@@ -1,8 +1,9 @@
 import { enabledSocialProviders } from '@ketopath/auth';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Masthead } from '@/components/masthead';
 
 import { SignInForm } from './sign-in-form';
 
@@ -11,16 +12,49 @@ export default function SignInPage({ params: { locale } }: { params: { locale: s
   const t = useTranslations('Auth.SignIn');
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
-          <CardDescription>{t('subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="mx-auto min-h-screen max-w-5xl px-6 sm:px-10">
+      <Masthead issueLabel="N. 02 — Accesso" />
+      <main className="grid gap-12 py-12 sm:py-20 md:grid-cols-12">
+        <aside className="md:sticky md:top-12 md:col-span-6 md:self-start">
+          <p className="editorial-eyebrow animate-fade-up">Capitolo II</p>
+          <h1 className="font-display text-display text-ink animate-fade-up mt-3 font-medium leading-[0.95] tracking-tight [animation-delay:120ms]">
+            <span className="block">Bentornato</span>
+            <span className="text-ink-soft block italic">in cucina</span>
+            <span className="text-pomodoro">.</span>
+          </h1>
+          <p className="font-display text-ink-soft animate-fade-up mt-6 max-w-md text-xl italic leading-snug [animation-delay:240ms]">
+            {t('subtitle')}
+          </p>
+          <p className="text-ink-dim animate-fade-up mt-10 hidden max-w-md text-sm leading-relaxed [animation-delay:360ms] md:block">
+            {t.rich('noAccount', {
+              link: (chunks) => (
+                <Link
+                  href="/sign-up"
+                  className="text-pomodoro hover:decoration-ink underline decoration-[1.5px] underline-offset-[6px]"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
+        </aside>
+        <section className="md:border-ink/15 animate-fade-up [animation-delay:240ms] md:col-span-6 md:border-l md:pl-10">
+          <p className="editorial-eyebrow mb-8">{t('title')}</p>
           <SignInForm googleEnabled={enabledSocialProviders.includes('google')} />
-        </CardContent>
-      </Card>
-    </main>
+          <p className="text-ink-dim mt-8 text-sm leading-relaxed md:hidden">
+            {t.rich('noAccount', {
+              link: (chunks) => (
+                <Link
+                  href="/sign-up"
+                  className="text-pomodoro underline decoration-[1.5px] underline-offset-[6px]"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
+        </section>
+      </main>
+    </div>
   );
 }

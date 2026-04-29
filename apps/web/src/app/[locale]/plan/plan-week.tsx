@@ -17,11 +17,11 @@ const DAY_KEYS = [
   'saturday',
   'sunday',
 ] as const;
+const DAY_NUMERAL = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 
 export function PlanWeek({ plan }: { plan: CurrentPlan }) {
   const t = useTranslations('Plan');
 
-  // Group slots by day for quick lookup.
   const byDay = new Map<number, PlanSlot[]>();
   for (const slot of plan.slots) {
     if (!byDay.has(slot.dayOfWeek)) byDay.set(slot.dayOfWeek, []);
@@ -29,25 +29,31 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-14">
       {DAY_KEYS.map((dayKey, idx) => {
         const slots = (byDay.get(idx) ?? []).sort(
           (a, b) => MEAL_ORDER.indexOf(a.meal) - MEAL_ORDER.indexOf(b.meal),
         );
         const dayKcal = slots.reduce((sum, s) => sum + (s.selected?.kcal ?? 0), 0);
         return (
-          <section key={dayKey} aria-labelledby={`day-${dayKey}`}>
-            <header className="mb-2 flex items-baseline justify-between">
-              <h2 id={`day-${dayKey}`} className="text-lg font-semibold">
+          <section key={dayKey} aria-labelledby={`day-${dayKey}`} className="space-y-5">
+            <header className="border-ink/15 grid items-baseline gap-2 border-b pb-3 sm:grid-cols-[auto_1fr_auto]">
+              <span className="font-display text-pomodoro text-xl font-medium italic leading-none">
+                {DAY_NUMERAL[idx]}
+              </span>
+              <h2
+                id={`day-${dayKey}`}
+                className="font-display text-ink text-2xl font-medium leading-none tracking-tight sm:text-3xl"
+              >
                 {t(`days.${dayKey}`)}
               </h2>
-              <span className="text-muted-foreground text-xs">
+              <span className="text-ink-soft font-mono text-[11px] uppercase tracking-widest">
                 {t('dayTotal', { kcal: Math.round(dayKcal) })}
               </span>
             </header>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {slots.map((slot) => (
-                <SlotCard key={slot.id} slot={slot} />
+            <div className="divide-ink/10 grid grid-cols-1 divide-y sm:grid-cols-2 sm:gap-x-8 sm:divide-y-0 lg:grid-cols-4 lg:gap-x-6">
+              {slots.map((slot, slotIdx) => (
+                <SlotCard key={slot.id} slot={slot} index={slotIdx} />
               ))}
             </div>
           </section>
@@ -57,7 +63,9 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
   );
 }
 
-function SlotCard({ slot }: { slot: PlanSlot }) {
+const MEAL_ROMAN = ['I', 'II', 'III', 'IV'];
+
+function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
   const t = useTranslations('Plan');
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -70,32 +78,42 @@ function SlotCard({ slot }: { slot: PlanSlot }) {
   }
 
   return (
-    <article className="border-border bg-card flex flex-col rounded-md border p-3">
-      <p className="text-muted-foreground text-xs uppercase tracking-wider">
-        {t(`meals.${slot.meal}`)}
-      </p>
-      <p className="mt-1 text-sm font-medium leading-tight">
+    <article className="group relative flex flex-col gap-3 py-5 sm:py-2">
+      <header className="flex items-baseline justify-between gap-3">
+        <p className="editorial-eyebrow flex items-baseline gap-2">
+          <span className="font-display not-italic-children text-pomodoro text-base italic">
+            {MEAL_ROMAN[index]}
+          </span>
+          <span>{t(`meals.${slot.meal}`)}</span>
+        </p>
+      </header>
+      <p className="font-display text-ink text-lg font-medium leading-tight">
         {slot.selected?.name ?? t('noRecipe')}
       </p>
       {slot.selected ? (
-        <p className="text-muted-foreground mt-1 text-xs">{Math.round(slot.selected.kcal)} kcal</p>
+        <p className="text-ink-soft font-mono text-xs tracking-tight">
+          {Math.round(slot.selected.kcal)}{' '}
+          <span className="font-display text-[10px] italic">kcal</span>
+        </p>
       ) : null}
       {slot.alternatives.length > 0 ? (
-        <div className="mt-2">
+        <div className="mt-1">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="text-primary text-xs hover:underline"
+            className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[10px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
           >
             {open ? t('hideAlternatives') : t('showAlternatives', { n: slot.alternatives.length })}
           </button>
           {open ? (
-            <ul className="mt-2 space-y-1">
+            <ul className="border-ink/15 mt-3 space-y-2 border-t pt-3">
               {slot.alternatives.map((alt) => (
-                <li key={alt.id} className="flex items-center justify-between gap-2">
-                  <span className="text-xs">
+                <li key={alt.id} className="flex items-baseline justify-between gap-2">
+                  <span className="font-display text-ink text-sm leading-snug">
                     {alt.name}{' '}
-                    <span className="text-muted-foreground">({Math.round(alt.kcal)} kcal)</span>
+                    <span className="text-ink-dim font-mono text-[10px]">
+                      {Math.round(alt.kcal)} kcal
+                    </span>
                   </span>
                   <Button
                     type="button"

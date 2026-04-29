@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
@@ -48,9 +47,9 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   }
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        <div className="space-y-1.5">
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-7" noValidate>
+        <div className="space-y-2">
           <Label htmlFor="name">{t('nameLabel')}</Label>
           <Input
             id="name"
@@ -61,7 +60,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
             onChange={(e) => setName(e.target.value)}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="email">{t('emailLabel')}</Label>
           <Input
             id="email"
@@ -72,7 +71,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="password">{t('passwordLabel')}</Label>
           <Input
             id="password"
@@ -83,43 +82,37 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <p className="text-muted-foreground text-xs">{t('passwordHint')}</p>
+          <p className="text-ink-dim font-mono text-[10px] uppercase tracking-widest">
+            {t('passwordHint')}
+          </p>
         </div>
         {error ? (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="font-display text-pomodoro text-sm italic">
             {error}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending} className="w-full">
+        <Button type="submit" disabled={pending} size="lg" className="w-full">
           {pending ? t('submitting') : t('submit')}
         </Button>
       </form>
       {googleEnabled ? (
         <>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="border-border w-full border-t" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-background text-muted-foreground px-2 text-xs uppercase tracking-wider">
-                {t('or')}
-              </span>
-            </div>
+          <div className="flex items-center gap-4">
+            <div className="bg-rule h-px flex-1" />
+            <span className="editorial-eyebrow">{t('or')}</span>
+            <div className="bg-rule h-px flex-1" />
           </div>
-          <Button type="button" variant="outline" onClick={handleGoogle} className="w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogle}
+            size="lg"
+            className="w-full"
+          >
             {t('google')}
           </Button>
         </>
       ) : null}
-      <p className="text-muted-foreground text-center text-sm">
-        {t.rich('haveAccount', {
-          link: (chunks) => (
-            <Link href="/sign-in" className="text-primary font-medium hover:underline">
-              {chunks}
-            </Link>
-          ),
-        })}
-      </p>
     </div>
   );
 }

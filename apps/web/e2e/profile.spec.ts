@@ -13,20 +13,20 @@ test('profile flow — submit returns BMR/TDEE for the Michele PRD persona', asy
 
   // Sign-up gives us an authenticated session
   await page.goto('/sign-up');
-  await page.getByLabel('Nome').fill(name);
+  await page.getByLabel('Come ti chiami').fill(name);
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Crea account' }).click();
   await page.waitForURL('/');
 
   // Open profile from home — first time we'll be redirected through /welcome
-  await page.getByRole('link', { name: 'Completa il tuo profilo' }).click();
+  await page.getByRole('link', { name: 'Profilo & calcoli' }).click();
   await page.waitForURL('/welcome');
 
   // Accept the medical disclaimer (3 mandatory checkboxes + submit)
-  await page.getByLabel(/Confermo di essere maggiorenne/).check();
-  await page.getByLabel(/Dichiaro di non avere condizioni mediche escludenti/).check();
-  await page.getByLabel(/Accetto che KetoPath non sostituisce/).check();
+  await page.getByText(/Confermo di essere maggiorenne/).click();
+  await page.getByText(/Dichiaro di non avere condizioni mediche escludenti/).click();
+  await page.getByText(/Accetto che KetoPath non sostituisce/).click();
   await page.getByRole('button', { name: 'Accetto e proseguo' }).click();
   await page.waitForURL('/profile');
 
@@ -35,15 +35,17 @@ test('profile flow — submit returns BMR/TDEE for the Michele PRD persona', asy
   await page.getByLabel('Sesso').click();
   await page.getByRole('option', { name: 'Maschio' }).click();
   await page.getByLabel('Altezza (cm)').fill('170');
-  await page.getByLabel('Peso iniziale (kg)').fill('76');
-  await page.getByLabel('Peso attuale (kg)').fill('76');
-  await page.getByLabel('Peso obiettivo (kg)').fill('70');
+  await page.getByLabel('Iniziale').fill('76');
+  await page.getByLabel('Attuale').fill('76');
+  await page.getByLabel('Obiettivo').fill('70');
   await page.getByLabel('Livello di attività').click();
   await page.getByRole('option', { name: /Sedentario/ }).click();
   await page.getByRole('button', { name: 'Salva profilo' }).click();
 
   // BMR/TDEE summary panel becomes visible after a successful save
   await expect(page.getByText('Calcolo personalizzato')).toBeVisible();
-  await expect(page.getByText('1583 kcal')).toBeVisible(); // BMR Michele
-  await expect(page.getByText('1899 kcal')).toBeVisible(); // TDEE = 1582.5 × 1.2
+  // Numbers are rendered in monospace next to a separate "kcal" unit span,
+  // so check for the bare numeric values.
+  await expect(page.getByText('1583', { exact: true })).toBeVisible();
+  await expect(page.getByText('1899', { exact: true })).toBeVisible();
 });

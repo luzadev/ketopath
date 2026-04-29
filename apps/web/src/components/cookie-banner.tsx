@@ -29,11 +29,14 @@ export function CookieBanner() {
     <div
       role="region"
       aria-label={t('aria')}
-      className="bg-background fixed inset-x-0 bottom-0 z-50 border-t p-4 shadow-lg"
+      className="border-ink bg-carta-light/95 fixed inset-x-0 bottom-0 z-50 border-t px-6 py-4 backdrop-blur-sm sm:px-10"
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-muted-foreground text-sm">{t('message')}</p>
-        <Button type="button" size="sm" onClick={dismiss}>
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-display text-ink-soft text-sm italic leading-snug">
+          <span className="editorial-eyebrow mr-2 not-italic">Privacy</span>
+          {t('message')}
+        </p>
+        <Button type="button" size="sm" variant="outline" onClick={dismiss}>
           {t('dismiss')}
         </Button>
       </div>

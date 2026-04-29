@@ -18,7 +18,7 @@ export function SignOutButton({ label }: { label: string }) {
   }
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={handleClick} disabled={pending}>
+    <Button type="button" variant="ghost" size="sm" onClick={handleClick} disabled={pending}>
       {label}
     </Button>
   );

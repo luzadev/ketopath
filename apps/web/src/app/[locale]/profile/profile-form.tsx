@@ -67,14 +67,56 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-5" noValidate>
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={onSubmit} className="grid gap-12 md:grid-cols-12" noValidate>
+        <fieldset className="space-y-10 md:col-span-7">
+          <legend className="editorial-eyebrow">Anagrafica</legend>
+
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+            <FormField
+              control={form.control}
+              name="age"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>{t('age')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" inputMode="numeric" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>{t('gender')}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('selectPlaceholder')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {GENDERS.map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {t(`genderOptions.${g}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
-            name="age"
+            name="heightCm"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('age')}</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel>{t('heightCm')}</FormLabel>
                 <FormControl>
                   <Input type="number" inputMode="numeric" {...field} value={field.value ?? ''} />
                 </FormControl>
@@ -82,12 +124,41 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
               </FormItem>
             )}
           />
+
+          <div className="space-y-6">
+            <p className="editorial-eyebrow">Peso (chilogrammi)</p>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-8">
+              {(['weightStartKg', 'weightCurrentKg', 'weightGoalKg'] as const).map((name) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>{t(name)}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          inputMode="decimal"
+                          {...field}
+                          value={field.value ?? ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+
           <FormField
             control={form.control}
-            name="gender"
+            name="activityLevel"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('gender')}</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel>{t('activityLevel')}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value ?? ''}>
                   <FormControl>
                     <SelectTrigger>
@@ -95,9 +166,9 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {GENDERS.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {t(`genderOptions.${g}`)}
+                    {ACTIVITY_LEVELS.map((a) => (
+                      <SelectItem key={a} value={a}>
+                        {t(`activityOptions.${a}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -106,101 +177,70 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
               </FormItem>
             )}
           />
-        </div>
 
-        <FormField
-          control={form.control}
-          name="heightCm"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('heightCm')}</FormLabel>
-              <FormControl>
-                <Input type="number" inputMode="numeric" {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {serverError ? (
+            <p role="alert" className="font-display text-pomodoro text-base italic">
+              {serverError}
+            </p>
+          ) : null}
 
-        <div className="grid grid-cols-3 gap-4">
-          {(['weightStartKg', 'weightCurrentKg', 'weightGoalKg'] as const).map((name) => (
-            <FormField
-              key={name}
-              control={form.control}
-              name={name}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t(name)}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      inputMode="decimal"
-                      {...field}
-                      value={field.value ?? ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-        </div>
-
-        <FormField
-          control={form.control}
-          name="activityLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('activityLevel')}</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectPlaceholder')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {ACTIVITY_LEVELS.map((a) => (
-                    <SelectItem key={a} value={a}>
-                      {t(`activityOptions.${a}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {serverError ? (
-          <p role="alert" className="text-destructive text-sm">
-            {serverError}
-          </p>
-        ) : null}
-
-        <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
-          {form.formState.isSubmitting ? t('saving') : t('save')}
-        </Button>
-
-        {saved ? (
-          <div className="bg-secondary mt-6 rounded-md p-4 text-sm">
-            <p className="font-medium">{t('summary')}</p>
-            <ul className="mt-2 space-y-1">
-              <li>
-                {t('bmr')}: <span className="font-mono">{saved.bmr} kcal</span>
-              </li>
-              <li>
-                {t('tdee')}: <span className="font-mono">{saved.tdee} kcal</span>
-              </li>
-              <li>
-                {t('activityMultiplier')}:{' '}
-                <span className="font-mono">{saved.activityMultiplier}</span>
-              </li>
-            </ul>
-            <p className="text-muted-foreground mt-2 text-xs">{t('hint')}</p>
+          <div className="pt-4">
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              {form.formState.isSubmitting ? t('saving') : t('save')}
+            </Button>
           </div>
-        ) : null}
+        </fieldset>
+
+        <aside className="md:border-ink/15 md:col-span-5 md:border-l md:pl-10">
+          <p className="editorial-eyebrow">{t('summary')}</p>
+          {saved ? (
+            <div className="mt-6 space-y-8">
+              <Stat label={t('bmr')} value={saved.bmr} unit="kcal" emphasis />
+              <Stat label={t('tdee')} value={saved.tdee} unit="kcal" />
+              <Stat label={t('activityMultiplier')} value={saved.activityMultiplier} fixed={3} />
+              <p className="border-ink/15 font-display text-ink-dim border-t pt-4 text-sm italic leading-relaxed">
+                {t('hint')}
+              </p>
+            </div>
+          ) : (
+            <p className="font-display text-ink-dim mt-6 text-base italic leading-relaxed">
+              {t('emptySummary')}
+            </p>
+          )}
+        </aside>
       </form>
     </Form>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  unit,
+  emphasis = false,
+  fixed,
+}: {
+  label: string;
+  value: number;
+  unit?: string;
+  emphasis?: boolean;
+  fixed?: number;
+}) {
+  const display = fixed != null ? value.toFixed(fixed) : Math.round(value).toString();
+  return (
+    <div>
+      <p className="editorial-eyebrow text-[10px]">{label}</p>
+      <p className={`mt-2 flex items-baseline gap-2 ${emphasis ? 'text-pomodoro' : 'text-ink'}`}>
+        <span className="font-mono text-4xl font-medium leading-none tracking-tight">
+          {display}
+        </span>
+        {unit ? <span className="font-display text-ink-soft text-sm italic">{unit}</span> : null}
+      </p>
+    </div>
   );
 }

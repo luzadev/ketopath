@@ -14,17 +14,17 @@ test.describe('email/password authentication', () => {
 
     // Sign up
     await page.goto('/sign-up');
-    await page.getByLabel('Nome').fill(name);
+    await page.getByLabel('Come ti chiami').fill(name);
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Crea account' }).click();
 
     await page.waitForURL('/');
-    await expect(page.getByText(`Accesso effettuato come ${name}`)).toBeVisible();
+    await expect(page.getByText(`Buongiorno, ${name}`)).toBeVisible();
 
     // Sign out
     await page.getByRole('button', { name: 'Esci' }).click();
-    await expect(page.getByRole('link', { name: 'Inizia gratis' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Iscriviti' })).toBeVisible();
 
     // Sign in with the same credentials
     await page.goto('/sign-in');
@@ -33,7 +33,7 @@ test.describe('email/password authentication', () => {
     await page.getByRole('button', { name: 'Accedi', exact: true }).click();
 
     await page.waitForURL('/');
-    await expect(page.getByText(`Accesso effettuato come ${name}`)).toBeVisible();
+    await expect(page.getByText(`Buongiorno, ${name}`)).toBeVisible();
   });
 
   test('shows an error message on invalid credentials', async ({ page }) => {

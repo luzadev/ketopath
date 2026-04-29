@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
+import { Masthead } from '@/components/masthead';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getServerSession } from '@/lib/auth';
 
 import { fetchCurrentPlan, regeneratePlan } from './actions';
@@ -27,27 +27,58 @@ export default async function PlanPage({ params: { locale } }: { params: { local
   return <PlanPageContent plan={plan} />;
 }
 
+const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+function formatWeek(weekStart: string): string {
+  const start = new Date(`${weekStart}T00:00:00`);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const startStr = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long' }).format(
+    start,
+  );
+  const endStr = ITALIAN_DATE.format(end);
+  return `${startStr} – ${endStr}`;
+}
+
 function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurrentPlan>> }) {
   const t = useTranslations('Plan');
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-10 sm:px-6">
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div>
-            <CardTitle>{t('title')}</CardTitle>
-            <CardDescription>
-              {plan ? t('weekOf', { date: plan.weekStart }) : t('noPlan')}
-            </CardDescription>
+    <div className="mx-auto min-h-screen max-w-6xl px-6 sm:px-10">
+      <Masthead issueLabel="N. 05 — Cucina" />
+      <main className="py-12 sm:py-16">
+        <div className="grid items-end gap-6 md:grid-cols-12">
+          <div className="md:col-span-8">
+            <p className="editorial-eyebrow animate-fade-up">Capitolo V</p>
+            <h1 className="font-display text-display text-ink animate-fade-up mt-3 font-medium leading-[0.95] tracking-tight [animation-delay:120ms]">
+              {t('title')}
+              <span className="text-pomodoro">.</span>
+            </h1>
+            <p className="font-display text-ink-soft animate-fade-up mt-5 max-w-2xl text-xl italic leading-snug [animation-delay:240ms]">
+              {plan ? formatWeek(plan.weekStart) : t('noPlan')}
+            </p>
           </div>
-          <form action={regeneratePlan}>
-            <Button type="submit" variant={plan ? 'outline' : 'default'} size="sm">
-              {plan ? t('regenerate') : t('generate')}
-            </Button>
-          </form>
-        </CardHeader>
-        <CardContent>{plan ? <PlanWeek plan={plan} /> : null}</CardContent>
-      </Card>
-    </main>
+          <div className="animate-fade-up [animation-delay:360ms] md:col-span-4 md:text-right">
+            <form action={regeneratePlan}>
+              <Button type="submit" variant={plan ? 'outline' : 'default'} size="lg">
+                {plan ? t('regenerate') : t('generate')}
+              </Button>
+            </form>
+          </div>
+        </div>
+
+        <div className="rule animate-rule-in my-10 [animation-delay:420ms]" />
+
+        {plan ? (
+          <div className="animate-fade-up [animation-delay:480ms]">
+            <PlanWeek plan={plan} />
+          </div>
+        ) : null}
+      </main>
+    </div>
   );
 }

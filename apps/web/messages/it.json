@@ -1,60 +1,66 @@
 {
   "Home": {
-    "title": "KetoPath",
-    "tagline": "Il tuo percorso personalizzato verso uno stile di vita chetogenico sostenibile.",
-    "ctaPrimary": "Inizia gratis",
-    "ctaSecondary": "Scopri come funziona",
-    "disclaimer": "Le informazioni fornite da questa app non sostituiscono il parere di un medico.",
+    "title": "Una keto italiana, sostenibile",
+    "tagline": "Il sentiero che ti accompagna dalla prima settimana di adattamento al mantenimento — settimana dopo settimana, piatto dopo piatto.",
+    "ctaPrimary": "Iscriviti",
+    "ctaSecondary": "Accedi",
+    "disclaimer": "KetoPath è uno strumento di stile di vita: suggerisce, non prescrive. Le indicazioni nutrizionali non sostituiscono il parere del tuo medico.",
     "signedInAs": "Accesso effettuato come {name}",
     "signOut": "Esci",
-    "completeProfile": "Completa il tuo profilo",
-    "viewPlan": "Vedi il piano settimanale"
+    "completeProfile": "Profilo & calcoli",
+    "viewPlan": "Piano della settimana",
+    "lettura": "Continua la lettura",
+    "inizia": "Inizia",
+    "greeting": "Buongiorno, <name>{name}</name>.",
+    "principle1": "Personalizzazione totale: ciò che vedi è solo ciò che ti riguarda.",
+    "principle2": "Cucina italiana e mediterranea: ingredienti veri, di stagione, reperibili.",
+    "principle3": "Progressività: dalla fase intensiva al mantenimento, senza strappi."
   },
   "Welcome": {
     "title": "Prima di iniziare",
-    "subtitle": "KetoPath è uno strumento di stile di vita, non un dispositivo medico. Conferma queste 4 cose prima di proseguire.",
+    "subtitle": "KetoPath è uno strumento di stile di vita, non un dispositivo medico. Quattro punti, prima di proseguire.",
     "point1": "L'app fornisce solo suggerimenti di stile di vita basati sui parametri che inserisci.",
     "point2": "Non diagnostica patologie, non prescrive trattamenti, non sostituisce il parere del tuo medico.",
-    "point3": "Se hai diabete di tipo 1, sei in gravidanza o allattamento, hai disturbi alimentari, problemi cardiaci o renali, parla prima con il tuo medico.",
-    "point4": "Prima di iniziare ti consigliamo esami del sangue di base (glicemia, colesterolo, profilo lipidico, funzionalità renale ed epatica).",
+    "point3": "Se hai diabete di tipo 1, sei in gravidanza o allattamento, hai disturbi alimentari, problemi cardiaci o renali — parla prima con il tuo medico.",
+    "point4": "Prima di iniziare ti consigliamo esami di base: glicemia, colesterolo, profilo lipidico, funzionalità renale ed epatica.",
     "checkAdult": "Confermo di essere maggiorenne.",
     "checkAware": "Dichiaro di non avere condizioni mediche escludenti, oppure di averle discusse con il mio medico.",
     "checkAccepts": "Accetto che KetoPath non sostituisce il parere medico professionale.",
     "submit": "Accetto e proseguo",
-    "submitting": "Salvataggio in corso…",
+    "submitting": "Salvataggio…",
     "legalNote": "Il consenso è registrato con data e ora come previsto dall'art. 7 GDPR."
   },
   "CookieBanner": {
     "aria": "Informativa cookie",
-    "message": "Usiamo solo cookie essenziali per l'autenticazione e la sessione. Niente analytics o tracker di terze parti.",
+    "message": "Usiamo solo cookie essenziali per autenticazione e sessione. Niente analytics o tracker di terze parti.",
     "dismiss": "Ho capito"
   },
   "Metadata": {
-    "title": "KetoPath — Chetogenica e digiuno intermittente personalizzati",
-    "description": "Web app italiana per la gestione strutturata di chetogenica e digiuno intermittente, con piani adattivi, tracking e lista della spesa automatica."
+    "title": "KetoPath — Chetogenica e digiuno intermittente, personalizzati",
+    "description": "Una keto italiana, sostenibile. Piani adattivi, tracking e lista della spesa automatica — settimana dopo settimana."
   },
   "Auth": {
     "SignIn": {
       "title": "Accedi",
-      "subtitle": "Bentornato. Inserisci le tue credenziali per continuare.",
+      "subtitle": "Bentornato. Riprendi da dove avevi lasciato.",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "submit": "Accedi",
       "submitting": "Accesso in corso…",
-      "google": "Accedi con Google",
+      "google": "Continua con Google",
       "or": "oppure",
-      "noAccount": "Non hai un account? <link>Registrati</link>",
+      "noAccount": "Non hai ancora un account? <link>Iscriviti</link>",
       "error": "Credenziali non valide. Riprova."
     },
     "SignUp": {
-      "title": "Registrati",
+      "title": "Iscriviti",
       "subtitle": "Crea il tuo profilo KetoPath in meno di un minuto.",
-      "nameLabel": "Nome",
+      "nameLabel": "Come ti chiami",
       "emailLabel": "Email",
       "passwordLabel": "Password",
-      "passwordHint": "Almeno 8 caratteri.",
+      "passwordHint": "Almeno 8 caratteri",
       "submit": "Crea account",
-      "submitting": "Creazione in corso…",
+      "submitting": "Creazione…",
       "google": "Continua con Google",
       "or": "oppure",
       "haveAccount": "Hai già un account? <link>Accedi</link>",
@@ -63,14 +69,14 @@
     }
   },
   "Plan": {
-    "title": "Il tuo piano settimanale",
+    "title": "Il tuo piano",
     "weekOf": "Settimana del {date}",
-    "noPlan": "Non hai ancora un piano. Generalo per ricevere ricette adatte alla tua fase.",
+    "noPlan": "Non hai ancora un piano. Generalo: l'algoritmo sceglie le ricette adatte alla tua fase e ai tuoi macros.",
     "generate": "Genera piano",
     "regenerate": "Rigenera",
     "noRecipe": "Nessuna ricetta selezionata",
     "showAlternatives": "Vedi {n} alternative",
-    "hideAlternatives": "Nascondi alternative",
+    "hideAlternatives": "Nascondi",
     "swap": "Scegli",
     "dayTotal": "{kcal} kcal totali",
     "meals": {
@@ -91,32 +97,33 @@
   },
   "Profile": {
     "title": "Il tuo profilo",
-    "subtitle": "Inserisci i tuoi dati per calcolare BMR e TDEE personalizzati.",
+    "subtitle": "I dati che ci servono per calcolare BMR, TDEE e i target di macros della settimana.",
     "age": "Età",
     "gender": "Sesso",
     "heightCm": "Altezza (cm)",
-    "weightStartKg": "Peso iniziale (kg)",
-    "weightCurrentKg": "Peso attuale (kg)",
-    "weightGoalKg": "Peso obiettivo (kg)",
+    "weightStartKg": "Iniziale",
+    "weightCurrentKg": "Attuale",
+    "weightGoalKg": "Obiettivo",
     "activityLevel": "Livello di attività",
     "selectPlaceholder": "Seleziona…",
     "save": "Salva profilo",
-    "saving": "Salvataggio in corso…",
+    "saving": "Salvataggio…",
     "summary": "Calcolo personalizzato",
-    "bmr": "Metabolismo basale (BMR)",
-    "tdee": "Fabbisogno totale (TDEE)",
+    "emptySummary": "Salva il profilo per ricevere il tuo BMR, il TDEE e il target calorico giornaliero.",
+    "bmr": "Metabolismo basale",
+    "tdee": "Fabbisogno totale",
     "activityMultiplier": "Moltiplicatore attività",
-    "hint": "I valori sono stime basate sulla formula Mifflin-St Jeor. Non sostituiscono il parere di un nutrizionista.",
+    "hint": "Valori stimati con la formula Mifflin-St Jeor. Non sostituiscono il parere di un nutrizionista.",
     "genderOptions": {
       "MALE": "Maschio",
       "FEMALE": "Femmina",
       "OTHER": "Altro / preferisco non specificare"
     },
     "activityOptions": {
-      "SEDENTARY": "Sedentario (lavoro d'ufficio)",
-      "LIGHT": "Leggero (sport 1-3 volte a settimana)",
-      "MODERATE": "Moderato (sport 3-5 volte a settimana)",
-      "INTENSE": "Intenso (sport 6+ volte a settimana)"
+      "SEDENTARY": "Sedentario · lavoro d'ufficio",
+      "LIGHT": "Leggero · sport 1–3 volte / settimana",
+      "MODERATE": "Moderato · sport 3–5 volte / settimana",
+      "INTENSE": "Intenso · sport 6+ volte / settimana"
     }
   }
 }
