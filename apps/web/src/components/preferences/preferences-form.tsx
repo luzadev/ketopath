@@ -187,6 +187,28 @@ export function PreferencesForm({
           <p className="font-display text-ink-soft text-base italic leading-snug">
             {t('fastingHint')}
           </p>
+          <details className="border-ink/15 bg-carta-light/40 group border p-4">
+            <summary className="text-ink-soft hover:text-ink cursor-pointer list-none font-mono text-[10px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px]">
+              {t('fastingTutorialToggle')}
+            </summary>
+            <div className="mt-4 space-y-3">
+              <p className="font-display text-ink text-sm leading-relaxed">
+                <strong className="not-italic">{t('fastingTutorialPoint1Title')}</strong>{' '}
+                {t('fastingTutorialPoint1')}
+              </p>
+              <p className="font-display text-ink text-sm leading-relaxed">
+                <strong className="not-italic">{t('fastingTutorialPoint2Title')}</strong>{' '}
+                {t('fastingTutorialPoint2')}
+              </p>
+              <p className="font-display text-ink text-sm leading-relaxed">
+                <strong className="not-italic">{t('fastingTutorialPoint3Title')}</strong>{' '}
+                {t('fastingTutorialPoint3')}
+              </p>
+              <p className="font-display text-ink-dim text-xs italic leading-snug">
+                {t('fastingTutorialDisclaimer')}
+              </p>
+            </div>
+          </details>
           <div className="max-w-xs">
             <Select
               value={values.fastingProtocol ?? 'NONE'}

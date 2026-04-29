@@ -32,6 +32,18 @@ function storageKey(planId: string): string {
   return `ketopath:shopping:${planId}`;
 }
 
+const STORE_MODE_KEY = 'ketopath:shopping:storeMode';
+
+interface ExtraItem {
+  id: string;
+  name: string;
+  checked: boolean;
+}
+
+function extrasKey(planId: string): string {
+  return `ketopath:shopping:extras:${planId}`;
+}
+
 function lineKey(line: ShoppingLine): string {
   return `${line.ingredientId}::${line.unit}`;
 }
@@ -39,16 +51,59 @@ function lineKey(line: ShoppingLine): string {
 export function ShoppingChecklist({ list }: { list: ShoppingList }) {
   const t = useTranslations('Shopping');
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [storeMode, setStoreMode] = useState(false);
+  const [extras, setExtras] = useState<ExtraItem[]>([]);
+  const [extraInput, setExtraInput] = useState('');
 
   // Load locally persisted check state per piano.
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(storageKey(list.plan.id));
       if (raw) setChecked(JSON.parse(raw) as Record<string, boolean>);
+      const sm = window.localStorage.getItem(STORE_MODE_KEY);
+      if (sm === '1') setStoreMode(true);
+      const rawExtras = window.localStorage.getItem(extrasKey(list.plan.id));
+      if (rawExtras) setExtras(JSON.parse(rawExtras) as ExtraItem[]);
     } catch {
       /* no-op */
     }
   }, [list.plan.id]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(extrasKey(list.plan.id), JSON.stringify(extras));
+    } catch {
+      /* no-op */
+    }
+  }, [extras, list.plan.id]);
+
+  function addExtra(): void {
+    const name = extraInput.trim();
+    if (!name) return;
+    setExtras((prev) => [
+      ...prev,
+      { id: `extra_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name, checked: false },
+    ]);
+    setExtraInput('');
+  }
+  function toggleExtra(id: string): void {
+    setExtras((prev) => prev.map((e) => (e.id === id ? { ...e, checked: !e.checked } : e)));
+  }
+  function removeExtra(id: string): void {
+    setExtras((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  function toggleStoreMode(): void {
+    setStoreMode((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem(STORE_MODE_KEY, next ? '1' : '0');
+      } catch {
+        /* no-op */
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     try {
@@ -88,18 +143,30 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
   }
 
   return (
-    <div className="space-y-12">
+    <div className={storeMode ? 'space-y-16 text-lg' : 'space-y-12'}>
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <p className="font-display text-ink-soft text-base italic leading-snug">
           {t('checked', { n: checkedCount, total: totalCount })}
         </p>
-        {remainingCost > 0 ? (
-          <p className="text-ink font-mono text-sm tabular-nums">
-            {t('remainingCost')}{' '}
-            <span className="font-display text-ink-soft text-xs italic">€</span>{' '}
-            {remainingCost.toFixed(2)}
-          </p>
-        ) : null}
+        <div className="flex items-baseline gap-4">
+          {remainingCost > 0 ? (
+            <p className="text-ink font-mono text-sm tabular-nums">
+              {t('remainingCost')}{' '}
+              <span className="font-display text-ink-soft text-xs italic">€</span>{' '}
+              {remainingCost.toFixed(2)}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            onClick={toggleStoreMode}
+            aria-pressed={storeMode}
+            className={`font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors ${
+              storeMode ? 'text-pomodoro' : 'text-ink-soft hover:text-ink decoration-pomodoro'
+            }`}
+          >
+            {storeMode ? t('storeModeOn') : t('storeModeOff')}
+          </button>
+        </div>
       </div>
 
       {list.groups.map((group, groupIdx) => (
@@ -109,12 +176,18 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
           className="space-y-5"
         >
           <header className="border-ink/15 grid items-baseline gap-2 border-b pb-3 sm:grid-cols-[auto_1fr_auto]">
-            <span className="font-display text-pomodoro text-xl font-medium italic leading-none">
+            <span
+              className={`font-display text-pomodoro font-medium italic leading-none ${
+                storeMode ? 'text-3xl' : 'text-xl'
+              }`}
+            >
               {ROMAN[groupIdx] ?? groupIdx + 1}
             </span>
             <h2
               id={`group-${group.category}`}
-              className="font-display text-ink text-2xl font-medium leading-none tracking-tight sm:text-3xl"
+              className={`font-display text-ink font-medium leading-none tracking-tight ${
+                storeMode ? 'text-4xl sm:text-5xl' : 'text-2xl sm:text-3xl'
+              }`}
             >
               {t.has(`categoryLabel.${group.category}`)
                 ? t(`categoryLabel.${group.category}`)
@@ -143,30 +216,38 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
                       type="button"
                       onClick={() => toggle(line)}
                       aria-pressed={isChecked}
-                      className="hover:bg-ink/5 group grid w-full grid-cols-[1.25rem_1fr_auto] items-baseline gap-4 py-4 pr-2 text-left transition-colors"
+                      className={`hover:bg-ink/5 group grid w-full items-baseline gap-4 text-left transition-colors ${
+                        storeMode
+                          ? 'grid-cols-[1.75rem_1fr_auto] py-6 pr-3'
+                          : 'grid-cols-[1.25rem_1fr_auto] py-4 pr-2'
+                      }`}
                     >
                       <span
                         aria-hidden
-                        className={`border-ink h-3 w-3 translate-y-1 border-[1.5px] transition-colors ${
+                        className={`border-ink translate-y-1 border-[1.5px] transition-colors ${
                           isChecked ? 'bg-ink' : 'bg-transparent'
-                        }`}
+                        } ${storeMode ? 'h-5 w-5' : 'h-3 w-3'}`}
                       />
                       <span className="flex flex-col gap-1">
                         <span
-                          className={`font-display text-ink text-lg leading-tight transition-colors ${
+                          className={`font-display text-ink leading-tight transition-colors ${
                             isChecked ? 'text-ink-dim line-through' : ''
-                          }`}
+                          } ${storeMode ? 'text-2xl' : 'text-lg'}`}
                         >
                           {line.name}
                         </span>
-                        <span className="text-ink-soft font-mono text-[10px] uppercase tracking-widest">
+                        <span
+                          className={`text-ink-soft font-mono uppercase tracking-widest ${
+                            storeMode ? 'text-xs' : 'text-[10px]'
+                          }`}
+                        >
                           {t('fromRecipes', { names: line.recipes.join(' · ') })}
                         </span>
                       </span>
                       <span
-                        className={`text-ink font-mono text-sm tabular-nums transition-colors ${
+                        className={`text-ink font-mono tabular-nums transition-colors ${
                           isChecked ? 'text-ink-dim' : ''
-                        }`}
+                        } ${storeMode ? 'text-xl' : 'text-sm'}`}
                       >
                         {formatQuantity(line.quantity)} {line.unit}
                       </span>
@@ -177,6 +258,94 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
           </ul>
         </section>
       ))}
+
+      <section className="space-y-5">
+        <header className="border-ink/15 border-b pb-3">
+          <h2
+            className={`font-display text-ink font-medium leading-none tracking-tight ${
+              storeMode ? 'text-4xl sm:text-5xl' : 'text-2xl sm:text-3xl'
+            }`}
+          >
+            {t('extrasTitle')}
+          </h2>
+          <p className="font-display text-ink-soft mt-2 text-sm italic leading-snug">
+            {t('extrasHint')}
+          </p>
+        </header>
+
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={extraInput}
+            onChange={(e) => setExtraInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addExtra();
+              }
+            }}
+            maxLength={80}
+            placeholder={t('extrasPlaceholder')}
+            className={`border-ink/30 focus:border-ink font-display text-ink w-full border-b bg-transparent py-2 outline-none ${
+              storeMode ? 'text-xl' : 'text-base'
+            }`}
+          />
+          <button
+            type="button"
+            onClick={addExtra}
+            disabled={!extraInput.trim()}
+            className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors disabled:opacity-40"
+          >
+            {t('extrasAdd')}
+          </button>
+        </div>
+
+        {extras.length > 0 ? (
+          <ul className="divide-ink/10 divide-y">
+            {[...extras]
+              .sort((a, b) => {
+                if (a.checked !== b.checked) return a.checked ? 1 : -1;
+                return a.name.localeCompare(b.name, 'it');
+              })
+              .map((it) => (
+                <li
+                  key={it.id}
+                  className={`grid items-baseline gap-4 ${
+                    storeMode
+                      ? 'grid-cols-[1.75rem_1fr_auto] py-6'
+                      : 'grid-cols-[1.25rem_1fr_auto] py-4'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleExtra(it.id)}
+                    aria-pressed={it.checked}
+                    aria-label={t('extrasToggle')}
+                    className={`border-ink translate-y-1 border-[1.5px] transition-colors ${
+                      it.checked ? 'bg-ink' : 'hover:bg-ink/30 bg-transparent'
+                    } ${storeMode ? 'h-5 w-5' : 'h-3 w-3'}`}
+                  />
+                  <span
+                    className={`font-display text-ink leading-tight transition-colors ${
+                      it.checked ? 'text-ink-dim line-through' : ''
+                    } ${storeMode ? 'text-2xl' : 'text-lg'}`}
+                  >
+                    {it.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeExtra(it.id)}
+                    aria-label={t('extrasRemove')}
+                    title={t('extrasRemove')}
+                    className="text-ink-dim hover:text-pomodoro font-mono text-xs leading-none transition-colors"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+          </ul>
+        ) : null}
+      </section>
     </div>
   );
 }

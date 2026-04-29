@@ -27,8 +27,17 @@ import { fetchProfile, saveConditions } from '../profile/actions';
 import { savePreferences, type PreferencesView } from '../profile/preferences-actions';
 import { ProfileForm as ProfileFormComponent } from '../profile/profile-form';
 import type { ProfileForm } from '../profile/profile-form';
+import { saveWeightEntry } from '../tracking/actions';
 
-const STEPS = ['goal', 'profile', 'conditions', 'preferences', 'notifications', 'done'] as const;
+const STEPS = [
+  'goal',
+  'profile',
+  'conditions',
+  'weighIn',
+  'preferences',
+  'notifications',
+  'done',
+] as const;
 type StepKey = (typeof STEPS)[number];
 
 const GOALS = ['LOSE', 'MAINTAIN', 'ENERGY'] as const;
@@ -63,7 +72,7 @@ export function OnboardingFlow({ initialProfile, initialPreferences }: Onboardin
                   i < stepIndex ? 'text-oliva' : i === stepIndex ? 'text-pomodoro' : 'text-ink-dim'
                 }`}
               >
-                {['I', 'II', 'III', 'IV', 'V', 'VI'][i]}
+                {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][i]}
               </span>
               <span
                 className={`font-display text-lg leading-tight ${
@@ -89,8 +98,16 @@ export function OnboardingFlow({ initialProfile, initialPreferences }: Onboardin
         {step === 'conditions' ? (
           <StepConditions
             initial={(initialProfile?.medicalConditions as string[] | undefined) ?? []}
-            onContinue={() => setStep('preferences')}
+            onContinue={() => setStep('weighIn')}
             onBack={() => setStep('profile')}
+          />
+        ) : null}
+
+        {step === 'weighIn' ? (
+          <StepWeighIn
+            startKg={initialProfile?.weightStartKg ?? null}
+            onContinue={() => setStep('preferences')}
+            onBack={() => setStep('conditions')}
           />
         ) : null}
 
@@ -100,7 +117,7 @@ export function OnboardingFlow({ initialProfile, initialPreferences }: Onboardin
               initialPreferences ? toFormValues(initialPreferences) : DEFAULT_PREFERENCES_VALUES
             }
             onSaved={() => setStep('notifications')}
-            onBack={() => setStep('conditions')}
+            onBack={() => setStep('weighIn')}
           />
         ) : null}
 
@@ -125,7 +142,7 @@ function StepGoal({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 1, total: 6 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 1, total: 7 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('goalHeading')}
         </h2>
@@ -190,7 +207,7 @@ function StepProfile({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 2, total: 6 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 2, total: 7 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {goal ? t(`profileHeadingGoal.${goal}`) : t('profileHeading')}
         </h2>
@@ -242,7 +259,7 @@ function StepConditions({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 3, total: 6 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 3, total: 7 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('conditionsHeading')}
         </h2>
@@ -362,7 +379,7 @@ function StepPreferences({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 4, total: 6 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 5, total: 7 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('preferencesHeading')}
         </h2>
@@ -378,6 +395,88 @@ function StepPreferences({
       >
         {t('back')}
       </button>
+    </div>
+  );
+}
+
+function StepWeighIn({
+  startKg,
+  onContinue,
+  onBack,
+}: {
+  startKg: number | null;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  const t = useTranslations('Onboarding');
+  const [todayKg, setTodayKg] = useState<string>(startKg != null ? String(startKg) : '');
+  const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave(): Promise<void> {
+    const value = Number(todayKg);
+    if (!Number.isFinite(value) || value < 35 || value > 300) {
+      onContinue();
+      return;
+    }
+    setPending(true);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await saveWeightEntry({ date: today, weightKg: value });
+    if (result.ok) setSaved(true);
+    setPending(false);
+    onContinue();
+  }
+
+  return (
+    <div className="space-y-8">
+      <header className="space-y-2">
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 4, total: 7 })}</p>
+        <h2 className="font-display text-ink text-3xl font-medium leading-tight">
+          {t('weighInHeading')}
+        </h2>
+        <p className="font-display text-ink-soft max-w-xl text-base italic leading-snug">
+          {t('weighInHint')}
+        </p>
+      </header>
+
+      <div className="max-w-sm space-y-3">
+        <p className="editorial-eyebrow">{t('weighInLabel')}</p>
+        <input
+          type="number"
+          step="0.1"
+          min={35}
+          max={300}
+          inputMode="decimal"
+          value={todayKg}
+          onChange={(e) => setTodayKg(e.target.value)}
+          placeholder={startKg != null ? String(startKg) : ''}
+          className="border-ink/30 focus:border-ink font-display text-ink w-full border-b bg-transparent py-2 text-2xl outline-none"
+        />
+        <p className="font-display text-ink-soft text-xs italic">{t('weighInTip')}</p>
+      </div>
+
+      {saved ? <p className="font-display text-oliva text-sm italic">{t('weighInSaved')}</p> : null}
+
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="button" size="lg" onClick={handleSave} disabled={pending}>
+          {pending ? t('working') : t('next')}
+        </Button>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="text-ink-soft hover:text-ink font-mono text-[11px] uppercase tracking-widest"
+        >
+          {t('skipForNow')}
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-ink-soft hover:text-ink font-mono text-[11px] uppercase tracking-widest"
+        >
+          {t('back')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -412,7 +511,7 @@ function StepNotifications({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 5, total: 6 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 6, total: 7 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('notificationsHeading')}
         </h2>
@@ -507,7 +606,7 @@ function StepDone({ goal }: { goal: Goal | null }) {
   return (
     <div className="space-y-10">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 6, total: 6 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 7, total: 7 })}</p>
         <h2 className="font-display text-ink text-4xl font-medium leading-tight">
           {goal ? t(`doneHeadingGoal.${goal}`) : t('doneHeading')}
         </h2>
