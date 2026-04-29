@@ -1,4 +1,5 @@
 import { prisma } from '@ketopath/db';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
@@ -62,12 +63,20 @@ function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurren
               {plan ? formatWeek(plan.weekStart) : t('noPlan')}
             </p>
           </div>
-          <div className="animate-fade-up [animation-delay:360ms] md:col-span-4 md:text-right">
+          <div className="animate-fade-up flex flex-col items-stretch gap-3 [animation-delay:360ms] md:col-span-4 md:items-end">
             <form action={regeneratePlan}>
               <Button type="submit" variant={plan ? 'outline' : 'default'} size="lg">
                 {plan ? t('regenerate') : t('generate')}
               </Button>
             </form>
+            {plan ? (
+              <Link
+                href="/shopping"
+                className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+              >
+                Lista della spesa →
+              </Link>
+            ) : null}
           </div>
         </div>
 

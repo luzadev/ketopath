@@ -104,6 +104,7 @@ function SignedInBlock({
       </div>
       <ul className="space-y-px">
         <NavItem href="/plan" label={t('viewPlan')} eyebrow="Cucina" />
+        <NavItem href="/shopping" label={t('viewShopping')} eyebrow="Spesa" />
         <NavItem href="/fasting" label={t('viewFasting')} eyebrow="Digiuno" />
         <NavItem href="/tracking" label={t('viewTracking')} eyebrow="Tracking" />
         <NavItem href="/profile" label={t('completeProfile')} eyebrow="Profilo" />

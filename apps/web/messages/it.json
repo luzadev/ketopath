@@ -9,6 +9,7 @@
     "signOut": "Esci",
     "completeProfile": "Profilo & calcoli",
     "viewPlan": "Piano della settimana",
+    "viewShopping": "Lista della spesa",
     "viewTracking": "Pesata & misure",
     "viewFasting": "Digiuno intermittente",
     "lettura": "Continua la lettura",
@@ -163,6 +164,64 @@
     "current": "Peso attuale",
     "delta": "Variazione",
     "emptyHistory": "Nessuna rilevazione registrata. Inserisci la prima a destra: la tendenza apparirà dopo due o tre pesate."
+  },
+  "Shopping": {
+    "title": "La spesa della settimana",
+    "subtitle": "Tutto ciò che ti serve per il piano in corso, raggruppato per reparto.",
+    "noPlan": "Genera prima un piano della settimana: la lista comparirà qui.",
+    "viewPlan": "Vai al piano",
+    "groupSize": "{n} articoli",
+    "totalLabel": "Totale articoli",
+    "estimatedCost": "Spesa stimata",
+    "checked": "{n} di {total}",
+    "fromRecipes": "Per: {names}",
+    "categoryLabel": {
+      "verdura": "Verdura",
+      "frutta": "Frutta",
+      "carne": "Carne",
+      "pesce": "Pesce",
+      "latticini": "Latticini",
+      "uova": "Uova",
+      "condimenti": "Condimenti",
+      "panetteria": "Panetteria",
+      "frutta-secca": "Frutta secca",
+      "erbe": "Erbe e spezie",
+      "salumi": "Salumi"
+    },
+    "viewCart": "Lista spesa"
+  },
+  "Recipe": {
+    "title": "Ricetta",
+    "back": "← Torna al piano",
+    "ingredientsTitle": "Ingredienti",
+    "ingredientsSubtitle": "Per una porzione singola",
+    "preparationTitle": "Preparazione",
+    "preparationFallback": "Mescola gli ingredienti seguendo l'ordine indicato e cuoci come preferisci.",
+    "macrosTitle": "Valori per porzione",
+    "kcal": "Calorie",
+    "protein": "Proteine",
+    "fat": "Grassi",
+    "netCarb": "Carb. netti",
+    "metaTitle": "Scheda ricetta",
+    "prepTime": "Preparazione",
+    "minutes": "{n} min",
+    "difficulty": "Difficoltà",
+    "phase": "Fase",
+    "phasesAll": "Tutte le fasi",
+    "phasesSome": "Fase {phases}",
+    "notesChef": "Nota dello chef",
+    "difficultyLabel": {
+      "FACILE": "Facile",
+      "MEDIA": "Media",
+      "ELABORATA": "Elaborata"
+    },
+    "categoryLabel": {
+      "COLAZIONE": "Colazione",
+      "PRANZO": "Pranzo",
+      "SPUNTINO": "Spuntino",
+      "CENA": "Cena"
+    },
+    "notFound": "Ricetta non trovata."
   },
   "Plan": {
     "title": "Il tuo piano",

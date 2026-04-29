@@ -1,8 +1,18 @@
 // Seed minimo del catalogo ricette italiane keto/low-carb (PRD §5.1).
 // 16 ricette distribuite su COLAZIONE/PRANZO/SPUNTINO/CENA, fasi 1/2/3.
 // Macros stimati per porzione singola.
+//
+// Ogni ricetta dichiara una lista di `ingredients` con quantità e unità,
+// usata dal seeder per creare i record `RecipeIngredient`. Il `name` deve
+// corrispondere esattamente a un ingrediente di `seed-ingredients.ts`.
 
 import type { Difficulty, MealCategory } from '@prisma/client';
+
+export interface SeedRecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+}
 
 export interface SeedRecipe {
   name: string;
@@ -16,6 +26,7 @@ export interface SeedRecipe {
   netCarbG: number;
   phases: number[];
   notesChef?: string;
+  ingredients: SeedRecipeIngredient[];
 }
 
 export const SEED_RECIPES: SeedRecipe[] = [
@@ -31,6 +42,14 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 26,
     netCarbG: 4,
     phases: [1, 2, 3],
+    notesChef:
+      'Cuoci la frittata a fuoco basso, coperta: la consistenza resta morbida e le uova non bruciano.',
+    ingredients: [
+      { name: 'Uova', quantity: 3, unit: 'pz' },
+      { name: 'Spinaci freschi', quantity: 80, unit: 'g' },
+      { name: 'Parmigiano Reggiano', quantity: 20, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Yogurt greco con noci e cannella',
@@ -43,6 +62,11 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 22,
     netCarbG: 8,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Yogurt greco intero', quantity: 200, unit: 'g' },
+      { name: 'Noci', quantity: 20, unit: 'g' },
+      { name: 'Cannella in polvere', quantity: 1, unit: 'cucchiaino' },
+    ],
   },
   {
     name: 'Avocado toast keto su pane di mandorle',
@@ -55,6 +79,12 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 30,
     netCarbG: 6,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Avocado', quantity: 0.5, unit: 'pz' },
+      { name: 'Pane proteico di mandorle', quantity: 40, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+      { name: 'Limone', quantity: 0.25, unit: 'pz' },
+    ],
   },
   {
     name: 'Uova strapazzate con pancetta',
@@ -67,6 +97,11 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 33,
     netCarbG: 2,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Uova', quantity: 2, unit: 'pz' },
+      { name: 'Pancetta affumicata', quantity: 30, unit: 'g' },
+      { name: 'Burro', quantity: 10, unit: 'g' },
+    ],
   },
   // PRANZO
   {
@@ -80,6 +115,13 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 36,
     netCarbG: 9,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Petto di pollo', quantity: 130, unit: 'g' },
+      { name: 'Avocado', quantity: 0.5, unit: 'pz' },
+      { name: 'Pomodorini ciliegino', quantity: 100, unit: 'g' },
+      { name: 'Insalata mista', quantity: 60, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 2, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Salmone al forno con asparagi',
@@ -92,6 +134,13 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 35,
     netCarbG: 6,
     phases: [1, 2, 3],
+    notesChef: 'Inforna a 200°C per 12-14 minuti, salmone con la pelle verso il basso.',
+    ingredients: [
+      { name: 'Filetto di salmone', quantity: 150, unit: 'g' },
+      { name: 'Asparagi', quantity: 200, unit: 'g' },
+      { name: 'Limone', quantity: 0.5, unit: 'pz' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Bistecca con zucchine grigliate',
@@ -104,6 +153,11 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 38,
     netCarbG: 5,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Tagliata di manzo', quantity: 180, unit: 'g' },
+      { name: 'Zucchine', quantity: 200, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 2, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Insalatona con tonno e olive',
@@ -116,6 +170,13 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 32,
     netCarbG: 7,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: "Tonno sott'olio", quantity: 120, unit: 'g' },
+      { name: 'Insalata mista', quantity: 100, unit: 'g' },
+      { name: 'Olive nere', quantity: 30, unit: 'g' },
+      { name: 'Capperi sotto sale', quantity: 1, unit: 'cucchiaio' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   // SPUNTINO
   {
@@ -129,6 +190,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 13,
     netCarbG: 3,
     phases: [1, 2, 3],
+    ingredients: [{ name: 'Mandorle', quantity: 25, unit: 'g' }],
   },
   {
     name: 'Cubetti di parmigiano',
@@ -141,6 +203,7 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 8,
     netCarbG: 0,
     phases: [1, 2, 3],
+    ingredients: [{ name: 'Parmigiano Reggiano', quantity: 30, unit: 'g' }],
   },
   {
     name: 'Olive verdi marinate',
@@ -153,6 +216,10 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 9,
     netCarbG: 1,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Olive verdi', quantity: 60, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 0.5, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Cetrioli con hummus di zucchine',
@@ -165,6 +232,11 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 8,
     netCarbG: 5,
     phases: [2, 3],
+    ingredients: [
+      { name: 'Cetrioli', quantity: 100, unit: 'g' },
+      { name: 'Zucchine', quantity: 60, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   // CENA
   {
@@ -178,6 +250,15 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 28,
     netCarbG: 7,
     phases: [1, 2, 3],
+    notesChef: 'Cottura 18-20 minuti a 190°C; il cartoccio mantiene il pesce umido.',
+    ingredients: [
+      { name: 'Branzino', quantity: 1, unit: 'pz' },
+      { name: 'Zucchine', quantity: 100, unit: 'g' },
+      { name: 'Carote', quantity: 60, unit: 'g' },
+      { name: 'Pomodorini ciliegino', quantity: 80, unit: 'g' },
+      { name: 'Limone', quantity: 0.5, unit: 'pz' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Polpette di pollo e ricotta',
@@ -190,6 +271,14 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 32,
     netCarbG: 4,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Petto di pollo', quantity: 150, unit: 'g' },
+      { name: 'Ricotta vaccina', quantity: 60, unit: 'g' },
+      { name: 'Parmigiano Reggiano', quantity: 20, unit: 'g' },
+      { name: 'Basilico fresco', quantity: 10, unit: 'g' },
+      { name: 'Uova', quantity: 1, unit: 'pz' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Zuppa di cavolfiore e gorgonzola',
@@ -202,6 +291,12 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 33,
     netCarbG: 9,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Cavolfiore', quantity: 250, unit: 'g' },
+      { name: 'Gorgonzola dolce DOP', quantity: 60, unit: 'g' },
+      { name: 'Burro', quantity: 10, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
   {
     name: 'Tagliata di manzo con rucola e grana',
@@ -214,5 +309,11 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 36,
     netCarbG: 3,
     phases: [1, 2, 3],
+    ingredients: [
+      { name: 'Tagliata di manzo', quantity: 180, unit: 'g' },
+      { name: 'Rucola', quantity: 60, unit: 'g' },
+      { name: 'Grana Padano', quantity: 25, unit: 'g' },
+      { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
   },
 ];

@@ -11,6 +11,7 @@ import { healthRoutes } from './modules/health/health.routes.js';
 import { meRoutes } from './modules/me/me.routes.js';
 import { planRoutes } from './modules/plan/plan.routes.js';
 import { profileRoutes } from './modules/profile/profile.routes.js';
+import { shoppingRoutes } from './modules/shopping/shopping.routes.js';
 import { fastRoutes } from './modules/tracking/fast.routes.js';
 import { weightRoutes } from './modules/tracking/weight.routes.js';
 import { authPlugin } from './plugins/auth.js';
@@ -52,6 +53,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(weightRoutes);
   await app.register(fastRoutes);
   await app.register(planRoutes);
+  await app.register(shoppingRoutes);
 
   if (env.SENTRY_DSN) {
     app.setErrorHandler((err, request, reply) => {

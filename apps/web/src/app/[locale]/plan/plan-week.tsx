@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 
@@ -87,9 +88,16 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
           <span>{t(`meals.${slot.meal}`)}</span>
         </p>
       </header>
-      <p className="font-display text-ink text-lg font-medium leading-tight">
-        {slot.selected?.name ?? t('noRecipe')}
-      </p>
+      {slot.selected ? (
+        <Link
+          href={`/recipes/${slot.selected.id}`}
+          className="font-display text-ink decoration-pomodoro hover:decoration-ink text-lg font-medium leading-tight underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+        >
+          {slot.selected.name}
+        </Link>
+      ) : (
+        <p className="font-display text-ink-soft text-lg italic leading-tight">{t('noRecipe')}</p>
+      )}
       {slot.selected ? (
         <p className="text-ink-soft font-mono text-xs tracking-tight">
           {Math.round(slot.selected.kcal)}{' '}
@@ -109,12 +117,15 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
             <ul className="border-ink/15 mt-3 space-y-2 border-t pt-3">
               {slot.alternatives.map((alt) => (
                 <li key={alt.id} className="flex items-baseline justify-between gap-2">
-                  <span className="font-display text-ink text-sm leading-snug">
+                  <Link
+                    href={`/recipes/${alt.id}`}
+                    className="font-display text-ink hover:text-pomodoro text-sm leading-snug transition-colors"
+                  >
                     {alt.name}{' '}
                     <span className="text-ink-dim font-mono text-[10px]">
                       {Math.round(alt.kcal)} kcal
                     </span>
-                  </span>
+                  </Link>
                   <Button
                     type="button"
                     size="sm"
