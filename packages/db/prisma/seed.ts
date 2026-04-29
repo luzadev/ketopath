@@ -1,12 +1,21 @@
 import { PrismaClient } from '@prisma/client';
 
+import { SEED_RECIPES } from './seed-recipes.js';
+
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  // TODO: dati di seed (utenti demo, ricette base, ecc.) — verranno aggiunti
-  // quando le entità relative saranno modellate.
+  // Idempotente: createMany con skipDuplicates su nome (unique implicit nope —
+  // usiamo upsert per ognuna).
+  let inserted = 0;
+  for (const r of SEED_RECIPES) {
+    const existing = await prisma.recipe.findFirst({ where: { name: r.name } });
+    if (existing) continue;
+    await prisma.recipe.create({ data: r });
+    inserted++;
+  }
   // eslint-disable-next-line no-console
-  console.info('[seed] nothing to seed yet');
+  console.info(`[seed] recipes inserted: ${inserted} (catalog total ${SEED_RECIPES.length})`);
 }
 
 main()
