@@ -10,5 +10,10 @@ pnpm-lock.yaml
 *.docx
 *.pdf
 
+# Playwright artifacts
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+
 # User-authored project doc — preserve exact formatting
 CLAUDE.md
