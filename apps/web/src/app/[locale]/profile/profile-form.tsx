@@ -58,11 +58,12 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       <div className="grid grid-cols-2 gap-4">
-        <Field label={t('age')} error={errors.age?.message}>
-          <Input type="number" inputMode="numeric" {...register('age')} />
+        <Field id="age" label={t('age')} error={errors.age?.message}>
+          <Input id="age" type="number" inputMode="numeric" {...register('age')} />
         </Field>
-        <Field label={t('gender')} error={errors.gender?.message}>
+        <Field id="gender" label={t('gender')} error={errors.gender?.message}>
           <select
+            id="gender"
             className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             {...register('gender')}
           >
@@ -76,24 +77,47 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
         </Field>
       </div>
 
-      <Field label={t('heightCm')} error={errors.heightCm?.message}>
-        <Input type="number" inputMode="numeric" {...register('heightCm')} />
+      <Field id="heightCm" label={t('heightCm')} error={errors.heightCm?.message}>
+        <Input id="heightCm" type="number" inputMode="numeric" {...register('heightCm')} />
       </Field>
 
       <div className="grid grid-cols-3 gap-4">
-        <Field label={t('weightStartKg')} error={errors.weightStartKg?.message}>
-          <Input type="number" step="0.1" inputMode="decimal" {...register('weightStartKg')} />
+        <Field id="weightStartKg" label={t('weightStartKg')} error={errors.weightStartKg?.message}>
+          <Input
+            id="weightStartKg"
+            type="number"
+            step="0.1"
+            inputMode="decimal"
+            {...register('weightStartKg')}
+          />
         </Field>
-        <Field label={t('weightCurrentKg')} error={errors.weightCurrentKg?.message}>
-          <Input type="number" step="0.1" inputMode="decimal" {...register('weightCurrentKg')} />
+        <Field
+          id="weightCurrentKg"
+          label={t('weightCurrentKg')}
+          error={errors.weightCurrentKg?.message}
+        >
+          <Input
+            id="weightCurrentKg"
+            type="number"
+            step="0.1"
+            inputMode="decimal"
+            {...register('weightCurrentKg')}
+          />
         </Field>
-        <Field label={t('weightGoalKg')} error={errors.weightGoalKg?.message}>
-          <Input type="number" step="0.1" inputMode="decimal" {...register('weightGoalKg')} />
+        <Field id="weightGoalKg" label={t('weightGoalKg')} error={errors.weightGoalKg?.message}>
+          <Input
+            id="weightGoalKg"
+            type="number"
+            step="0.1"
+            inputMode="decimal"
+            {...register('weightGoalKg')}
+          />
         </Field>
       </div>
 
-      <Field label={t('activityLevel')} error={errors.activityLevel?.message}>
+      <Field id="activityLevel" label={t('activityLevel')} error={errors.activityLevel?.message}>
         <select
+          id="activityLevel"
           className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           {...register('activityLevel')}
         >
@@ -139,17 +163,19 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
 }
 
 function Field({
+  id,
   label,
   error,
   children,
 }: {
+  id: string;
   label: string;
   error?: string | undefined;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}</Label>
       {children}
       {error ? <p className="text-destructive text-xs">{error}</p> : null}
     </div>
