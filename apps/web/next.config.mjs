@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
@@ -20,4 +21,17 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+const isSentryEnabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+const sentryWebpackPluginOptions = {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  // Source map upload requires SENTRY_AUTH_TOKEN — disabled until configured.
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+};
+
+const composed = withNextIntl(nextConfig);
+
+export default isSentryEnabled ? withSentryConfig(composed, sentryWebpackPluginOptions) : composed;

@@ -5,6 +5,7 @@ import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import { env } from './config/env.js';
+import { Sentry } from './lib/sentry.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { meRoutes } from './modules/me/me.routes.js';
@@ -45,6 +46,20 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(dbRoutes);
   await app.register(meRoutes);
   await app.register(profileRoutes);
+
+  if (env.SENTRY_DSN) {
+    app.setErrorHandler((err, request, reply) => {
+      if (request.user) {
+        Sentry.captureException(err, {
+          user: { id: request.user.id, email: request.user.email },
+        });
+      } else {
+        Sentry.captureException(err);
+      }
+      app.log.error({ err }, 'unhandled error');
+      reply.send(err);
+    });
+  }
 
   return app;
 }

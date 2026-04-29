@@ -28,17 +28,19 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
     formState: { errors, isSubmitting },
   } = useForm<ProfileInput>({
     resolver: zodResolver(profileInputSchema),
-    defaultValues: initial
+    ...(initial
       ? {
-          age: initial.age,
-          gender: initial.gender,
-          heightCm: initial.heightCm,
-          weightStartKg: initial.weightStartKg,
-          weightCurrentKg: initial.weightCurrentKg,
-          weightGoalKg: initial.weightGoalKg,
-          activityLevel: initial.activityLevel,
+          defaultValues: {
+            age: initial.age,
+            gender: initial.gender,
+            heightCm: initial.heightCm,
+            weightStartKg: initial.weightStartKg,
+            weightCurrentKg: initial.weightCurrentKg,
+            weightGoalKg: initial.weightGoalKg,
+            activityLevel: initial.activityLevel,
+          },
         }
-      : undefined,
+      : {}),
   });
 
   const onSubmit = handleSubmit(async (input) => {
@@ -142,7 +144,7 @@ function Field({
   children,
 }: {
   label: string;
-  error?: string;
+  error?: string | undefined;
   children: React.ReactNode;
 }) {
   return (

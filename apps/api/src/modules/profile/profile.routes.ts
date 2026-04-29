@@ -78,7 +78,7 @@ export const profileRoutes: FastifyPluginAsync = async (fastify) => {
         weightCurrentKg: data.weightCurrentKg,
         weightGoalKg: data.weightGoalKg,
         activityLevel: data.activityLevel,
-        targetDate: data.targetDate,
+        targetDate: data.targetDate ?? null,
       },
       update: {
         age: data.age,
