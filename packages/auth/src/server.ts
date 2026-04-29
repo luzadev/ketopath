@@ -6,15 +6,20 @@ import { readAuthEnv } from './env.js';
 
 const env = readAuthEnv();
 
-const googleProvider =
-  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-    ? {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-        },
-      }
-    : undefined;
+const isGoogleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+
+export const enabledSocialProviders = isGoogleConfigured ? (['google'] as const) : ([] as const);
+
+export type SocialProvider = (typeof enabledSocialProviders)[number];
+
+const googleProvider = isGoogleConfigured
+  ? {
+      google: {
+        clientId: env.GOOGLE_CLIENT_ID!,
+        clientSecret: env.GOOGLE_CLIENT_SECRET!,
+      },
+    }
+  : undefined;
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),

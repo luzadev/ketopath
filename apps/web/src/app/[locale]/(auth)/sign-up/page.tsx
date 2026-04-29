@@ -1,3 +1,4 @@
+import { enabledSocialProviders } from '@ketopath/auth';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
@@ -13,7 +14,7 @@ export default function SignUpPage({ params: { locale } }: { params: { locale: s
         <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-sm text-slate-600">{t('subtitle')}</p>
       </header>
-      <SignUpForm />
+      <SignUpForm googleEnabled={enabledSocialProviders.includes('google')} />
       <p className="text-xs text-slate-500">{t('disclaimer')}</p>
     </main>
   );

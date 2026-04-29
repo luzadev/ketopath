@@ -7,7 +7,7 @@ import { useState, type FormEvent } from 'react';
 
 import { authClient } from '@/lib/auth-client';
 
-export function SignUpForm() {
+export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   const t = useTranslations('Auth.SignUp');
   const router = useRouter();
   const [name, setName] = useState('');
@@ -95,23 +95,27 @@ export function SignUpForm() {
           {pending ? t('submitting') : t('submit')}
         </button>
       </form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-white px-2 text-xs uppercase tracking-wider text-slate-500">
-            {t('or')}
-          </span>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={handleGoogle}
-        className="w-full rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-      >
-        {t('google')}
-      </button>
+      {googleEnabled ? (
+        <>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-2 text-xs uppercase tracking-wider text-slate-500">
+                {t('or')}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            className="w-full rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            {t('google')}
+          </button>
+        </>
+      ) : null}
       <p className="text-center text-sm text-slate-600">
         {t.rich('haveAccount', {
           link: (chunks) => (
