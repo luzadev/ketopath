@@ -1,4 +1,5 @@
 export { prisma } from './client.js';
+export type { ExtendedPrismaClient } from './client.js';
 export {
   ActivityLevel,
   CookingTime,
@@ -14,11 +15,13 @@ export {
 } from '@prisma/client';
 export type {
   Account,
+  DeviceToken,
   FastEvent,
   Ingredient,
   MealPlan,
   MealSlot,
   Preferences,
+  PrismaClient,
   Profile,
   Recipe,
   RecipeIngredient,

@@ -7,6 +7,8 @@ import { Masthead } from '@/components/masthead';
 import { getServerSession } from '@/lib/auth';
 
 import { fetchProfile } from './actions';
+import { fetchNotificationConfig } from './notifications-actions';
+import { NotificationsPanel } from './notifications-panel';
 import { ProfileForm } from './profile-form';
 
 export default async function ProfilePage({ params: { locale } }: { params: { locale: string } }) {
@@ -21,14 +23,17 @@ export default async function ProfilePage({ params: { locale } }: { params: { lo
   if (!user?.disclaimerAcceptedAt) redirect('/welcome');
 
   const profile = (await fetchProfile()) as Parameters<typeof ProfileForm>[0]['initial'];
+  const notifications = await fetchNotificationConfig();
 
-  return <ProfilePageContent initial={profile} />;
+  return <ProfilePageContent initial={profile} notifications={notifications} />;
 }
 
 function ProfilePageContent({
   initial,
+  notifications,
 }: {
   initial: Parameters<typeof ProfileForm>[0]['initial'];
+  notifications: Awaited<ReturnType<typeof fetchNotificationConfig>>;
 }) {
   const t = useTranslations('Profile');
 
@@ -49,6 +54,12 @@ function ProfilePageContent({
 
         <div className="animate-fade-up [animation-delay:300ms]">
           <ProfileForm initial={initial} />
+        </div>
+
+        <div className="rule animate-rule-in my-16 [animation-delay:480ms]" />
+
+        <div className="animate-fade-up [animation-delay:540ms]">
+          <NotificationsPanel initial={notifications} />
         </div>
       </main>
     </div>

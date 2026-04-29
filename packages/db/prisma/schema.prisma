@@ -96,6 +96,7 @@ model User {
   weightEntries WeightEntry[]
   fastEvents    FastEvent[]
   mealPlans     MealPlan[]
+  deviceTokens  DeviceToken[]
 
   @@map("users")
 }
@@ -317,6 +318,31 @@ model MealPlan {
   @@unique([userId, weekStart])
   @@index([userId, weekStart])
   @@map("meal_plans")
+}
+
+// PRD §5.6 — token di un dispositivo registrato per ricevere push.
+// Il modello è agnostico rispetto alla piattaforma per facilitare l'estensione
+// a iOS/Android (Expo/APNs/FCM) in futuro: vedi ADR 0003.
+//
+// `platform` è 'web' | 'ios' | 'android'. Per web valorizziamo endpoint+p256dh+auth;
+// per iOS/Android valorizziamo `token` (device token nativo o Expo push token).
+model DeviceToken {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  platform   String
+  endpoint   String?
+  p256dh     String?
+  auth       String?
+  token      String?
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+  @@map("device_tokens")
 }
 
 model MealSlot {

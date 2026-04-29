@@ -4,9 +4,15 @@
 import './lib/sentry.js';
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
+import { startNotificationScheduler } from './modules/notifications/scheduler.js';
 
 async function start(): Promise<void> {
   const app = await buildApp();
+
+  const cronTask = startNotificationScheduler(app.prisma, app.log);
+  app.addHook('onClose', async () => {
+    cronTask?.stop();
+  });
 
   try {
     await app.listen({ port: env.PORT, host: env.HOST });

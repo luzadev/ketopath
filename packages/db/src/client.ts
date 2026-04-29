@@ -17,3 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export const prisma = baseClient.$extends(fieldEncryptionExtension());
+
+// Tipo del client esteso (post-$extends), utile per chi consuma `app.prisma`
+// fuori dai route handler (es. scheduler).
+export type ExtendedPrismaClient = typeof prisma;

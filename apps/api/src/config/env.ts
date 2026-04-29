@@ -18,6 +18,12 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
   SENTRY_DSN: z.string().url().optional(),
+  // PRD §5.6 — Web Push (VAPID). Tutte e tre opzionali: se mancano, lo
+  // scheduler delle notifiche resta disattivo e gli endpoint /me/device-tokens
+  // rispondono 503. Vedi ADR 0003.
+  VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+  VAPID_SUBJECT: z.string().min(1).optional(), // es. mailto:hello@ketopath.app
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -9,6 +9,7 @@ import { Sentry } from './lib/sentry.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { meRoutes } from './modules/me/me.routes.js';
+import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { planRoutes } from './modules/plan/plan.routes.js';
 import { profileRoutes } from './modules/profile/profile.routes.js';
 import { shoppingRoutes } from './modules/shopping/shopping.routes.js';
@@ -54,6 +55,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(fastRoutes);
   await app.register(planRoutes);
   await app.register(shoppingRoutes);
+  await app.register(notificationsRoutes);
 
   if (env.SENTRY_DSN) {
     app.setErrorHandler((err, request, reply) => {
