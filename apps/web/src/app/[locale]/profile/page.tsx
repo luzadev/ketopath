@@ -7,6 +7,7 @@ import { Masthead } from '@/components/masthead';
 import { getServerSession } from '@/lib/auth';
 
 import { fetchProfile } from './actions';
+import { DataPanel } from './data-panel';
 import { fetchNotificationConfig } from './notifications-actions';
 import { NotificationsPanel } from './notifications-panel';
 import { fetchPreferences } from './preferences-actions';
@@ -73,6 +74,12 @@ function ProfilePageContent({
 
         <div className="animate-fade-up [animation-delay:660ms]">
           <NotificationsPanel initial={notifications} />
+        </div>
+
+        <div className="rule animate-rule-in my-16 [animation-delay:780ms]" />
+
+        <div className="animate-fade-up [animation-delay:840ms]">
+          <DataPanel />
         </div>
       </main>
     </div>

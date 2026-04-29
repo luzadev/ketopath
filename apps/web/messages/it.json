@@ -571,6 +571,26 @@
       "LIGHT": "Leggero · sport 1–3 volte / settimana",
       "MODERATE": "Moderato · sport 3–5 volte / settimana",
       "INTENSE": "Intenso · sport 6+ volte / settimana"
+    },
+    "working": "Attendere…",
+    "dataEyebrow": "I tuoi dati (GDPR)",
+    "dataTitle": "I tuoi diritti sui dati personali",
+    "dataSubtitle": "Puoi scaricare in qualsiasi momento una copia completa dei tuoi dati o eliminare l'account. Le richieste sono evase immediatamente.",
+    "dataExportEyebrow": "Esporta",
+    "dataExportDescription": "Scarica un file JSON con profilo, preferenze, pesate, sessioni di digiuno, piani e check-in.",
+    "dataExportAction": "Esporta i miei dati",
+    "dataDeleteEyebrow": "Elimina account",
+    "dataDeleteDescription": "Cancellazione completa e irreversibile di tutti i tuoi dati. Niente backup, niente recupero.",
+    "dataDeleteAction": "Elimina account",
+    "dataDeleteWarning": "Questa azione è irreversibile. Conferma con la tua password per procedere.",
+    "dataDeletePasswordPlaceholder": "La tua password",
+    "dataDeleteConfirm": "Elimina definitivamente",
+    "dataDeleteCancel": "Annulla",
+    "dataDeleteErrors": {
+      "password_required": "Inserisci la tua password.",
+      "invalid_password": "Password non corretta.",
+      "email_required": "Email assente sul tuo account.",
+      "api_error": "Errore di rete. Riprova fra poco."
     }
   }
 }

@@ -42,6 +42,21 @@ export async function fetchProfile(): Promise<unknown | null> {
   return data.profile;
 }
 
+export async function deleteAccount(
+  password: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const cookie = headers().get('cookie') ?? '';
+  const res = await fetch(`${API_URL}/me`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', cookie },
+    body: JSON.stringify({ password }),
+    cache: 'no-store',
+  });
+  if (res.status === 204) return { ok: true };
+  const body = (await res.json().catch(() => ({}))) as { error?: string };
+  return { ok: false, error: body.error ?? `api_error_${res.status}` };
+}
+
 export type SaveConditionsResult = { ok: true } | { ok: false; error: string };
 
 export async function saveConditions(conditions: readonly string[]): Promise<SaveConditionsResult> {

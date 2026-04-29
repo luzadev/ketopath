@@ -8,6 +8,7 @@ import { env } from './config/env.js';
 import { Sentry } from './lib/sentry.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { gdprRoutes } from './modules/me/gdpr.routes.js';
 import { meRoutes } from './modules/me/me.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { planExportRoutes } from './modules/plan/export.routes.js';
@@ -54,6 +55,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(dbRoutes);
   await app.register(meRoutes);
+  await app.register(gdprRoutes);
   await app.register(profileRoutes);
   await app.register(preferencesRoutes);
   await app.register(weightRoutes);
