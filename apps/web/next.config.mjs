@@ -5,7 +5,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@ketopath/shared', '@ketopath/ui'],
+  transpilePackages: ['@ketopath/auth', '@ketopath/shared', '@ketopath/ui'],
   experimental: {
     typedRoutes: true,
   },

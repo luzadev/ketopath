@@ -1,0 +1,6 @@
+import { auth } from '@ketopath/auth';
+import { headers } from 'next/headers';
+
+export async function getServerSession() {
+  return auth.api.getSession({ headers: headers() });
+}
