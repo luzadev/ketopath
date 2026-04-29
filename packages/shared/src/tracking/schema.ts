@@ -20,6 +20,18 @@ const measurementsSchema = z
   })
   .strict();
 
+// PRD §5.2 — check-in lampo quotidiano. Form 10-secondi: solo soggettivi.
+export const dailyCheckInInputSchema = z.object({
+  date: z.coerce.date(),
+  energy: z.coerce.number().int().min(1).max(10).optional(),
+  sleep: z.coerce.number().int().min(1).max(10).optional(),
+  hunger: z.coerce.number().int().min(1).max(10).optional(),
+  mood: z.coerce.number().int().min(1).max(10).optional(),
+  notes: z.string().max(500).optional(),
+});
+
+export type DailyCheckInInput = z.input<typeof dailyCheckInInputSchema>;
+
 export const weightEntryInputSchema = z.object({
   date: z.coerce.date(),
   weightKg: z.coerce.number().min(35).max(300),

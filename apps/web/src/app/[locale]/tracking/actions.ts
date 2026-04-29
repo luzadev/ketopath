@@ -61,3 +61,47 @@ export async function saveWeightEntry(input: WeightEntryInput): Promise<SaveResu
   revalidatePath('/tracking');
   return { ok: true };
 }
+
+export interface DailyCheckInRow {
+  id: string;
+  date: string;
+  energy: number | null;
+  sleep: number | null;
+  hunger: number | null;
+  mood: number | null;
+  notes: string | null;
+}
+
+export async function fetchTodayCheckIn(): Promise<DailyCheckInRow | null> {
+  const res = await fetch(`${API_URL}/me/check-ins/today`, {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { item: DailyCheckInRow | null };
+  return data.item;
+}
+
+export interface CheckInInput {
+  energy?: number;
+  sleep?: number;
+  hunger?: number;
+  mood?: number;
+  notes?: string;
+}
+
+export async function saveTodayCheckIn(
+  input: CheckInInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const res = await fetch(`${API_URL}/me/check-ins`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', cookie: cookieHeader() },
+    body: JSON.stringify({ ...input, date: today.toISOString() }),
+    cache: 'no-store',
+  });
+  if (!res.ok) return { ok: false, error: `api_error_${res.status}` };
+  revalidatePath('/tracking');
+  return { ok: true };
+}

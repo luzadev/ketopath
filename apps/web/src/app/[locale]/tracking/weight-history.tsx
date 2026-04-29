@@ -1,3 +1,4 @@
+import { linearWeightTrend, projectGoalDate } from '@ketopath/shared';
 import { useTranslations } from 'next-intl';
 
 import type { WeightEntryRow } from './actions';
@@ -57,7 +58,19 @@ function Sparkline({ values, width = 280, height = 64 }: SparkProps) {
   );
 }
 
-export function WeightHistory({ entries }: { entries: WeightEntryRow[] }) {
+const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+export function WeightHistory({
+  entries,
+  goalKg,
+}: {
+  entries: WeightEntryRow[];
+  goalKg?: number | null;
+}) {
   const t = useTranslations('Tracking');
   if (entries.length === 0) {
     return (
@@ -73,6 +86,18 @@ export function WeightHistory({ entries }: { entries: WeightEntryRow[] }) {
   const oldest = entries[entries.length - 1]!;
   const delta = newest.weightKg - oldest.weightKg;
 
+  const trend = linearWeightTrend(
+    [...entries].reverse().map((e) => ({ date: e.date, weightKg: e.weightKg })),
+  );
+  const projectedDate =
+    trend && goalKg != null
+      ? projectGoalDate({
+          currentKg: newest.weightKg,
+          goalKg,
+          slopeKgPerWeek: trend.slopeKgPerWeek,
+        })
+      : null;
+
   return (
     <div className="space-y-8">
       <div>
@@ -83,7 +108,7 @@ export function WeightHistory({ entries }: { entries: WeightEntryRow[] }) {
         </div>
       </div>
 
-      <div className="border-ink/10 grid grid-cols-2 gap-6 border-y py-5">
+      <div className="border-ink/10 grid grid-cols-2 gap-6 border-y py-5 sm:grid-cols-3">
         <div>
           <p className="editorial-eyebrow">{t('current')}</p>
           <p className="text-ink mt-2 font-mono text-3xl font-medium leading-none tracking-tight">
@@ -103,7 +128,31 @@ export function WeightHistory({ entries }: { entries: WeightEntryRow[] }) {
             <span className="font-display text-ink-soft ml-1 text-xs italic">kg</span>
           </p>
         </div>
+        {trend && trend.n >= 2 ? (
+          <div>
+            <p className="editorial-eyebrow">{t('weeklyTrend')}</p>
+            <p
+              className={`mt-2 font-mono text-3xl font-medium leading-none tracking-tight ${
+                trend.slopeKgPerWeek < 0
+                  ? 'text-oliva'
+                  : trend.slopeKgPerWeek > 0
+                    ? 'text-pomodoro'
+                    : 'text-ink'
+              }`}
+            >
+              {trend.slopeKgPerWeek > 0 ? '+' : ''}
+              {trend.slopeKgPerWeek.toFixed(2)}
+              <span className="font-display text-ink-soft ml-1 text-xs italic">kg/sett</span>
+            </p>
+          </div>
+        ) : null}
       </div>
+
+      {projectedDate && goalKg != null ? (
+        <p className="font-display text-ink-soft text-base italic leading-snug">
+          {t('projection', { kg: goalKg.toFixed(1), date: ITALIAN_DATE.format(projectedDate) })}
+        </p>
+      ) : null}
 
       <ul className="space-y-3">
         {entries.slice(0, 8).map((e) => (

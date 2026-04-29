@@ -66,6 +66,7 @@ export function ProfileForm({
               ? { targetWeeklyLossKg: initial.targetWeeklyLossKg }
               : {}),
             ...(initial.dietHistory ? { dietHistory: initial.dietHistory } : {}),
+            ...(initial.alertWeightKg != null ? { alertWeightKg: initial.alertWeightKg } : {}),
           },
         }
       : {}),
@@ -253,6 +254,31 @@ export function ProfileForm({
                 </FormControl>
                 <p className="font-display text-ink-soft text-sm italic leading-snug">
                   {t('targetWeeklyLossKgHint')}
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="alertWeightKg"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>{t('alertWeightKg')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min={35}
+                    max={300}
+                    inputMode="decimal"
+                    {...field}
+                    value={(field.value as number | undefined) ?? ''}
+                  />
+                </FormControl>
+                <p className="font-display text-ink-soft text-sm italic leading-snug">
+                  {t('alertWeightKgHint')}
                 </p>
                 <FormMessage />
               </FormItem>

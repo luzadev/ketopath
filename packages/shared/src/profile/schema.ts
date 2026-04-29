@@ -27,6 +27,9 @@ export const profileInputSchema = z.object({
   hipsCm: z.coerce.number().min(40).max(200).optional(),
   // Storia delle diete restrittive precedenti (vedi diet-history.ts).
   dietHistory: z.enum(DIET_HISTORIES).optional(),
+  // PRD §5.2 — soglia di allarme peso (kg). Tipicamente posta 2-3 kg sopra
+  // il peso obiettivo per intervenire prima del recupero.
+  alertWeightKg: z.coerce.number().min(35).max(300).optional(),
 });
 
 export type ProfileInput = z.input<typeof profileInputSchema>;

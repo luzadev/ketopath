@@ -187,7 +187,27 @@
     "saved": "Registrato.",
     "current": "Peso attuale",
     "delta": "Variazione",
-    "emptyHistory": "Nessuna rilevazione registrata. Inserisci la prima a destra: la tendenza apparirà dopo due o tre pesate."
+    "emptyHistory": "Nessuna rilevazione registrata. Inserisci la prima a destra: la tendenza apparirà dopo due o tre pesate.",
+    "weeklyTrend": "Trend settimanale",
+    "projection": "Al ritmo attuale raggiungerai {kg} kg il {date}.",
+    "alertEyebrow": "Soglia di allarme",
+    "alertMessage": "Il tuo peso è {current} kg, sopra la soglia di {threshold} kg che hai impostato.",
+    "alertHint": "Suggerimento: una settimana di riparazione — torna al deficit di Fase 1, idratazione alta, sonno regolare. Senza colpa: tornare in carreggiata è normale.",
+    "measurementsHelpToggle": "Come misurare bene?",
+    "measurementGuides": {
+      "waist": "Misura nel punto più stretto del busto, sopra l'ombelico, espirando senza forzare.",
+      "hips": "Nel punto più sporgente del bacino/glutei, in piedi e con i piedi uniti.",
+      "thigh": "Coscia dominante, a metà tra inguine e ginocchio, gamba leggermente flessa.",
+      "arm": "Braccio dominante, a metà tra spalla e gomito, braccio rilassato lungo il fianco.",
+      "tip": "Misura sempre alla stessa ora, possibilmente al mattino e con lo stesso metro a nastro morbido."
+    },
+    "checkInEyebrow": "Check-in di oggi",
+    "checkInTitle": "Come ti senti oggi? Pochi secondi, una traccia nel tempo.",
+    "checkInSave": "Registra check-in",
+    "checkInUpdate": "Aggiorna check-in",
+    "checkInSaved": "Salvato.",
+    "checkInAlreadyDone": "Già compilato",
+    "mood": "Umore"
   },
   "Onboarding": {
     "title": "Configura il tuo percorso",
@@ -516,6 +536,8 @@
     "hipsCm": "Fianchi",
     "targetWeeklyLossKg": "Velocità di calo (kg/settimana)",
     "targetWeeklyLossKgHint": "Suggerito: 0.4–0.7 kg/settimana. Oltre 1% del peso corporeo è considerato troppo aggressivo.",
+    "alertWeightKg": "Soglia di allarme peso (kg)",
+    "alertWeightKgHint": "Quando ci risali, KetoPath ti suggerisce una settimana di riparazione. Tipicamente 2-3 kg sopra l'obiettivo.",
     "dietHistory": "Storia delle diete precedenti",
     "dietHistoryHint": "Diete restrittive ripetute (yo-yo) abbassano il metabolismo basale del 5-15%. Indicarcelo ci serve a calibrare il deficit con prudenza.",
     "dietHistoryLabel": {

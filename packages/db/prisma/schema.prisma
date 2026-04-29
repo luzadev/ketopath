@@ -100,6 +100,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   weightEntries WeightEntry[]
+  dailyCheckIns DailyCheckIn[]
   fastEvents    FastEvent[]
   mealPlans     MealPlan[]
   deviceTokens  DeviceToken[]
@@ -187,6 +188,10 @@ model Profile {
   // PRD §5.1 — % grasso corporeo stimata (US Navy) per BMR Katch-McArdle.
   /// @encrypted
   bodyFatPct      String?       @map("body_fat_pct")
+  // PRD §5.2 — soglia di allarme peso. Quando il peso corrente la supera,
+  // mostriamo un banner di "settimana di riparazione" in /tracking.
+  /// @encrypted
+  alertWeightKg   String?       @map("alert_weight_kg")
   // PRD §5.1 — storia delle diete restrittive precedenti, per stimare
   // l'adattamento metabolico (Fothergill 2016, Rosenbaum 2008). Categoriale:
   // NONE / SOME / EXTENSIVE / SEVERE. Cifrato perché può alludere a
@@ -228,6 +233,29 @@ model Preferences {
 
 // PRD §5.2 — pesata settimanale, misure, indicatori soggettivi.
 // I campi sanitari sono cifrati at-rest (ADR 0002).
+// PRD §5.2 — check-in lampo quotidiano (10s): solo indicatori soggettivi.
+// Distinto da WeightEntry (settimanale, con peso e misure).
+model DailyCheckIn {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  date      DateTime @db.Date
+  energy    Int? // 1..10
+  sleep     Int? // 1..10
+  hunger    Int? // 1..10
+  mood      Int? // 1..10
+  /// @encrypted
+  notes     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("daily_check_ins")
+}
+
 model WeightEntry {
   id           String   @id @default(cuid())
   userId       String   @map("user_id")

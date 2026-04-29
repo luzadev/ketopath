@@ -28,6 +28,7 @@ function serialize(
     targetWeeklyLossKg: number | null;
     medicalConditions: string | null;
     bodyFatPct: string | null;
+    alertWeightKg: string | null;
     dietHistory: string | null;
     currentPhase: string;
   } | null,
@@ -56,6 +57,7 @@ function serialize(
     targetWeeklyLossKg: profile.targetWeeklyLossKg,
     medicalConditions: parseConditions(profile.medicalConditions),
     bodyFatPct,
+    alertWeightKg: profile.alertWeightKg ? Number(profile.alertWeightKg) : null,
     dietHistory: profile.dietHistory,
     currentPhase: profile.currentPhase,
     derived: {
@@ -130,6 +132,7 @@ export const profileRoutes: FastifyPluginAsync = async (fastify) => {
         targetWeeklyLossKg: data.targetWeeklyLossKg ?? null,
         medicalConditions: conditionsJson,
         dietHistory: data.dietHistory ?? null,
+        alertWeightKg: data.alertWeightKg != null ? String(data.alertWeightKg) : null,
         bodyFatPct,
       },
       update: {
@@ -144,6 +147,7 @@ export const profileRoutes: FastifyPluginAsync = async (fastify) => {
         targetWeeklyLossKg: data.targetWeeklyLossKg ?? null,
         medicalConditions: conditionsJson,
         dietHistory: data.dietHistory ?? null,
+        alertWeightKg: data.alertWeightKg != null ? String(data.alertWeightKg) : null,
         // Se l'utente ricalcola con misure nuove, sovrascriviamo; altrimenti
         // lasciamo il valore precedente.
         ...(bodyFatPct != null ? { bodyFatPct } : {}),

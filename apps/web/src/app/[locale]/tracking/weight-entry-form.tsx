@@ -91,7 +91,37 @@ export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
         </div>
 
         <div className="space-y-6">
-          <p className="editorial-eyebrow">{t('measurements')}</p>
+          <div className="flex items-baseline justify-between gap-4">
+            <p className="editorial-eyebrow">{t('measurements')}</p>
+            <details className="group">
+              <summary className="text-ink-soft hover:text-ink cursor-pointer list-none font-mono text-[10px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px]">
+                {t('measurementsHelpToggle')}
+              </summary>
+              <div className="border-ink/15 bg-carta-light/40 mt-3 max-w-md border p-4">
+                <ul className="font-display text-ink-soft space-y-3 text-sm leading-relaxed">
+                  <li>
+                    <strong className="text-ink not-italic">{t('waist')}</strong>:{' '}
+                    {t('measurementGuides.waist')}
+                  </li>
+                  <li>
+                    <strong className="text-ink not-italic">{t('hips')}</strong>:{' '}
+                    {t('measurementGuides.hips')}
+                  </li>
+                  <li>
+                    <strong className="text-ink not-italic">{t('thigh')}</strong>:{' '}
+                    {t('measurementGuides.thigh')}
+                  </li>
+                  <li>
+                    <strong className="text-ink not-italic">{t('arm')}</strong>:{' '}
+                    {t('measurementGuides.arm')}
+                  </li>
+                </ul>
+                <p className="font-display text-ink-dim mt-4 text-xs italic leading-snug">
+                  {t('measurementGuides.tip')}
+                </p>
+              </div>
+            </details>
+          </div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
             {(
               [
