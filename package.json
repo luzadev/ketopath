@@ -1,0 +1,48 @@
+{
+  "name": "ketopath",
+  "version": "0.0.0",
+  "private": true,
+  "description": "KetoPath monorepo — web app per la gestione di chetogenica e digiuno intermittente",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.11",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev:web": "pnpm --filter @ketopath/web dev",
+    "dev:api": "pnpm --filter @ketopath/api dev",
+    "build": "pnpm --filter \"./apps/*\" build",
+    "start": "pnpm --filter \"./apps/*\" start",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -b",
+    "test": "pnpm --filter \"./packages/*\" --filter \"./apps/*\" -r --if-present test",
+    "test:e2e": "pnpm --filter @ketopath/web test:e2e",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.5.14",
+    "typescript": "5.4.5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,cjs,mjs}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  }
+}

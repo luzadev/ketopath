@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+dist/
+build/
+.next/
+out/
+.turbo/
+coverage/
+pnpm-lock.yaml
+*.docx
+*.pdf
+
+# User-authored project doc — preserve exact formatting
+CLAUDE.md
