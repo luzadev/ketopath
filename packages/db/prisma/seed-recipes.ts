@@ -1,17 +1,30 @@
-// Seed minimo del catalogo ricette italiane keto/low-carb (PRD §5.1).
-// 16 ricette distribuite su COLAZIONE/PRANZO/SPUNTINO/CENA, fasi 1/2/3.
+// Seed catalogo ricette italiane keto/low-carb (PRD §5.1).
+// 46 ricette distribuite su COLAZIONE/PRANZO/SPUNTINO/CENA, fasi 1/2/3.
 // Macros stimati per porzione singola.
 //
 // Ogni ricetta dichiara una lista di `ingredients` con quantità e unità,
 // usata dal seeder per creare i record `RecipeIngredient`. Il `name` deve
 // corrispondere esattamente a un ingrediente di `seed-ingredients.ts`.
+//
+// `variants` espone alternative testuali alla ricetta (es. versione
+// vegetariana o senza lattosio) — vengono salvate in Recipe.variants.
+// `substitutes` su un singolo ingrediente sovrascrive la mappa default
+// (DEFAULT_SUBSTITUTES_BY_INGREDIENT) per quella ricetta specifica.
 
 import type { Difficulty, MealCategory } from '@prisma/client';
+
+export interface RecipeVariant {
+  name: string;
+  description: string;
+  kcalDelta?: number;
+}
 
 export interface SeedRecipeIngredient {
   name: string;
   quantity: number;
   unit: string;
+  /** Se omesso, viene preso da DEFAULT_SUBSTITUTES_BY_INGREDIENT. */
+  substitutes?: string[];
 }
 
 export interface SeedRecipe {
@@ -27,7 +40,80 @@ export interface SeedRecipe {
   phases: number[];
   notesChef?: string;
   ingredients: SeedRecipeIngredient[];
+  variants?: RecipeVariant[];
 }
+
+// Sostituzioni "ragionevoli" per ingrediente, riusate da tutte le ricette.
+// Il seeder le applica a `RecipeIngredient.substitutes` quando la ricetta
+// non specifica un override esplicito. Riempire qui evita di ripetere le
+// stesse sostituzioni in 46 ricette × N ingredienti.
+export const DEFAULT_SUBSTITUTES_BY_INGREDIENT: Record<string, string[]> = {
+  // Pesci → interscambiabili, attenzione al gusto
+  'Filetto di salmone': ['trota salmonata', 'sgombro fresco', 'tonno fresco'],
+  Sgombro: ['salmone', 'sardine fresche', 'palamita'],
+  Branzino: ['orata', 'spigola', 'dentice'],
+  "Tonno sott'olio": ['sgombro al naturale', 'salmone affumicato', 'pollo lessato'],
+  Gamberi: ['mazzancolle', 'scampi puliti', 'calamari a strisce'],
+  // Carni
+  'Petto di pollo': ['petto di tacchino', 'fesa di pollo bio', 'sovracoscia disossata'],
+  'Petto di tacchino': ['petto di pollo', 'lonza di maiale magra'],
+  'Tagliata di manzo': ['tagliata di scottona', 'controfiletto', 'flank steak'],
+  'Pancetta affumicata': ['guanciale', 'speck a cubetti', 'pancetta dolce'],
+  'Prosciutto crudo': ['speck stagionato', 'culatello', 'coppa stagionata'],
+  Bresaola: ['carpaccio di manzo', 'roastbeef sottile', "tonno sott'olio"],
+  // Latticini → versioni lactose-free quando possibile
+  'Yogurt greco intero': ['skyr intero', 'yogurt di cocco non zuccherato'],
+  'Parmigiano Reggiano': ['Grana Padano', 'pecorino romano stagionato'],
+  'Grana Padano': ['Parmigiano Reggiano', 'pecorino dolce'],
+  'Mozzarella di bufala': ['fiordilatte', 'burrata (porzione ridotta)'],
+  Stracchino: ['robiola', 'crescenza', 'philadelphia'],
+  Mascarpone: ['ricotta intera setacciata', 'cream cheese intero'],
+  Ricotta: ['ricotta di capra', 'fiocchi di latte'],
+  'Ricotta vaccina': ['ricotta di pecora', 'fiocchi di latte', 'cottage cheese'],
+  'Gorgonzola dolce DOP': ['taleggio', 'roquefort', 'fontina'],
+  Burro: ['ghee', 'olio di cocco extravergine'],
+  // Uova / vegetali
+  Uova: ['tofu strapazzato (versione vegana)'],
+  Avocado: ['mezzo avocado piccolo', 'guacamole non zuccherato'],
+  Spinaci: ['bietole', 'cime di rapa', 'lattuga romana saltata'],
+  'Spinaci freschi': ['bietole', 'cime di rapa', 'spinaci surgelati'],
+  'Spinaci surgelati': ['spinaci freschi (porzione doppia)', 'bietole'],
+  Asparagi: ['fagiolini', 'broccoletti', 'puntarelle'],
+  Zucchine: ['cetrioli grandi', 'zucchina chiara', 'finocchi'],
+  'Pomodorini ciliegino': ['pomodori datterini', 'cuore di bue a cubetti'],
+  'Insalata mista': ['valeriana', 'songino', 'rucola e radicchio'],
+  Rucola: ['valeriana', 'spinacino baby'],
+  Cavolfiore: ['broccoli', 'cavolo romanesco'],
+  Broccoli: ['cavolfiore', 'broccoletti'],
+  'Funghi champignon': ['funghi cardoncelli', 'funghi porcini'],
+  Melanzane: ['zucchine', 'peperoni'],
+  Peperoni: ['zucchine', 'pomodori ramati'],
+  Cetrioli: ['sedano croccante', 'finocchi a fettine'],
+  Carote: ['carote viola', 'pastinaca cotta (fase 2+)'],
+  // Frutta
+  'Frutti di bosco misti': ['lamponi', 'mirtilli', 'fragoline di bosco'],
+  Mela: ['pera (porzione ridotta)', 'kiwi'],
+  Pera: ['mela'],
+  Limone: ['lime', 'aceto di mele'],
+  // Frutta secca / semi
+  Mandorle: ['nocciole', 'noci pecan'],
+  Noci: ['mandorle', 'pinoli'],
+  'Semi di chia': ['semi di lino macinati', 'psillio'],
+  'Cocco rapè non zuccherato': ['mandorle a scaglie', 'farina di cocco'],
+  // Condimenti / panetteria
+  'Olio extravergine di oliva': ['olio di avocado', 'olio di sesamo per piatti orientali'],
+  'Olive nere': ['olive di Gaeta', 'olive taggiasche'],
+  'Olive verdi': ['olive di Castelvetrano', 'olive baresane'],
+  'Capperi sotto sale': ["capperi sott'aceto (sgocciolati)", 'olive nere tritate'],
+  'Pane proteico di mandorle': ['cracker di semi keto', 'foglie di lattuga (per wrap)'],
+  'Aceto balsamico': ['aceto di mele', 'glassa di balsamico keto-friendly'],
+  'Cannella in polvere': ['cardamomo', 'noce moscata'],
+  'Basilico fresco': ['mentuccia', 'foglie di prezzemolo'],
+  // Legumi / cereali (fase 2+)
+  'Lenticchie cotte': ['ceci cotti', 'fagioli cannellini'],
+  'Ceci cotti': ['lenticchie cotte', 'fagioli borlotti'],
+  'Quinoa cotta': ['miglio cotto', 'farro perlato cotto'],
+};
 
 export const SEED_RECIPES: SeedRecipe[] = [
   // COLAZIONE
@@ -50,6 +136,18 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Parmigiano Reggiano', quantity: 20, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Versione senza lattosio',
+        description: 'Sostituisci il parmigiano con 30 g di lievito alimentare in scaglie.',
+        kcalDelta: -40,
+      },
+      {
+        name: 'Più saziante',
+        description: 'Aggiungi una fetta di prosciutto crudo a julienne durante la cottura.',
+        kcalDelta: 90,
+      },
+    ],
   },
   {
     name: 'Yogurt greco con noci e cannella',
@@ -66,6 +164,19 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Yogurt greco intero', quantity: 200, unit: 'g' },
       { name: 'Noci', quantity: 20, unit: 'g' },
       { name: 'Cannella in polvere', quantity: 1, unit: 'cucchiaino' },
+    ],
+    variants: [
+      {
+        name: 'Versione vegana',
+        description: 'Yogurt di cocco non zuccherato al posto di quello greco.',
+        kcalDelta: -50,
+      },
+      {
+        name: 'Con frutti di bosco (Fase 2+)',
+        description:
+          'Aggiungi 50 g di mirtilli o lamponi: porta zuccheri naturali ma resta sotto i 12 g di carb netti.',
+        kcalDelta: 25,
+      },
     ],
   },
   {
@@ -102,6 +213,17 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Pancetta affumicata', quantity: 30, unit: 'g' },
       { name: 'Burro', quantity: 10, unit: 'g' },
     ],
+    variants: [
+      {
+        name: 'Senza maiale',
+        description: 'Sostituisci la pancetta con bresaola o tacchino arrosto a striscioline.',
+        kcalDelta: -80,
+      },
+      {
+        name: 'Con verdure',
+        description: 'Aggiungi 50 g di funghi champignon trifolati o pomodorini saltati.',
+      },
+    ],
   },
   // PRANZO
   {
@@ -122,6 +244,18 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Insalata mista', quantity: 60, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 2, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Versione vegetariana',
+        description: 'Pollo sostituito da 100 g di tofu marinato o 2 uova sode.',
+        kcalDelta: -100,
+      },
+      {
+        name: 'Con feta e olive',
+        description: 'Aggiungi 40 g di feta sbriciolata e 8 olive Kalamata: stile mediterraneo.',
+        kcalDelta: 130,
+      },
+    ],
   },
   {
     name: 'Salmone al forno con asparagi',
@@ -141,6 +275,17 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Limone', quantity: 0.5, unit: 'pz' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Versione fredda',
+        description: 'Salmone scottato 2 min per lato e servito tiepido su asparagi crudi sottili.',
+      },
+      {
+        name: 'Sgombro al posto del salmone',
+        description: 'Più economico e ricco di omega-3. Riduci il tempo di cottura a 10 min.',
+        kcalDelta: -10,
+      },
+    ],
   },
   {
     name: 'Bistecca con zucchine grigliate',
@@ -157,6 +302,19 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Tagliata di manzo', quantity: 180, unit: 'g' },
       { name: 'Zucchine', quantity: 200, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 2, unit: 'cucchiaio' },
+    ],
+    variants: [
+      {
+        name: 'Versione tacchino',
+        description:
+          'Petto di tacchino spesso al posto della tagliata: più magro, meno grassi saturi.',
+        kcalDelta: -180,
+      },
+      {
+        name: 'Con melanzane grigliate',
+        description: 'Aggiungi 100 g di melanzane grigliate per più volume e fibra.',
+        kcalDelta: 30,
+      },
     ],
   },
   {
@@ -176,6 +334,17 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Olive nere', quantity: 30, unit: 'g' },
       { name: 'Capperi sotto sale', quantity: 1, unit: 'cucchiaio' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
+    variants: [
+      {
+        name: 'Niçoise',
+        description: 'Aggiungi 1 uovo sodo, 4 fagiolini cotti e una manciata di pomodorini.',
+        kcalDelta: 90,
+      },
+      {
+        name: 'Con sgombro',
+        description: 'Sgombro al naturale al posto del tonno: più ricco di omega-3.',
+      },
     ],
   },
   // SPUNTINO
@@ -259,6 +428,18 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Limone', quantity: 0.5, unit: 'pz' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Mediterranea',
+        description:
+          'Aggiungi 6 olive Kalamata, 1 cucchiaino di capperi e una foglia di alloro nel cartoccio.',
+        kcalDelta: 50,
+      },
+      {
+        name: 'Orata al posto del branzino',
+        description: "Stessa preparazione: l'orata è più dolce e ha carne più morbida.",
+      },
+    ],
   },
   {
     name: 'Polpette di pollo e ricotta',
@@ -278,6 +459,19 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Basilico fresco', quantity: 10, unit: 'g' },
       { name: 'Uova', quantity: 1, unit: 'pz' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
+    variants: [
+      {
+        name: 'In sugo di pomodoro',
+        description: 'Cuoci le polpette nella passata di pomodoro per gli ultimi 10 minuti.',
+        kcalDelta: 40,
+      },
+      {
+        name: 'Versione tacchino e spinaci',
+        description:
+          'Tacchino macinato + 50 g di spinaci surgelati strizzati al posto della ricotta.',
+        kcalDelta: -80,
+      },
     ],
   },
   {
@@ -315,6 +509,18 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Grana Padano', quantity: 25, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Con pomodorini e aceto balsamico',
+        description: 'Aggiungi 80 g di pomodorini e un filo di aceto balsamico (Fase 2+).',
+        kcalDelta: 25,
+      },
+      {
+        name: 'Bresaola al posto della tagliata',
+        description: 'Versione più magra: 100 g di bresaola arrotolata sulla rucola.',
+        kcalDelta: -240,
+      },
+    ],
   },
   // ─── Espansione catalogo ──────────────────────────────────────────────
   // COLAZIONE
@@ -336,6 +542,19 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Cannella in polvere', quantity: 1, unit: 'cucchiaino' },
       { name: 'Burro', quantity: 5, unit: 'g' },
     ],
+    variants: [
+      {
+        name: 'Con farina di mandorle',
+        description: 'Aggiungi 20 g di farina di mandorle per pancake più strutturati.',
+        kcalDelta: 120,
+      },
+      {
+        name: 'Versione vegana',
+        description:
+          'Sostituisci le uova con 2 cucchiai di semi di chia + 60 ml di acqua riposati 10 min, e la ricotta con yogurt di cocco.',
+        kcalDelta: -80,
+      },
+    ],
   },
   {
     name: 'Smoothie verde con avocado e spinaci',
@@ -353,6 +572,19 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Avocado', quantity: 0.5, unit: 'pz' },
       { name: 'Yogurt greco intero', quantity: 100, unit: 'g' },
       { name: 'Semi di chia', quantity: 10, unit: 'g' },
+    ],
+    variants: [
+      {
+        name: 'Versione vegana',
+        description:
+          'Yogurt di cocco al posto del greco; aggiungi 1 cucchiaio di proteine in polvere se serve.',
+        kcalDelta: -30,
+      },
+      {
+        name: 'Con frutti di bosco (Fase 2+)',
+        description: 'Aggiungi 60 g di mirtilli/lamponi: smoothie più gustoso, +12 g carb netti.',
+        kcalDelta: 30,
+      },
     ],
   },
   {
@@ -529,6 +761,18 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Basilico fresco', quantity: 10, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 1.5, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Con avocado',
+        description: 'Aggiungi mezzo avocado a fette: capresotto più nutriente e saziante.',
+        kcalDelta: 120,
+      },
+      {
+        name: 'Con prosciutto crudo',
+        description: 'Avvolgi le fette di mozzarella con prosciutto crudo: più proteine.',
+        kcalDelta: 80,
+      },
+    ],
   },
   {
     name: 'Insalata di gamberi e avocado',
@@ -597,11 +841,24 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 18,
     netCarbG: 22,
     phases: [2, 3],
+    notesChef: 'Disponibile dalla 3ª settimana di Fase 2 (reintroduzione legumi).',
     ingredients: [
       { name: 'Lenticchie cotte', quantity: 130, unit: 'g' },
       { name: "Tonno sott'olio", quantity: 100, unit: 'g' },
       { name: 'Pomodorini ciliegino', quantity: 80, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
+    variants: [
+      {
+        name: 'Con ceci al posto delle lenticchie',
+        description: 'Stessa ricetta con ceci cotti: più cremosa, disponibile dalla settimana 4.',
+        kcalDelta: 50,
+      },
+      {
+        name: 'Con sgombro fresco',
+        description: 'Sgombro al naturale al posto del tonno: profilo lipidico migliore.',
+        kcalDelta: -20,
+      },
     ],
   },
   // SPUNTINO
@@ -739,6 +996,17 @@ export const SEED_RECIPES: SeedRecipe[] = [
       { name: 'Parmigiano Reggiano', quantity: 20, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 2, unit: 'cucchiaio' },
     ],
+    variants: [
+      {
+        name: 'Con gamberi saltati',
+        description: 'Aggiungi 100 g di gamberi saltati in padella: piatto più completo.',
+        kcalDelta: 100,
+      },
+      {
+        name: 'Pesto di rucola',
+        description: 'Sostituisci il basilico con rucola: gusto più deciso, stesso profilo macros.',
+      },
+    ],
   },
   {
     name: 'Pollo al curry con cavolfiore',
@@ -823,12 +1091,25 @@ export const SEED_RECIPES: SeedRecipe[] = [
     fatG: 22,
     netCarbG: 26,
     phases: [3],
+    notesChef: 'Disponibile in mantenimento (Fase 3) o dalla 7ª settimana di Fase 2.',
     ingredients: [
       { name: 'Quinoa cotta', quantity: 100, unit: 'g' },
       { name: 'Petto di pollo', quantity: 130, unit: 'g' },
       { name: 'Peperoni', quantity: 100, unit: 'g' },
       { name: 'Zucchine', quantity: 100, unit: 'g' },
       { name: 'Olio extravergine di oliva', quantity: 1, unit: 'cucchiaio' },
+    ],
+    variants: [
+      {
+        name: 'Versione vegetariana',
+        description: 'Sostituisci il pollo con 80 g di feta + 1 uovo sodo: più mediterranea.',
+        kcalDelta: -30,
+      },
+      {
+        name: 'Con gamberi',
+        description: 'Gamberi al posto del pollo: piatto più estivo e leggero.',
+        kcalDelta: -80,
+      },
     ],
   },
   {

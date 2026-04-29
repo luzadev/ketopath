@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 import { SEED_INGREDIENTS } from './seed-ingredients.js';
-import { SEED_RECIPES } from './seed-recipes.js';
+import { DEFAULT_SUBSTITUTES_BY_INGREDIENT, SEED_RECIPES } from './seed-recipes.js';
 
 const prisma = new PrismaClient();
 
@@ -40,6 +40,7 @@ async function main(): Promise<void> {
   let linksCreated = 0;
   for (const r of SEED_RECIPES) {
     let recipe = await prisma.recipe.findFirst({ where: { name: r.name } });
+    const variantsJson = r.variants ?? [];
     if (!recipe) {
       recipe = await prisma.recipe.create({
         data: {
@@ -54,6 +55,7 @@ async function main(): Promise<void> {
           netCarbG: r.netCarbG,
           phases: r.phases,
           notesChef: r.notesChef ?? null,
+          variants: variantsJson,
         },
       });
       recipesInserted++;
@@ -71,6 +73,7 @@ async function main(): Promise<void> {
           netCarbG: r.netCarbG,
           phases: r.phases,
           notesChef: r.notesChef ?? null,
+          variants: variantsJson,
         },
       });
     }
@@ -83,12 +86,14 @@ async function main(): Promise<void> {
         console.warn(`[seed] ricetta "${r.name}": ingrediente "${ing.name}" non trovato`);
         continue;
       }
+      const substitutes = ing.substitutes ?? DEFAULT_SUBSTITUTES_BY_INGREDIENT[ing.name] ?? [];
       await prisma.recipeIngredient.create({
         data: {
           recipeId: recipe.id,
           ingredientId,
           quantity: ing.quantity,
           unit: ing.unit,
+          substitutes,
         },
       });
       linksCreated++;
