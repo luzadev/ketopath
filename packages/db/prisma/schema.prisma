@@ -169,6 +169,18 @@ model Profile {
   activityLevel   ActivityLevel @map("activity_level")
   /// @encrypted
   targetDate      String?       @map("target_date")
+  // PRD §5.1 — velocità desiderata di calo peso (kg/settimana). Determina il
+  // deficit calorico in modo dinamico al posto del valore hard-coded.
+  targetWeeklyLossKg Float?     @map("target_weekly_loss_kg")
+  // PRD §14.3 — condizioni mediche dichiarate dall'utente. Filtrano ricette,
+  // modulano deficit/macros, e bloccano l'app se "escludenti" (gravidanza,
+  // allattamento, diabete tipo 1, disturbi alimentari). Cifrate at-rest come
+  // dato sanitario (art. 9 GDPR — vedi ADR 0002).
+  /// @encrypted
+  medicalConditions String?     @map("medical_conditions")
+  // PRD §5.1 — % grasso corporeo stimata (US Navy) per BMR Katch-McArdle.
+  /// @encrypted
+  bodyFatPct      String?       @map("body_fat_pct")
   currentPhase    Phase         @default(INTENSIVE) @map("current_phase")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")

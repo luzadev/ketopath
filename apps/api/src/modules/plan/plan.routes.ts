@@ -1,6 +1,10 @@
 import {
+  bmrAdjustmentForConditions,
   calculateBmr,
+  calculateBmrKatchMcArdle,
   calculateTdee,
+  computeDailyKcalTarget,
+  hasExcludingCondition,
   macrosForPhase,
   matchMeals,
   protocolPlanForDay,
@@ -26,6 +30,16 @@ function phaseToInt(p: string): 1 | 2 | 3 {
   if (p === 'INTENSIVE') return 1;
   if (p === 'TRANSITION') return 2;
   return 3;
+}
+
+function parseConditions(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw) as unknown;
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 
 export const planRoutes: FastifyPluginAsync = async (fastify) => {
@@ -75,17 +89,36 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       };
     });
 
+    // Condizioni escludenti: PRD §14.3 — blocchiamo la generazione e
+    // rimandiamo l'utente al medico (lato UI mostriamo un disclaimer).
+    const conditions = parseConditions(profile.medicalConditions);
+    if (hasExcludingCondition(conditions)) {
+      return reply.code(409).send({ error: 'medical_block', conditions });
+    }
+
     const weightCurrentKg = Number(profile.weightCurrentKg);
-    const bmr = calculateBmr({
-      weightKg: weightCurrentKg,
-      heightCm: profile.heightCm,
-      ageYears: profile.age,
-      gender: profile.gender,
-    });
+    const bodyFatPct = profile.bodyFatPct ? Number(profile.bodyFatPct) : null;
+    // BMR: Katch-McArdle (FFM-based) se BF% noto, altrimenti Mifflin.
+    let bmr = bodyFatPct
+      ? calculateBmrKatchMcArdle(weightCurrentKg, bodyFatPct)
+      : calculateBmr({
+          weightKg: weightCurrentKg,
+          heightCm: profile.heightCm,
+          ageYears: profile.age,
+          gender: profile.gender,
+        });
+    // Aggiusto BMR per condizioni che lo influenzano (es. ipotiroidismo -10%).
+    bmr *= bmrAdjustmentForConditions(conditions);
     const tdee = calculateTdee(bmr, profile.activityLevel);
     const phaseInt = phaseToInt(profile.currentPhase);
-    // Deficit base solo in fase 1; in fase 2/3 si avvicina a TDEE.
-    const baseKcal = Math.round(phaseInt === 1 ? tdee - 500 : phaseInt === 2 ? tdee - 200 : tdee);
+
+    // Deficit dinamico da targetWeeklyLossKg (con caps di sicurezza).
+    const { kcalTarget: baseKcal } = computeDailyKcalTarget({
+      tdee,
+      weightCurrentKg,
+      targetWeeklyLossKg: profile.targetWeeklyLossKg,
+      phase: phaseInt,
+    });
     const baseDailyTarget = macrosForPhase({
       kcalTarget: baseKcal,
       weightKg: weightCurrentKg,

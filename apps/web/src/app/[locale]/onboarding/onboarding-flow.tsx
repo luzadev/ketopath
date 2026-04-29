@@ -1,9 +1,12 @@
 'use client';
 
 import {
+  EXCLUDING_CONDITIONS,
+  MEDICAL_CONDITIONS,
   type CookingTimeLevel,
   type CuisineTag,
   type ExclusionGroup,
+  type MedicalCondition,
   type PreferencesPatch,
 } from '@ketopath/shared';
 import Link from 'next/link';
@@ -20,11 +23,12 @@ import { Button } from '@/components/ui/button';
 import { pushSupported, subscribe, getCurrentSubscription } from '@/lib/notifications/push-client';
 
 import { regeneratePlan } from '../plan/actions';
+import { saveConditions } from '../profile/actions';
 import { savePreferences, type PreferencesView } from '../profile/preferences-actions';
 import { ProfileForm as ProfileFormComponent } from '../profile/profile-form';
 import type { ProfileForm } from '../profile/profile-form';
 
-const STEPS = ['goal', 'profile', 'preferences', 'notifications', 'done'] as const;
+const STEPS = ['goal', 'profile', 'conditions', 'preferences', 'notifications', 'done'] as const;
 type StepKey = (typeof STEPS)[number];
 
 const GOALS = ['LOSE', 'MAINTAIN', 'ENERGY'] as const;
@@ -59,7 +63,7 @@ export function OnboardingFlow({ initialProfile, initialPreferences }: Onboardin
                   i < stepIndex ? 'text-oliva' : i === stepIndex ? 'text-pomodoro' : 'text-ink-dim'
                 }`}
               >
-                {['I', 'II', 'III', 'IV', 'V'][i]}
+                {['I', 'II', 'III', 'IV', 'V', 'VI'][i]}
               </span>
               <span
                 className={`font-display text-lg leading-tight ${
@@ -79,10 +83,14 @@ export function OnboardingFlow({ initialProfile, initialPreferences }: Onboardin
         ) : null}
 
         {step === 'profile' ? (
-          <StepProfile
-            initial={initialProfile}
-            goal={goal}
-            onSaved={() => setStep('preferences')}
+          <StepProfile initial={initialProfile} goal={goal} onSaved={() => setStep('conditions')} />
+        ) : null}
+
+        {step === 'conditions' ? (
+          <StepConditions
+            initial={(initialProfile?.medicalConditions as string[] | undefined) ?? []}
+            onContinue={() => setStep('preferences')}
+            onBack={() => setStep('profile')}
           />
         ) : null}
 
@@ -92,7 +100,7 @@ export function OnboardingFlow({ initialProfile, initialPreferences }: Onboardin
               initialPreferences ? toFormValues(initialPreferences) : DEFAULT_PREFERENCES_VALUES
             }
             onSaved={() => setStep('notifications')}
-            onBack={() => setStep('profile')}
+            onBack={() => setStep('conditions')}
           />
         ) : null}
 
@@ -117,7 +125,7 @@ function StepGoal({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 1, total: 5 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 1, total: 6 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('goalHeading')}
         </h2>
@@ -182,7 +190,7 @@ function StepProfile({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 2, total: 5 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 2, total: 6 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {goal ? t(`profileHeadingGoal.${goal}`) : t('profileHeading')}
         </h2>
@@ -192,6 +200,145 @@ function StepProfile({
       </header>
       <ProfileFormComponent initial={initial} onSaved={onSaved} saveLabel={t('next')} />
     </div>
+  );
+}
+
+function StepConditions({
+  initial,
+  onContinue,
+  onBack,
+}: {
+  initial: string[];
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  const t = useTranslations('Onboarding');
+  const [selected, setSelected] = useState<string[]>(initial);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function toggle(c: MedicalCondition): void {
+    setSelected((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+  }
+
+  const blocked = selected.some((c) => EXCLUDING_CONDITIONS.has(c as MedicalCondition));
+
+  async function handleNext(): Promise<void> {
+    setError(null);
+    setPending(true);
+    const result = await saveConditions(selected);
+    setPending(false);
+    if (!result.ok) {
+      setError(t('conditionsSaveError'));
+      return;
+    }
+    onContinue();
+  }
+
+  const adaptive = MEDICAL_CONDITIONS.filter(
+    (c) => !EXCLUDING_CONDITIONS.has(c as MedicalCondition),
+  );
+
+  return (
+    <div className="space-y-8">
+      <header className="space-y-2">
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 3, total: 6 })}</p>
+        <h2 className="font-display text-ink text-3xl font-medium leading-tight">
+          {t('conditionsHeading')}
+        </h2>
+        <p className="font-display text-ink-soft max-w-xl text-base italic leading-snug">
+          {t('conditionsHint')}
+        </p>
+      </header>
+
+      <fieldset className="space-y-3">
+        <legend className="editorial-eyebrow">{t('conditionsAdaptive')}</legend>
+        <div className="flex flex-wrap gap-2">
+          {adaptive.map((c) => (
+            <ConditionChip
+              key={c}
+              label={t(`conditionLabel.${c}`)}
+              active={selected.includes(c)}
+              onToggle={() => toggle(c as MedicalCondition)}
+            />
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="editorial-eyebrow">{t('conditionsExcluding')}</legend>
+        <p className="font-display text-ink-soft text-sm italic leading-snug">
+          {t('conditionsExcludingHint')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {Array.from(EXCLUDING_CONDITIONS).map((c) => (
+            <ConditionChip
+              key={c}
+              label={t(`conditionLabel.${c}`)}
+              active={selected.includes(c)}
+              onToggle={() => toggle(c)}
+              danger
+            />
+          ))}
+        </div>
+      </fieldset>
+
+      {blocked ? (
+        <div className="border-pomodoro/40 bg-pomodoro/5 border-2 border-dashed p-5">
+          <p className="editorial-eyebrow">{t('blockedEyebrow')}</p>
+          <p className="font-display text-ink mt-3 text-base leading-snug">{t('blockedMessage')}</p>
+        </div>
+      ) : null}
+
+      {error ? (
+        <p className="font-display text-pomodoro text-base italic" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="button" size="lg" onClick={handleNext} disabled={pending}>
+          {pending ? t('working') : t('next')}
+        </Button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-ink-soft hover:text-ink font-mono text-[11px] uppercase tracking-widest"
+        >
+          {t('back')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConditionChip({
+  label,
+  active,
+  onToggle,
+  danger,
+}: {
+  label: string;
+  active: boolean;
+  onToggle: () => void;
+  danger?: boolean;
+}) {
+  const palette = active
+    ? danger
+      ? 'bg-pomodoro text-carta-light border-pomodoro'
+      : 'bg-ink text-carta-light border-ink'
+    : danger
+      ? 'border-pomodoro/40 hover:border-pomodoro text-pomodoro hover:bg-pomodoro/5 bg-transparent'
+      : 'border-ink/30 hover:border-ink text-ink hover:bg-ink/5 bg-transparent';
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onToggle}
+      className={`font-display rounded-full border px-4 py-2 text-sm leading-tight transition-colors ${palette}`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -215,7 +362,7 @@ function StepPreferences({
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 3, total: 5 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 4, total: 6 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('preferencesHeading')}
         </h2>
@@ -265,7 +412,7 @@ function StepNotifications({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 4, total: 5 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 5, total: 6 })}</p>
         <h2 className="font-display text-ink text-3xl font-medium leading-tight">
           {t('notificationsHeading')}
         </h2>
@@ -339,7 +486,7 @@ function StepDone({ goal }: { goal: Goal | null }) {
   return (
     <div className="space-y-10">
       <header className="space-y-2">
-        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 5, total: 5 })}</p>
+        <p className="editorial-eyebrow">{t('stepEyebrow', { n: 6, total: 6 })}</p>
         <h2 className="font-display text-ink text-4xl font-medium leading-tight">
           {goal ? t(`doneHeadingGoal.${goal}`) : t('doneHeading')}
         </h2>

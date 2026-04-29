@@ -190,6 +190,65 @@ export function ProfileForm({
             )}
           />
 
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <p className="editorial-eyebrow">{t('measurementsTitle')}</p>
+              <p className="font-display text-ink-soft text-sm italic leading-snug">
+                {t('measurementsHint')}
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-8">
+              {(['neckCm', 'waistCm', 'hipsCm'] as const).map((name) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>{t(name)}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          inputMode="decimal"
+                          {...field}
+                          value={(field.value as number | undefined) ?? ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="targetWeeklyLossKg"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>{t('targetWeeklyLossKg')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min={0.1}
+                    max={1.5}
+                    inputMode="decimal"
+                    placeholder="0.5"
+                    {...field}
+                    value={(field.value as number | undefined) ?? ''}
+                  />
+                </FormControl>
+                <p className="font-display text-ink-soft text-sm italic leading-snug">
+                  {t('targetWeeklyLossKgHint')}
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {serverError ? (
             <p role="alert" className="font-display text-pomodoro text-base italic">
               {serverError}

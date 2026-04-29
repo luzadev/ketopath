@@ -41,3 +41,19 @@ export async function fetchProfile(): Promise<unknown | null> {
   const data = (await res.json()) as { profile: unknown };
   return data.profile;
 }
+
+export type SaveConditionsResult = { ok: true } | { ok: false; error: string };
+
+export async function saveConditions(conditions: readonly string[]): Promise<SaveConditionsResult> {
+  const cookie = headers().get('cookie') ?? '';
+  const res = await fetch(`${API_URL}/me/profile/conditions`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', cookie },
+    body: JSON.stringify({ conditions }),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    return { ok: false, error: `api_error_${res.status}` };
+  }
+  return { ok: true };
+}
