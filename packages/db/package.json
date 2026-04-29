@@ -19,7 +19,8 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.18.0"
+    "@prisma/client": "^5.18.0",
+    "prisma-field-encryption": "^1.6.0"
   },
   "devDependencies": {
     "@ketopath/eslint-config": "workspace:*",

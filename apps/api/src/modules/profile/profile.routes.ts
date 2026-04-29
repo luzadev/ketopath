@@ -10,21 +10,24 @@ import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
 
+// The weight columns are encrypted at rest (ADR 0002) and therefore stored
+// as String. The Zod input schema parses numeric strings → numbers, but the
+// Prisma row keeps them as strings — so serialize/parse explicitly here.
 function serialize(
   profile: {
     age: number;
     gender: Gender;
     heightCm: number;
-    weightStartKg: { toNumber(): number };
-    weightCurrentKg: { toNumber(): number };
-    weightGoalKg: { toNumber(): number };
+    weightStartKg: string;
+    weightCurrentKg: string;
+    weightGoalKg: string;
     activityLevel: ActivityLevel;
-    targetDate: Date | null;
+    targetDate: string | null;
     currentPhase: string;
   } | null,
 ) {
   if (!profile) return null;
-  const weightCurrentKg = profile.weightCurrentKg.toNumber();
+  const weightCurrentKg = Number(profile.weightCurrentKg);
   const bmr = calculateBmr({
     weightKg: weightCurrentKg,
     heightCm: profile.heightCm,
@@ -36,11 +39,11 @@ function serialize(
     age: profile.age,
     gender: profile.gender,
     heightCm: profile.heightCm,
-    weightStartKg: profile.weightStartKg.toNumber(),
+    weightStartKg: Number(profile.weightStartKg),
     weightCurrentKg,
-    weightGoalKg: profile.weightGoalKg.toNumber(),
+    weightGoalKg: Number(profile.weightGoalKg),
     activityLevel: profile.activityLevel,
-    targetDate: profile.targetDate?.toISOString() ?? null,
+    targetDate: profile.targetDate,
     currentPhase: profile.currentPhase,
     derived: {
       bmr: Math.round(bmr),
@@ -67,6 +70,8 @@ export const profileRoutes: FastifyPluginAsync = async (fastify) => {
     const data = parsed.data;
     const userId = request.user!.id;
 
+    const targetDateStr = data.targetDate ? data.targetDate.toISOString().slice(0, 10) : null;
+
     const profile = await fastify.prisma.profile.upsert({
       where: { userId },
       create: {
@@ -74,21 +79,21 @@ export const profileRoutes: FastifyPluginAsync = async (fastify) => {
         age: data.age,
         gender: data.gender,
         heightCm: data.heightCm,
-        weightStartKg: data.weightStartKg,
-        weightCurrentKg: data.weightCurrentKg,
-        weightGoalKg: data.weightGoalKg,
+        weightStartKg: String(data.weightStartKg),
+        weightCurrentKg: String(data.weightCurrentKg),
+        weightGoalKg: String(data.weightGoalKg),
         activityLevel: data.activityLevel,
-        targetDate: data.targetDate ?? null,
+        targetDate: targetDateStr,
       },
       update: {
         age: data.age,
         gender: data.gender,
         heightCm: data.heightCm,
-        weightStartKg: data.weightStartKg,
-        weightCurrentKg: data.weightCurrentKg,
-        weightGoalKg: data.weightGoalKg,
+        weightStartKg: String(data.weightStartKg),
+        weightCurrentKg: String(data.weightCurrentKg),
+        weightGoalKg: String(data.weightGoalKg),
         activityLevel: data.activityLevel,
-        targetDate: data.targetDate ?? null,
+        targetDate: targetDateStr,
       },
     });
 

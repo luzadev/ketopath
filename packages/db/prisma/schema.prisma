@@ -128,11 +128,15 @@ model Profile {
   age             Int
   gender          Gender
   heightCm        Int           @map("height_cm")
-  weightStartKg   Decimal       @map("weight_start_kg") @db.Decimal(5, 2)
-  weightCurrentKg Decimal       @map("weight_current_kg") @db.Decimal(5, 2)
-  weightGoalKg    Decimal       @map("weight_goal_kg") @db.Decimal(5, 2)
+  /// @encrypted
+  weightStartKg   String        @map("weight_start_kg")
+  /// @encrypted
+  weightCurrentKg String        @map("weight_current_kg")
+  /// @encrypted
+  weightGoalKg    String        @map("weight_goal_kg")
   activityLevel   ActivityLevel @map("activity_level")
-  targetDate      DateTime?     @map("target_date") @db.Date
+  /// @encrypted
+  targetDate      String?       @map("target_date")
   currentPhase    Phase         @default(INTENSIVE) @map("current_phase")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
