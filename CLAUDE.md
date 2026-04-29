@@ -26,7 +26,7 @@ Il documento di prodotto completo è in `docs/PRD_KetoPath.docx`. Quando devi pr
 **Backend**
 - Node.js + Fastify + TypeScript
 - Prisma come ORM
-- Auth gestita via Clerk (no roll-your-own)
+- Auth gestita via Better Auth, self-hostata su Postgres EU (vedi `docs/decisions/0001-auth-provider.md`)
 
 **Database & infrastruttura**
 - PostgreSQL 15+ come DB principale
@@ -156,7 +156,7 @@ pnpm test:e2e             # Playwright
 
 ## Cosa NON fare mai
 
-- Salvare password in chiaro (Clerk gestisce auth, non implementarla a mano).
+- Salvare password in chiaro o reimplementare l'hashing manualmente (Better Auth gestisce hashing scrypt, sessioni e flussi OAuth — non riscriverli).
 - Loggare dati di salute fuori dal DB cifrato.
 - Usare `eval()` o `new Function()` con input utente.
 - Disabilitare feature di sicurezza (CSP, CORS, rate limiting) per "comodità di sviluppo".
@@ -199,7 +199,7 @@ Queste decisioni non sono ancora finalizzate. Se le tocchi, aprire un ADR in `do
 - PRD completo: `docs/PRD_KetoPath.docx`
 - Documentazione Next.js: https://nextjs.org/docs
 - Documentazione Prisma: https://www.prisma.io/docs
-- Documentazione Clerk: https://clerk.com/docs
+- Documentazione Better Auth: https://better-auth.com/docs
 - shadcn/ui: https://ui.shadcn.com
 - GDPR e dati sanitari: https://www.garanteprivacy.it/
 
