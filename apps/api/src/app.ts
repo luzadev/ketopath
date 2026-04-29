@@ -7,6 +7,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { env } from './config/env.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { meRoutes } from './modules/me/me.routes.js';
+import { authPlugin } from './plugins/auth.js';
 import { prismaPlugin } from './plugins/prisma.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -36,9 +38,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
   await app.register(sensible);
   await app.register(prismaPlugin);
+  await app.register(authPlugin);
 
   await app.register(healthRoutes);
   await app.register(dbRoutes);
+  await app.register(meRoutes);
 
   return app;
 }

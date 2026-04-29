@@ -15,6 +15,8 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   DATABASE_URL: z.string().url(),
+  BETTER_AUTH_SECRET: z.string().min(32),
+  BETTER_AUTH_URL: z.string().url(),
 });
 
 export type Env = z.infer<typeof envSchema>;
