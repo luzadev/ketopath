@@ -1,4 +1,5 @@
 export * from './medical/conditions.js';
+export * from './planner/adherence.js';
 export * from './notifications/schema.js';
 export * from './preferences/schema.js';
 export * from './nutrition/bmr.js';

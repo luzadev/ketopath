@@ -207,7 +207,8 @@
     "checkInUpdate": "Aggiorna check-in",
     "checkInSaved": "Salvato.",
     "checkInAlreadyDone": "Già compilato",
-    "mood": "Umore"
+    "mood": "Umore",
+    "exportPdf": "Esporta PDF per medico/nutrizionista"
   },
   "Onboarding": {
     "title": "Configura il tuo percorso",
@@ -479,6 +480,9 @@
     "hideAlternatives": "Nascondi",
     "swap": "Scegli",
     "regenerateSlot": "Rigenera questo pasto",
+    "consumedMark": "Segna come consumato",
+    "consumedUndo": "Annulla consumato",
+    "adherence": "Aderenza",
     "freeMealMark": "Segna come pasto libero",
     "freeMealUndo": "Torna a una ricetta keto",
     "freeMealLabel": "Pasto libero pianificato",

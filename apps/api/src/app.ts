@@ -15,6 +15,7 @@ import { preferencesRoutes } from './modules/preferences/preferences.routes.js';
 import { profileRoutes } from './modules/profile/profile.routes.js';
 import { shoppingRoutes } from './modules/shopping/shopping.routes.js';
 import { checkInRoutes } from './modules/tracking/check-in.routes.js';
+import { trackingExportRoutes } from './modules/tracking/export.routes.js';
 import { fastRoutes } from './modules/tracking/fast.routes.js';
 import { weightRoutes } from './modules/tracking/weight.routes.js';
 import { authPlugin } from './plugins/auth.js';
@@ -57,6 +58,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(weightRoutes);
   await app.register(fastRoutes);
   await app.register(checkInRoutes);
+  await app.register(trackingExportRoutes);
   await app.register(planRoutes);
   await app.register(shoppingRoutes);
   await app.register(notificationsRoutes);

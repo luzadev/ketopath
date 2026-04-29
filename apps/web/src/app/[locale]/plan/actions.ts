@@ -22,6 +22,8 @@ export interface PlanSlot {
   recipeId: string | null;
   status: string;
   isFreeMeal: boolean;
+  consumed: boolean;
+  consumedAt: string | null;
   selected: SlotRecipe | null;
   alternatives: SlotRecipe[];
 }
@@ -84,6 +86,17 @@ export async function regenerateSlot(slotId: string): Promise<SwapResult> {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     return { ok: false, error: body.error ?? `api_error_${res.status}` };
   }
+  revalidatePath('/plan');
+  return { ok: true };
+}
+
+export async function toggleConsumed(slotId: string): Promise<SwapResult> {
+  const res = await fetch(`${API_URL}/me/meal-plans/slots/${slotId}/consumed`, {
+    method: 'POST',
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return { ok: false, error: `api_error_${res.status}` };
   revalidatePath('/plan');
   return { ok: true };
 }

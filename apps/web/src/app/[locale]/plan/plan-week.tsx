@@ -1,5 +1,6 @@
 'use client';
 
+import { computeAdherence } from '@ketopath/shared';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import {
   regenerateSlot,
   swapSlotRecipe,
+  toggleConsumed,
   toggleFreeMeal,
   type CurrentPlan,
   type PlanSlot,
@@ -81,13 +83,33 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
         }
       : { kcal: 0, proteinG: 0, fatG: 0, netCarbG: 0 };
 
+  const adherence = computeAdherence(
+    plan.slots.map((s) => ({
+      dayOfWeek: s.dayOfWeek,
+      consumed: s.consumed,
+      isFreeMeal: s.isFreeMeal,
+    })),
+    new Date(plan.weekStart + 'T00:00:00'),
+  );
+
   return (
     <div className="space-y-14">
-      <section className="border-ink/15 bg-carta-light/40 grid grid-cols-2 gap-x-8 gap-y-4 border p-5 sm:grid-cols-4">
+      <section className="border-ink/15 bg-carta-light/40 grid grid-cols-2 gap-x-8 gap-y-4 border p-5 sm:grid-cols-5">
         <MacroSummary label={t('avgKcal')} value={weekAvg.kcal} unit="kcal" big />
         <MacroSummary label={t('avgProtein')} value={weekAvg.proteinG} unit="g" />
         <MacroSummary label={t('avgFat')} value={weekAvg.fatG} unit="g" />
         <MacroSummary label={t('avgNetCarb')} value={weekAvg.netCarbG} unit="g" />
+        <div className="flex flex-col gap-1">
+          <span className="editorial-eyebrow">{t('adherence')}</span>
+          <span className="text-ink font-mono text-3xl font-medium tabular-nums">
+            {adherence.pastSlots === 0 ? '—' : `${Math.round(adherence.rate * 100)}%`}
+          </span>
+          {adherence.pastSlots > 0 ? (
+            <span className="text-ink-soft font-mono text-[10px] uppercase tracking-widest">
+              {adherence.consumedSlots}/{adherence.pastSlots}
+            </span>
+          ) : null}
+        </div>
       </section>
 
       {DAY_KEYS.map((dayKey, idx) => {
@@ -181,6 +203,12 @@ function SlotCard({
     });
   }
 
+  function consume() {
+    startTransition(async () => {
+      await toggleConsumed(slot.id);
+    });
+  }
+
   return (
     <article className="group relative flex flex-col gap-3 py-5 sm:py-2">
       <header className="flex items-baseline justify-between gap-3">
@@ -191,6 +219,19 @@ function SlotCard({
           <span>{t(`meals.${slot.meal}`)}</span>
         </p>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={consume}
+            disabled={pending}
+            aria-pressed={slot.consumed}
+            aria-label={slot.consumed ? t('consumedUndo') : t('consumedMark')}
+            title={slot.consumed ? t('consumedUndo') : t('consumedMark')}
+            className={`font-mono text-xs leading-none transition-colors disabled:opacity-40 ${
+              slot.consumed ? 'text-oliva' : 'text-ink-dim hover:text-oliva'
+            }`}
+          >
+            ✓
+          </button>
           {canFreeMeal ? (
             <button
               type="button"

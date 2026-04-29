@@ -428,6 +428,11 @@ model MealSlot {
   // è un placeholder (no ricetta KetoPath, kcal stimate ~750) e il piano
   // adatta gli altri pasti della settimana.
   isFreeMeal Boolean      @default(false) @map("is_free_meal")
+  // PRD §5.2 — aderenza al piano. L'utente spunta "consumato" sui pasti
+  // effettivamente fatti dal menu. Solo gli slot di giorni già passati
+  // contano nel calcolo dell'aderenza.
+  consumed   Boolean      @default(false)
+  consumedAt DateTime?    @map("consumed_at")
 
   plan         MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   selected     Recipe?  @relation("SelectedRecipe", fields: [recipeId], references: [id])

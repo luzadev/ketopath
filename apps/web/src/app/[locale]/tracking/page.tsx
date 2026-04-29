@@ -73,6 +73,17 @@ function TrackingPageContent({
           {t('subtitle')}
         </p>
 
+        <p className="animate-fade-up mt-4 [animation-delay:300ms]">
+          <a
+            href="/api/tracking-export"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+          >
+            {t('exportPdf')} ↗
+          </a>
+        </p>
+
         <div className="rule animate-rule-in my-10 [animation-delay:360ms]" />
 
         <DailyCheckIn initial={todayCheckIn} />

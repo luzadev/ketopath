@@ -283,6 +283,32 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
     },
   );
 
+  // PRD §5.2 — aderenza: l'utente segna lo slot come consumato.
+  fastify.post(
+    '/me/meal-plans/slots/:slotId/consumed',
+    { preHandler: requireAuth() },
+    async (request, reply) => {
+      const slotId = (request.params as { slotId: string }).slotId;
+      const userId = request.user!.id;
+      const body = (request.body ?? {}) as { consumed?: unknown };
+      const desired = typeof body.consumed === 'boolean' ? body.consumed : null;
+
+      const slot = await fastify.prisma.mealSlot.findFirst({
+        where: { id: slotId, plan: { userId } },
+        select: { id: true, consumed: true },
+      });
+      if (!slot) return reply.code(404).send({ error: 'slot_not_found' });
+
+      const next = desired ?? !slot.consumed;
+      const updated = await fastify.prisma.mealSlot.update({
+        where: { id: slotId },
+        data: { consumed: next, consumedAt: next ? new Date() : null },
+        select: { id: true, consumed: true, consumedAt: true },
+      });
+      return { slot: updated };
+    },
+  );
+
   // PRD §5.1 — toggle "pasto libero". Disponibile solo in Fase 3.
   fastify.post(
     '/me/meal-plans/slots/:slotId/free-meal',
@@ -478,7 +504,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(409).send({ error: 'no_recipes_available' });
       }
 
-      const newSelected = top[0];
+      const newSelected = top[0]!;
       const altIds = top.slice(1).map((r) => r.id);
 
       // Re-set alternatives via Prisma `set` per pulire la M2M.
