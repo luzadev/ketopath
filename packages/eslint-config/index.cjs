@@ -18,6 +18,7 @@ module.exports = {
     'import/resolver': {
       typescript: {
         alwaysTryTypes: true,
+        project: ['tsconfig.json', 'apps/*/tsconfig.json', 'packages/*/tsconfig.json'],
       },
       node: true,
     },
@@ -48,18 +49,9 @@ module.exports = {
       env: { node: true },
       rules: {
         '@typescript-eslint/no-var-requires': 'off',
+        '@typescript-eslint/consistent-type-imports': 'off',
       },
     },
   ],
-  ignorePatterns: [
-    'node_modules/',
-    'dist/',
-    'build/',
-    '.next/',
-    'out/',
-    'coverage/',
-    '*.config.js',
-    '*.config.cjs',
-    '*.config.mjs',
-  ],
+  ignorePatterns: ['node_modules/', 'dist/', 'build/', '.next/', 'out/', 'coverage/'],
 };

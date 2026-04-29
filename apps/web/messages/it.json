@@ -1,0 +1,13 @@
+{
+  "Home": {
+    "title": "KetoPath",
+    "tagline": "Il tuo percorso personalizzato verso uno stile di vita chetogenico sostenibile.",
+    "ctaPrimary": "Inizia gratis",
+    "ctaSecondary": "Scopri come funziona",
+    "disclaimer": "Le informazioni fornite da questa app non sostituiscono il parere di un medico."
+  },
+  "Metadata": {
+    "title": "KetoPath — Chetogenica e digiuno intermittente personalizzati",
+    "description": "Web app italiana per la gestione strutturata di chetogenica e digiuno intermittente, con piani adattivi, tracking e lista della spesa automatica."
+  }
+}
