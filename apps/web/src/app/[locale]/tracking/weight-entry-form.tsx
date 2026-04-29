@@ -29,12 +29,16 @@ export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
+  // L'input HTML type="date" passa stringhe ISO; zod le coerce a Date a runtime
+  // (vedi `weightEntryInputSchema.date = z.coerce.date()`). Il TS-side resta
+  // strict, perciò usiamo cast `unknown` agli ingressi dei defaultValues e di
+  // form.reset.
   const form = useForm<WeightEntryInput>({
     resolver: zodResolver(weightEntryInputSchema),
     defaultValues: {
       date: todayISO(),
       weightKg: latest?.weightKg,
-    } as WeightEntryInput,
+    } as unknown as WeightEntryInput,
   });
 
   const onSubmit = form.handleSubmit(async (input) => {
@@ -45,7 +49,7 @@ export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
       return;
     }
     setSavedAt(new Date().toISOString());
-    form.reset({ date: todayISO(), weightKg: input.weightKg } as WeightEntryInput);
+    form.reset({ date: todayISO(), weightKg: input.weightKg } as unknown as WeightEntryInput);
   });
 
   return (
@@ -59,7 +63,7 @@ export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
               <FormItem className="space-y-3">
                 <FormLabel>{t('date')}</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} value={field.value as string} />
+                  <Input type="date" {...field} value={field.value as unknown as string} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

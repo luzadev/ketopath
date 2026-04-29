@@ -59,14 +59,17 @@ export const fastRoutes: FastifyPluginAsync = async (fastify) => {
     });
     if (!owned) return reply.code(404).send({ error: 'fast_event_not_found' });
 
+    // Costruiamo l'oggetto data omettendo le chiavi non fornite, perché con
+    // `exactOptionalPropertyTypes` Prisma rifiuta `undefined` esplicito.
+    const updateData: Parameters<typeof fastify.prisma.fastEvent.update>[0]['data'] = {};
+    if (data.endedAt) updateData.endedAt = data.endedAt;
+    if (data.status) updateData.status = data.status;
+    if (data.symptoms) updateData.symptoms = JSON.stringify(data.symptoms);
+    if (data.notes != null) updateData.notes = data.notes;
+
     const event = await fastify.prisma.fastEvent.update({
       where: { id },
-      data: {
-        endedAt: data.endedAt ?? undefined,
-        status: data.status ?? undefined,
-        symptoms: data.symptoms ? JSON.stringify(data.symptoms) : undefined,
-        notes: data.notes ?? undefined,
-      },
+      data: updateData,
     });
     return { event: { id: event.id, status: event.status } };
   });

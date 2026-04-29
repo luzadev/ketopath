@@ -42,9 +42,9 @@ export async function fetchCurrentPlan(): Promise<CurrentPlan | null> {
   return data.plan;
 }
 
-export type RegenerateResult = { ok: true } | { ok: false; error: string };
-
-export async function regeneratePlan(): Promise<RegenerateResult> {
+// Server action invocata via `<form action={regeneratePlan}>`. La firma è
+// `(FormData) => Promise<void>` per allinearsi al type richiesto da React 18.
+export async function regeneratePlan(_formData?: FormData): Promise<void> {
   const res = await fetch(`${API_URL}/me/meal-plans`, {
     method: 'POST',
     headers: { cookie: cookieHeader() },
@@ -52,10 +52,9 @@ export async function regeneratePlan(): Promise<RegenerateResult> {
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
-    return { ok: false, error: body.error ?? `api_error_${res.status}` };
+    throw new Error(body.error ?? `api_error_${res.status}`);
   }
   revalidatePath('/plan');
-  return { ok: true };
 }
 
 export type SwapResult = { ok: true } | { ok: false; error: string };
