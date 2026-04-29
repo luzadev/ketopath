@@ -52,9 +52,15 @@ export const planExportRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
-      reply.header('Content-Type', 'application/pdf');
-      reply.header('Content-Disposition', 'attachment; filename="ketopath-piano.pdf"');
-      reply.send(doc);
+      // Bufferizziamo i chunks: fastify + pdfkit stream hanno una race se
+      // facciamo `reply.send(doc)` e poi `doc.end()`. Con il buffer chiudiamo
+      // il PDF prima di inviarlo e siamo sicuri che il body sia completo.
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      const done = new Promise<Buffer>((resolve, reject) => {
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
+      });
 
       // ── Header ───────────────────────────────────────────────────────────
       doc
@@ -225,6 +231,12 @@ export const planExportRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       doc.end();
+      const pdfBuffer = await done;
+      return reply
+        .header('Content-Type', 'application/pdf')
+        .header('Content-Disposition', 'attachment; filename="ketopath-piano.pdf"')
+        .header('Content-Length', String(pdfBuffer.length))
+        .send(pdfBuffer);
     },
   );
 };
