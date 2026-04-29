@@ -13,6 +13,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@ketopath/auth": "workspace:*",
+    "@ketopath/db": "workspace:*",
     "@ketopath/shared": "workspace:*",
     "@ketopath/ui": "workspace:*",
     "@radix-ui/react-label": "^2.1.0",

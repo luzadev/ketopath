@@ -51,20 +51,51 @@ enum FastingProtocol {
   FIVE_TWO
 }
 
-model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  emailVerified Boolean  @default(false) @map("email_verified")
-  name          String?
-  image         String?
-  role          Role     @default(USER)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+enum FastStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABORTED
+}
 
-  profile     Profile?
-  preferences Preferences?
-  sessions    Session[]
-  accounts    Account[]
+enum MealCategory {
+  COLAZIONE
+  PRANZO
+  SPUNTINO
+  CENA
+}
+
+enum Difficulty {
+  FACILE
+  MEDIA
+  ELABORATA
+}
+
+enum MealPlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  emailVerified        Boolean   @default(false) @map("email_verified")
+  name                 String?
+  image                String?
+  role                 Role      @default(USER)
+  // PRD §14.3 — consenso esplicito al disclaimer medico. NULL finché l'utente
+  // non lo accetta; bloccante per le pagine di profilo/tracking.
+  disclaimerAcceptedAt DateTime? @map("disclaimer_accepted_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  profile       Profile?
+  preferences   Preferences?
+  sessions      Session[]
+  accounts      Account[]
+  weightEntries WeightEntry[]
+  fastEvents    FastEvent[]
+  mealPlans     MealPlan[]
 
   @@map("users")
 }
@@ -160,4 +191,146 @@ model Preferences {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("preferences")
+}
+
+// PRD §5.2 — pesata settimanale, misure, indicatori soggettivi.
+// I campi sanitari sono cifrati at-rest (ADR 0002).
+model WeightEntry {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  date         DateTime @db.Date
+  /// @encrypted
+  weightKg     String   @map("weight_kg")
+  /// @encrypted
+  measurements String?
+  /// @encrypted
+  notes        String?
+  energy       Int?
+  sleep        Int?
+  hunger       Int?
+  photos       String[] @default([])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("weight_entries")
+}
+
+// PRD §5.3 — sessione di digiuno intermittente con tracking sintomi.
+model FastEvent {
+  id             String          @id @default(cuid())
+  userId         String          @map("user_id")
+  protocol       FastingProtocol
+  startedAt      DateTime        @map("started_at")
+  endedAt        DateTime?       @map("ended_at")
+  targetDuration Int             @map("target_duration_minutes")
+  status         FastStatus      @default(IN_PROGRESS)
+  /// @encrypted
+  symptoms       String?
+  /// @encrypted
+  notes          String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@map("fast_events")
+}
+
+// PRD §5.1 — database ricette italiane chetogeniche/low-carb.
+model Ingredient {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  category        String
+  defaultUnit     String   @map("default_unit")
+  kcalPer100g     Float    @map("kcal_per_100g")
+  proteinPer100g  Float    @map("protein_per_100g")
+  fatPer100g      Float    @map("fat_per_100g")
+  netCarbPer100g  Float    @map("net_carb_per_100g")
+  exclusionGroups String[] @default([]) @map("exclusion_groups")
+  priceAvgEur     Float?   @map("price_avg_eur")
+
+  recipeIngredients RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+model Recipe {
+  id          String       @id @default(cuid())
+  name        String
+  category    MealCategory
+  description String?
+  prepMinutes Int          @map("prep_minutes")
+  difficulty  Difficulty   @default(FACILE)
+  cuisine     String       @default("italiana")
+  photoUrl    String?      @map("photo_url")
+  kcal        Float
+  proteinG    Float        @map("protein_g")
+  fatG        Float        @map("fat_g")
+  netCarbG    Float        @map("net_carb_g")
+  phases      Int[]        @default([1, 2, 3])
+  servings    Int          @default(1)
+  notesChef   String?      @map("notes_chef")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  ingredients    RecipeIngredient[]
+  selectedSlots  MealSlot[]         @relation("SelectedRecipe")
+  alternativeFor MealSlot[]         @relation("AlternativeRecipes")
+
+  @@index([category])
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id           String @id @default(cuid())
+  recipeId     String @map("recipe_id")
+  ingredientId String @map("ingredient_id")
+  quantity     Float
+  unit         String
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+// PRD §5.1 — piano settimanale generato dall'algoritmo di matchmaking.
+model MealPlan {
+  id          String         @id @default(cuid())
+  userId      String         @map("user_id")
+  weekStart   DateTime       @map("week_start") @db.Date
+  status      MealPlanStatus @default(ACTIVE)
+  generatedAt DateTime       @default(now()) @map("generated_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slots MealSlot[]
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart])
+  @@map("meal_plans")
+}
+
+model MealSlot {
+  id        String       @id @default(cuid())
+  planId    String       @map("plan_id")
+  dayOfWeek Int          @map("day_of_week")
+  meal      MealCategory
+  recipeId  String?      @map("recipe_id")
+  status    String       @default("pending")
+
+  plan         MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  selected     Recipe?  @relation("SelectedRecipe", fields: [recipeId], references: [id])
+  alternatives Recipe[] @relation("AlternativeRecipes")
+
+  @@unique([planId, dayOfWeek, meal])
+  @@map("meal_slots")
 }

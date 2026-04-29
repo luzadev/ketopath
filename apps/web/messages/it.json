@@ -9,6 +9,20 @@
     "signOut": "Esci",
     "completeProfile": "Completa il tuo profilo"
   },
+  "Welcome": {
+    "title": "Prima di iniziare",
+    "subtitle": "KetoPath è uno strumento di stile di vita, non un dispositivo medico. Conferma queste 4 cose prima di proseguire.",
+    "point1": "L'app fornisce solo suggerimenti di stile di vita basati sui parametri che inserisci.",
+    "point2": "Non diagnostica patologie, non prescrive trattamenti, non sostituisce il parere del tuo medico.",
+    "point3": "Se hai diabete di tipo 1, sei in gravidanza o allattamento, hai disturbi alimentari, problemi cardiaci o renali, parla prima con il tuo medico.",
+    "point4": "Prima di iniziare ti consigliamo esami del sangue di base (glicemia, colesterolo, profilo lipidico, funzionalità renale ed epatica).",
+    "checkAdult": "Confermo di essere maggiorenne.",
+    "checkAware": "Dichiaro di non avere condizioni mediche escludenti, oppure di averle discusse con il mio medico.",
+    "checkAccepts": "Accetto che KetoPath non sostituisce il parere medico professionale.",
+    "submit": "Accetto e proseguo",
+    "submitting": "Salvataggio in corso…",
+    "legalNote": "Il consenso è registrato con data e ora come previsto dall'art. 7 GDPR."
+  },
   "CookieBanner": {
     "aria": "Informativa cookie",
     "message": "Usiamo solo cookie essenziali per l'autenticazione e la sessione. Niente analytics o tracker di terze parti.",

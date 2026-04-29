@@ -111,6 +111,9 @@ importers:
       '@ketopath/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@ketopath/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@ketopath/shared':
         specifier: workspace:*
         version: link:../../packages/shared

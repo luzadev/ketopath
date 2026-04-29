@@ -1,3 +1,4 @@
+import { prisma } from '@ketopath/db';
 import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
@@ -12,6 +13,12 @@ export default async function ProfilePage({ params: { locale } }: { params: { lo
   setRequestLocale(locale);
   const session = await getServerSession();
   if (!session?.user) redirect('/sign-in');
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { disclaimerAcceptedAt: true },
+  });
+  if (!user?.disclaimerAcceptedAt) redirect('/welcome');
 
   const profile = (await fetchProfile()) as Parameters<typeof ProfileForm>[0]['initial'];
 
