@@ -86,6 +86,9 @@ model User {
   // PRD §14.3 — consenso esplicito al disclaimer medico. NULL finché l'utente
   // non lo accetta; bloccante per le pagine di profilo/tracking.
   disclaimerAcceptedAt DateTime? @map("disclaimer_accepted_at")
+  // PRD §5.1 — momento in cui l'utente è entrato nella fase 2 (TRANSITION).
+  // Serve a calcolare la "settimana di fase" per la reintroduzione progressiva.
+  phase2StartedAt      DateTime? @map("phase2_started_at")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
@@ -282,6 +285,9 @@ model Ingredient {
   netCarbPer100g  Float    @map("net_carb_per_100g")
   exclusionGroups String[] @default([]) @map("exclusion_groups")
   priceAvgEur     Float?   @map("price_avg_eur")
+  // PRD §5.1 — settimana di Fase 2 dalla quale l'ingrediente diventa
+  // disponibile (1=da subito, 5=quinta settimana, ecc.). NULL = sempre.
+  phase2Week      Int?     @map("phase2_week")
 
   recipeIngredients RecipeIngredient[]
 
@@ -304,6 +310,9 @@ model Recipe {
   phases      Int[]        @default([1, 2, 3])
   servings    Int          @default(1)
   notesChef   String?      @map("notes_chef")
+  // PRD §5.1 — varianti della ricetta (es. "versione vegetariana"). Array
+  // JSON di { name, description, kcalDelta? }. Schema applicativo zod-validato.
+  variants    Json         @default("[]")
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
@@ -316,11 +325,14 @@ model Recipe {
 }
 
 model RecipeIngredient {
-  id           String @id @default(cuid())
-  recipeId     String @map("recipe_id")
-  ingredientId String @map("ingredient_id")
+  id           String   @id @default(cuid())
+  recipeId     String   @map("recipe_id")
+  ingredientId String   @map("ingredient_id")
   quantity     Float
   unit         String
+  // PRD §5.1 — suggerimenti di sostituzione per quell'ingrediente in questa
+  // ricetta. Stringhe libere ("ricotta intera", "tofu strapazzato"…).
+  substitutes  String[] @default([])
 
   recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
@@ -372,12 +384,16 @@ model DeviceToken {
 }
 
 model MealSlot {
-  id        String       @id @default(cuid())
-  planId    String       @map("plan_id")
-  dayOfWeek Int          @map("day_of_week")
-  meal      MealCategory
-  recipeId  String?      @map("recipe_id")
-  status    String       @default("pending")
+  id         String       @id @default(cuid())
+  planId     String       @map("plan_id")
+  dayOfWeek  Int          @map("day_of_week")
+  meal       MealCategory
+  recipeId   String?      @map("recipe_id")
+  status     String       @default("pending")
+  // PRD §5.1 — "pasto libero" pianificato in Fase 3. Quando true, lo slot
+  // è un placeholder (no ricetta KetoPath, kcal stimate ~750) e il piano
+  // adatta gli altri pasti della settimana.
+  isFreeMeal Boolean      @default(false) @map("is_free_meal")
 
   plan         MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   selected     Recipe?  @relation("SelectedRecipe", fields: [recipeId], references: [id])

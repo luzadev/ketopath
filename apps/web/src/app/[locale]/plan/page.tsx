@@ -70,6 +70,18 @@ function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurren
                 </span>
               </p>
             ) : null}
+            {plan?.currentPhase === 'TRANSITION' && plan.phase2Week ? (
+              <p className="animate-fade-up mt-3 [animation-delay:330ms]">
+                <span className="editorial-eyebrow">{t('phase2Eyebrow')}</span>{' '}
+                <span className="font-display text-oliva ml-2 text-base italic">
+                  {t('phase2Week', { n: plan.phase2Week })}
+                </span>
+              </p>
+            ) : plan?.currentPhase === 'MAINTENANCE' ? (
+              <p className="animate-fade-up mt-3 [animation-delay:330ms]">
+                <span className="editorial-eyebrow">{t('phase3Eyebrow')}</span>
+              </p>
+            ) : null}
           </div>
           <div className="animate-fade-up flex flex-col items-stretch gap-3 [animation-delay:360ms] md:col-span-4 md:items-end">
             <form action={regeneratePlan}>

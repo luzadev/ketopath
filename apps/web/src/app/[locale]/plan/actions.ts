@@ -21,6 +21,7 @@ export interface PlanSlot {
   meal: 'COLAZIONE' | 'PRANZO' | 'SPUNTINO' | 'CENA';
   recipeId: string | null;
   status: string;
+  isFreeMeal: boolean;
   selected: SlotRecipe | null;
   alternatives: SlotRecipe[];
 }
@@ -37,6 +38,8 @@ export interface CurrentPlan {
     | 'ESE_24'
     | 'FIVE_TWO'
     | null;
+  currentPhase: 'INTENSIVE' | 'TRANSITION' | 'MAINTENANCE' | null;
+  phase2Week: number | null;
 }
 
 function cookieHeader(): string {
@@ -73,6 +76,20 @@ export type SwapResult = { ok: true } | { ok: false; error: string };
 
 export async function regenerateSlot(slotId: string): Promise<SwapResult> {
   const res = await fetch(`${API_URL}/me/meal-plans/slots/${slotId}/regenerate`, {
+    method: 'POST',
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: body.error ?? `api_error_${res.status}` };
+  }
+  revalidatePath('/plan');
+  return { ok: true };
+}
+
+export async function toggleFreeMeal(slotId: string): Promise<SwapResult> {
+  const res = await fetch(`${API_URL}/me/meal-plans/slots/${slotId}/free-meal`, {
     method: 'POST',
     headers: { cookie: cookieHeader() },
     cache: 'no-store',

@@ -5,8 +5,10 @@ import {
   calculateBmrKatchMcArdle,
   calculateTdee,
   computeDailyKcalTarget,
+  currentPhase2Week,
   extraKcalForSession,
   hasExcludingCondition,
+  isRecipeAllowedForPhaseWeek,
   isTrainingDay,
   macrosForPhase,
   matchMeals,
@@ -71,7 +73,9 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         phases: true,
         prepMinutes: true,
         ingredients: {
-          select: { ingredient: { select: { exclusionGroups: true } } },
+          select: {
+            ingredient: { select: { exclusionGroups: true, phase2Week: true } },
+          },
         },
       },
     });
@@ -79,7 +83,20 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(409).send({ error: 'recipe_catalog_empty' });
     }
 
-    const candidates: RecipeCandidate[] = recipes.map((r) => {
+    // PRD §5.1 — Reintroduzione progressiva: in fase 2 filtriamo le ricette
+    // che contengono ingredienti non ancora reintrodotti per la settimana
+    // corrente di fase 2.
+    const phaseIntForFilter = phaseToInt(profile.currentPhase);
+    const phase2WeekForFilter = currentPhase2Week(profile.user.phase2StartedAt);
+    const allowedRecipes = recipes.filter((r) =>
+      isRecipeAllowedForPhaseWeek(
+        r.ingredients.map((ri) => ({ phase2Week: ri.ingredient.phase2Week })),
+        phaseIntForFilter,
+        phase2WeekForFilter,
+      ),
+    );
+
+    const candidates: RecipeCandidate[] = allowedRecipes.map((r) => {
       const tags = new Set<string>();
       for (const ri of r.ingredients) {
         for (const g of ri.ingredient.exclusionGroups) tags.add(g);
@@ -263,6 +280,31 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         },
       });
       return { slot: updated };
+    },
+  );
+
+  // PRD §5.1 — toggle "pasto libero". Disponibile solo in Fase 3.
+  fastify.post(
+    '/me/meal-plans/slots/:slotId/free-meal',
+    { preHandler: requireAuth() },
+    async (request, reply) => {
+      const slotId = (request.params as { slotId: string }).slotId;
+      const userId = request.user!.id;
+      const slot = await fastify.prisma.mealSlot.findFirst({
+        where: { id: slotId, plan: { userId } },
+        include: { plan: true },
+      });
+      if (!slot) return reply.code(404).send({ error: 'slot_not_found' });
+      const profile = await fastify.prisma.profile.findUnique({ where: { userId } });
+      if (!profile) return reply.code(409).send({ error: 'profile_required' });
+      if (profile.currentPhase !== 'MAINTENANCE') {
+        return reply.code(409).send({ error: 'free_meal_phase3_only' });
+      }
+      const updated = await fastify.prisma.mealSlot.update({
+        where: { id: slotId },
+        data: { isFreeMeal: !slot.isFreeMeal },
+      });
+      return { slot: { id: updated.id, isFreeMeal: updated.isFreeMeal } };
     },
   );
 
@@ -456,7 +498,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/me/meal-plans/current', { preHandler: requireAuth() }, async (request, reply) => {
     const userId = request.user!.id;
-    const [plan, prefs] = await Promise.all([
+    const [plan, prefs, profileForPhase, userForPhase2] = await Promise.all([
       fastify.prisma.mealPlan.findFirst({
         where: { userId, status: 'ACTIVE' },
         orderBy: { weekStart: 'desc' },
@@ -494,14 +536,29 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         where: { userId },
         select: { fastingProtocol: true },
       }),
+      fastify.prisma.profile.findUnique({
+        where: { userId },
+        select: { currentPhase: true },
+      }),
+      fastify.prisma.user.findUnique({
+        where: { id: userId },
+        select: { phase2StartedAt: true },
+      }),
     ]);
     if (!plan) return reply.code(404).send({ error: 'plan_not_found' });
+    const currentPhase = profileForPhase?.currentPhase ?? null;
+    const phase2Week =
+      currentPhase === 'TRANSITION'
+        ? currentPhase2Week(userForPhase2?.phase2StartedAt ?? null)
+        : null;
     return {
       plan: {
         id: plan.id,
         weekStart: plan.weekStart.toISOString().slice(0, 10),
         slots: plan.slots,
         fastingProtocol: prefs?.fastingProtocol ?? null,
+        currentPhase,
+        phase2Week,
       },
     };
   });

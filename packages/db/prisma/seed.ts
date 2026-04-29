@@ -6,25 +6,28 @@ import { SEED_RECIPES } from './seed-recipes.js';
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  // 1. Ingredienti — upsert sul nome (unique).
+  // 1. Ingredienti — upsert sul nome (unique). Aggiorniamo phase2Week e gli
+  // altri campi anche per quelli già presenti, così il seed resta autoritativo.
   let ingredientsInserted = 0;
   for (const i of SEED_INGREDIENTS) {
+    const data = {
+      category: i.category,
+      defaultUnit: i.defaultUnit,
+      kcalPer100g: i.kcalPer100g,
+      proteinPer100g: i.proteinPer100g,
+      fatPer100g: i.fatPer100g,
+      netCarbPer100g: i.netCarbPer100g,
+      exclusionGroups: i.exclusionGroups,
+      priceAvgEur: i.priceAvgEur ?? null,
+      phase2Week: i.phase2Week ?? null,
+    };
     const existing = await prisma.ingredient.findUnique({ where: { name: i.name } });
-    if (existing) continue;
-    await prisma.ingredient.create({
-      data: {
-        name: i.name,
-        category: i.category,
-        defaultUnit: i.defaultUnit,
-        kcalPer100g: i.kcalPer100g,
-        proteinPer100g: i.proteinPer100g,
-        fatPer100g: i.fatPer100g,
-        netCarbPer100g: i.netCarbPer100g,
-        exclusionGroups: i.exclusionGroups,
-        priceAvgEur: i.priceAvgEur ?? null,
-      },
-    });
-    ingredientsInserted++;
+    if (existing) {
+      await prisma.ingredient.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.ingredient.create({ data: { ...data, name: i.name } });
+      ingredientsInserted++;
+    }
   }
 
   const allIngredients = await prisma.ingredient.findMany({ select: { id: true, name: true } });

@@ -13,6 +13,13 @@ interface RecipeIngredientView {
   category: string;
   quantity: number;
   unit: string;
+  substitutes: string[];
+}
+
+interface RecipeVariant {
+  name: string;
+  description: string;
+  kcalDelta?: number;
 }
 
 interface RecipeView {
@@ -29,6 +36,7 @@ interface RecipeView {
   phases: number[];
   notesChef: string | null;
   ingredients: RecipeIngredientView[];
+  variants: RecipeVariant[];
 }
 
 export default async function RecipePage({
@@ -72,13 +80,30 @@ export default async function RecipePage({
       category: ri.ingredient.category,
       quantity: ri.quantity,
       unit: ri.unit,
+      substitutes: ri.substitutes ?? [],
     })),
+    variants: parseVariants(recipe.variants),
   };
 
   return <RecipeContent recipe={view} />;
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
+function parseVariants(value: unknown): RecipeVariant[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((v): v is { name: string; description: string; kcalDelta?: number } => {
+      if (!v || typeof v !== 'object') return false;
+      const o = v as Record<string, unknown>;
+      return typeof o.name === 'string' && typeof o.description === 'string';
+    })
+    .map((v) => ({
+      name: v.name,
+      description: v.description,
+      ...(typeof v.kcalDelta === 'number' ? { kcalDelta: v.kcalDelta } : {}),
+    }));
+}
 
 function RecipeContent({ recipe }: { recipe: RecipeView }) {
   const t = useTranslations('Recipe');
@@ -149,6 +174,11 @@ function RecipeContent({ recipe }: { recipe: RecipeView }) {
                     <p className="text-ink-soft mt-1 font-mono text-[10px] uppercase tracking-widest">
                       {ing.category}
                     </p>
+                    {ing.substitutes.length > 0 ? (
+                      <p className="font-display text-ink-dim mt-1 text-xs italic leading-snug">
+                        {t('substitutesPrefix')} {ing.substitutes.join(', ')}
+                      </p>
+                    ) : null}
                   </div>
                   <span className="text-ink font-mono text-sm tabular-nums">
                     {formatQuantity(ing.quantity)} {ing.unit}
@@ -190,6 +220,33 @@ function RecipeContent({ recipe }: { recipe: RecipeView }) {
             </aside>
           ) : null}
         </section>
+
+        {recipe.variants.length > 0 ? (
+          <>
+            <div className="rule animate-rule-in my-12" />
+            <section className="space-y-6">
+              <p className="editorial-eyebrow">{t('variantsTitle')}</p>
+              <ul className="grid gap-6 sm:grid-cols-2">
+                {recipe.variants.map((v, i) => (
+                  <li key={i} className="border-ink/15 border p-5">
+                    <p className="font-display text-ink text-lg font-medium leading-tight">
+                      {v.name}
+                    </p>
+                    <p className="font-display text-ink-soft mt-2 text-base italic leading-snug">
+                      {v.description}
+                    </p>
+                    {v.kcalDelta != null ? (
+                      <p className="text-ink-dim mt-2 font-mono text-[10px] uppercase tracking-widest">
+                        {v.kcalDelta > 0 ? '+' : ''}
+                        {v.kcalDelta} kcal
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        ) : null}
       </main>
 
       <div className="rule-thick mt-16" />

@@ -153,6 +153,42 @@ export const profileRoutes: FastifyPluginAsync = async (fastify) => {
     return { profile: serialize(profile) };
   });
 
+  // PRD §5.1 — avanzamento di fase. Quando l'utente passa da INTENSIVE a
+  // TRANSITION (Fase 2), salviamo automaticamente phase2StartedAt sull'utente
+  // così la reintroduzione progressiva degli alimenti funziona dalla settimana
+  // corretta.
+  fastify.post('/me/profile/phase', { preHandler: requireAuth() }, async (request, reply) => {
+    const body = request.body as { phase?: unknown };
+    const phase = body.phase;
+    if (phase !== 'INTENSIVE' && phase !== 'TRANSITION' && phase !== 'MAINTENANCE') {
+      return reply.code(400).send({ error: 'invalid_phase' });
+    }
+    const userId = request.user!.id;
+    const profile = await fastify.prisma.profile.findUnique({ where: { userId } });
+    if (!profile) return reply.code(404).send({ error: 'profile_not_found' });
+
+    const transitioning = profile.currentPhase !== 'TRANSITION' && phase === 'TRANSITION';
+
+    await fastify.prisma.profile.update({
+      where: { userId },
+      data: { currentPhase: phase },
+    });
+    if (transitioning) {
+      // Setta phase2StartedAt solo se non già impostato (idempotente).
+      const user = await fastify.prisma.user.findUnique({
+        where: { id: userId },
+        select: { phase2StartedAt: true },
+      });
+      if (!user?.phase2StartedAt) {
+        await fastify.prisma.user.update({
+          where: { id: userId },
+          data: { phase2StartedAt: new Date() },
+        });
+      }
+    }
+    return { phase };
+  });
+
   // PATCH dedicato per le condizioni mediche: l'onboarding lo usa per salvare
   // solo questo delta senza richiedere tutti i campi obbligatori del PUT.
   fastify.patch('/me/profile/conditions', { preHandler: requireAuth() }, async (request, reply) => {

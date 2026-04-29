@@ -6,7 +6,13 @@ import { useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { regenerateSlot, swapSlotRecipe, type CurrentPlan, type PlanSlot } from './actions';
+import {
+  regenerateSlot,
+  swapSlotRecipe,
+  toggleFreeMeal,
+  type CurrentPlan,
+  type PlanSlot,
+} from './actions';
 
 const MEAL_ORDER: PlanSlot['meal'][] = ['COLAZIONE', 'PRANZO', 'SPUNTINO', 'CENA'];
 const DAY_KEYS = [
@@ -28,6 +34,17 @@ function aggregateMacros(slots: PlanSlot[]): {
 } {
   return slots.reduce(
     (acc, s) => {
+      // Per i free meal usiamo una stima fissa kcal e azzeriamo i macros
+      // (non li conosciamo davvero) — il PRD parla di "compensazione" non di
+      // tracking puntuale del pasto libero.
+      if (s.isFreeMeal) {
+        return {
+          kcal: acc.kcal + FREE_MEAL_DEFAULT_KCAL,
+          proteinG: acc.proteinG,
+          fatG: acc.fatG,
+          netCarbG: acc.netCarbG,
+        };
+      }
       if (!s.selected) return acc;
       return {
         kcal: acc.kcal + s.selected.kcal,
@@ -40,6 +57,8 @@ function aggregateMacros(slots: PlanSlot[]): {
   );
 }
 
+const FREE_MEAL_DEFAULT_KCAL = 750;
+
 export function PlanWeek({ plan }: { plan: CurrentPlan }) {
   const t = useTranslations('Plan');
 
@@ -49,6 +68,7 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
     byDay.get(slot.dayOfWeek)!.push(slot);
   }
 
+  const isPhase3 = plan.currentPhase === 'MAINTENANCE';
   const weekTotals = aggregateMacros(plan.slots);
   const activeDays = Array.from(byDay.values()).filter((s) => s.length > 0).length;
   const weekAvg =
@@ -114,7 +134,7 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
             ) : (
               <div className="divide-ink/10 grid grid-cols-1 divide-y sm:grid-cols-2 sm:gap-x-8 sm:divide-y-0 lg:grid-cols-4 lg:gap-x-6">
                 {slots.map((slot, slotIdx) => (
-                  <SlotCard key={slot.id} slot={slot} index={slotIdx} />
+                  <SlotCard key={slot.id} slot={slot} index={slotIdx} canFreeMeal={isPhase3} />
                 ))}
               </div>
             )}
@@ -127,7 +147,15 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
 
 const MEAL_ROMAN = ['I', 'II', 'III', 'IV'];
 
-function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
+function SlotCard({
+  slot,
+  index,
+  canFreeMeal,
+}: {
+  slot: PlanSlot;
+  index: number;
+  canFreeMeal: boolean;
+}) {
   const t = useTranslations('Plan');
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -146,6 +174,13 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
     });
   }
 
+  function freeMeal() {
+    startTransition(async () => {
+      await toggleFreeMeal(slot.id);
+      setOpen(false);
+    });
+  }
+
   return (
     <article className="group relative flex flex-col gap-3 py-5 sm:py-2">
       <header className="flex items-baseline justify-between gap-3">
@@ -155,18 +190,46 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
           </span>
           <span>{t(`meals.${slot.meal}`)}</span>
         </p>
-        <button
-          type="button"
-          onClick={regenerate}
-          disabled={pending}
-          aria-label={t('regenerateSlot')}
-          title={t('regenerateSlot')}
-          className="text-ink-dim hover:text-pomodoro font-mono text-xs leading-none transition-colors disabled:opacity-40"
-        >
-          ↻
-        </button>
+        <div className="flex items-center gap-2">
+          {canFreeMeal ? (
+            <button
+              type="button"
+              onClick={freeMeal}
+              disabled={pending}
+              aria-label={slot.isFreeMeal ? t('freeMealUndo') : t('freeMealMark')}
+              title={slot.isFreeMeal ? t('freeMealUndo') : t('freeMealMark')}
+              className={`font-mono text-xs leading-none transition-colors disabled:opacity-40 ${
+                slot.isFreeMeal ? 'text-pomodoro' : 'text-ink-dim hover:text-pomodoro'
+              }`}
+            >
+              ☆
+            </button>
+          ) : null}
+          {!slot.isFreeMeal ? (
+            <button
+              type="button"
+              onClick={regenerate}
+              disabled={pending}
+              aria-label={t('regenerateSlot')}
+              title={t('regenerateSlot')}
+              className="text-ink-dim hover:text-pomodoro font-mono text-xs leading-none transition-colors disabled:opacity-40"
+            >
+              ↻
+            </button>
+          ) : null}
+        </div>
       </header>
-      {slot.selected ? (
+      {slot.isFreeMeal ? (
+        <>
+          <p className="font-display text-pomodoro text-lg font-medium italic leading-tight">
+            {t('freeMealLabel')}
+          </p>
+          <p className="text-ink-soft font-mono text-xs tracking-tight">
+            ~{FREE_MEAL_DEFAULT_KCAL}{' '}
+            <span className="font-display text-[10px] italic">kcal stimate</span>
+          </p>
+        </>
+      ) : slot.selected ? (
         <Link
           href={`/recipes/${slot.selected.id}`}
           className="font-display text-ink decoration-pomodoro hover:decoration-ink text-lg font-medium leading-tight underline decoration-[1.5px] underline-offset-[5px] transition-colors"
@@ -176,7 +239,7 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
       ) : (
         <p className="font-display text-ink-soft text-lg italic leading-tight">{t('noRecipe')}</p>
       )}
-      {slot.selected ? (
+      {!slot.isFreeMeal && slot.selected ? (
         <p className="text-ink-soft font-mono text-xs tracking-tight">
           {Math.round(slot.selected.kcal)}{' '}
           <span className="font-display text-[10px] italic">kcal</span>
