@@ -167,22 +167,75 @@
   },
   "Onboarding": {
     "title": "Configura il tuo percorso",
-    "subtitle": "Tre passaggi: parametri personali, preferenze, e via al primo piano.",
+    "subtitle": "Cinque passaggi: l'obiettivo, i numeri, le preferenze, le notifiche e via al primo piano.",
     "stepsTitle": "Tappe",
     "stepEyebrow": "Tappa {n} di {total}",
     "next": "Salva e continua",
     "back": "← Indietro",
+    "skipForNow": "Salta per ora",
+    "working": "Attendere…",
     "steps": {
+      "goal": "L'obiettivo",
       "profile": "Anagrafica e attività",
       "preferences": "Esclusioni e cucine",
+      "notifications": "Promemoria",
       "done": "Pronti a partire"
     },
+    "goalHeading": "Perché sei qui?",
+    "goalHint": "Scegli il motivo principale: ci aiuterà a parlarti nel modo giusto. Potrai sempre cambiarlo.",
+    "goals": {
+      "LOSE": {
+        "title": "Perdere peso",
+        "hint": "Deficit calorico graduale, fase intensiva poi mantenimento."
+      },
+      "MAINTAIN": {
+        "title": "Mantenere il peso",
+        "hint": "Equilibrio tra macros e digiuno per restare stabile."
+      },
+      "ENERGY": {
+        "title": "Energia e salute",
+        "hint": "Lucidità mentale, glicemia stabile, infiammazione bassa."
+      }
+    },
     "profileHeading": "I numeri che ti riguardano",
+    "profileHeadingGoal": {
+      "LOSE": "I numeri da cui partire",
+      "MAINTAIN": "I numeri da mantenere",
+      "ENERGY": "I numeri che ti raccontano"
+    },
     "profileHint": "Età, sesso, altezza, peso e attività: bastano per calcolare BMR, TDEE e i target di macros.",
     "preferencesHeading": "Cosa eviti, cosa ami",
     "preferencesHint": "Le esclusioni filtrano davvero le ricette del piano. Le cucine sono un suggerimento al matchmaking.",
+    "notificationsHeading": "Vuoi un promemoria?",
+    "notificationsHint": "Un piccolo nudge il lunedì per la pesata, e altre tappe in arrivo. Niente spam: scegli tu cosa ricevere.",
+    "notificationsActivate": "Attiva promemoria",
+    "notificationsActive": "Promemoria attivati. Bene così.",
+    "notificationsBlocked": "Hai bloccato le notifiche per questo sito. Le potrai riattivare dalle impostazioni del browser.",
+    "notificationsUnsupported": "Il tuo browser non supporta le notifiche push. Su iOS apri prima KetoPath dalla Home.",
+    "notificationsError": "Non è stato possibile attivarle. Riprova più tardi dal tuo profilo.",
     "doneHeading": "Tutto pronto.",
-    "doneHint": "Puoi generare il primo piano della settimana adesso, oppure esplorare l'app a tuo ritmo.",
+    "doneHeadingGoal": {
+      "LOSE": "Si parte. Un passo alla volta.",
+      "MAINTAIN": "Si parte. Mantenendo l'equilibrio.",
+      "ENERGY": "Si parte. Con più lucidità."
+    },
+    "doneHint": "Puoi esplorare l'app a tuo ritmo: ogni sezione resta sempre a portata.",
+    "doneGenerating": "Stiamo preparando il primo piano per la tua settimana…",
+    "donePlanReady": "Il primo piano è pronto. Dai un'occhiata o tuffati in cucina.",
+    "nextPlanEyebrow": "Cucina",
+    "nextPlanTitle": "Il piano della settimana",
+    "nextPlanHint": "Sette giorni, quattro pasti al dì, scelti dal matchmaking.",
+    "nextFastingEyebrow": "Digiuno",
+    "nextFastingTitle": "Una sessione di digiuno",
+    "nextFastingHint": "Scegli un protocollo, lascia che il timer scandisca il ritmo.",
+    "nextTrackingEyebrow": "Tracking",
+    "nextTrackingTitle": "La pesata di oggi",
+    "nextTrackingHint": "Pochi numeri, una volta a settimana. Costanza prima di tutto.",
+    "iosInstallEyebrow": "Solo iOS — per ricevere le notifiche",
+    "iosInstallTitle": "Installa KetoPath sulla Home in tre passaggi.",
+    "iosInstallStep1": "Tocca il pulsante Condividi (icona quadrato con freccia in alto) nella barra di Safari.",
+    "iosInstallStep2": "Scorri e seleziona “Aggiungi alla schermata Home”.",
+    "iosInstallStep3": "Apri KetoPath dalla Home: ora le notifiche funzionano anche su iPhone.",
     "goToPlan": "Genera il primo piano",
     "skipToHome": "Esplora l'app →"
   },
