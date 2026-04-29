@@ -13,4 +13,5 @@ export * from './planner/types.js';
 export * from './preferences/training.js';
 export * from './profile/diet-history.js';
 export * from './profile/schema.js';
+export * from './tracking/fasting-stats.js';
 export * from './tracking/schema.js';

@@ -1,6 +1,8 @@
+import { computeFastingStats } from '@ketopath/shared';
 import { useTranslations } from 'next-intl';
 
 import type { FastEventRow } from './actions';
+import { BreakFastSuggestionsBlock } from './break-fast-suggestions';
 
 const PROTOCOL_LABEL: Record<FastEventRow['protocol'], string> = {
   FOURTEEN_TEN: '14:10',
@@ -44,43 +46,54 @@ export function FastHistory({ events }: { events: FastEventRow[] }) {
     );
   }
 
-  const completed = events.filter((e) => e.status === 'COMPLETED');
-  const totalHours =
-    completed.reduce(
-      (sum, e) =>
-        sum + ((e.endedAt ? new Date(e.endedAt).getTime() : 0) - new Date(e.startedAt).getTime()),
-      0,
-    ) / 3_600_000;
+  const stats = computeFastingStats(events);
 
   return (
     <div className="space-y-8">
-      <div className="border-ink/10 grid grid-cols-2 gap-6 border-y py-5 sm:grid-cols-3">
-        <Stat label={t('statCompleted')} value={String(completed.length)} />
-        <Stat label={t('statTotal')} value={`${totalHours.toFixed(1)} h`} />
-        <Stat label={t('statSessions')} value={String(events.length)} />
+      <div className="border-ink/10 grid grid-cols-2 gap-6 border-y py-5 sm:grid-cols-5">
+        <Stat label={t('statWeekly')} value={`${stats.weeklyHours.toFixed(1)} h`} />
+        <Stat label={t('statMonthly')} value={`${stats.monthlyHours.toFixed(1)} h`} />
+        <Stat
+          label={t('statCurrentStreak')}
+          value={t('statStreakValue', { n: stats.currentStreak })}
+        />
+        <Stat
+          label={t('statLongestStreak')}
+          value={t('statStreakValue', { n: stats.longestStreak })}
+        />
+        <Stat
+          label={t('statCompletionRate')}
+          value={`${Math.round(stats.completionRate * 100)}%`}
+        />
       </div>
       <ul className="space-y-3">
-        {events.slice(0, 12).map((e) => (
-          <li
-            key={e.id}
-            className="border-ink/10 grid grid-cols-[auto_1fr_auto] items-baseline gap-4 border-b pb-3 last:border-b-0"
-          >
-            <span className="font-display text-pomodoro text-base italic tabular-nums">
-              {PROTOCOL_LABEL[e.protocol]}
-            </span>
-            <div>
-              <p className="font-display text-ink text-base leading-tight">
-                {formatDate(e.startedAt)}
-              </p>
-              <p className="text-ink-dim mt-0.5 font-mono text-[10px] uppercase tracking-widest">
-                {t(`status.${e.status}`)}
-              </p>
-            </div>
-            <p className="text-ink font-mono text-sm tabular-nums">
-              {durationLabel(e.startedAt, e.endedAt)}
-            </p>
-          </li>
-        ))}
+        {events.slice(0, 12).map((e) => {
+          const hours = e.endedAt
+            ? (new Date(e.endedAt).getTime() - new Date(e.startedAt).getTime()) / 3_600_000
+            : 0;
+          const isLongFast = e.status === 'COMPLETED' && hours >= 24;
+          return (
+            <li key={e.id} className="border-ink/10 space-y-3 border-b pb-3 last:border-b-0">
+              <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-4">
+                <span className="font-display text-pomodoro text-base italic tabular-nums">
+                  {PROTOCOL_LABEL[e.protocol]}
+                </span>
+                <div>
+                  <p className="font-display text-ink text-base leading-tight">
+                    {formatDate(e.startedAt)}
+                  </p>
+                  <p className="text-ink-dim mt-0.5 font-mono text-[10px] uppercase tracking-widest">
+                    {t(`status.${e.status}`)}
+                  </p>
+                </div>
+                <p className="text-ink font-mono text-sm tabular-nums">
+                  {durationLabel(e.startedAt, e.endedAt)}
+                </p>
+              </div>
+              {isLongFast ? <BreakFastSuggestionsBlock fastEventId={e.id} /> : null}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

@@ -6,9 +6,10 @@ import { setRequestLocale } from 'next-intl/server';
 import { Masthead } from '@/components/masthead';
 import { getServerSession } from '@/lib/auth';
 
-import { fetchFastEvents } from './actions';
+import { fetchFastEvents, fetchFastingPause, type FastingPauseStatus } from './actions';
 import { FastHistory } from './fast-history';
 import { FastTimer } from './fast-timer';
+import { FastingPauseToggle } from './fasting-pause-toggle';
 
 export default async function FastingPage({ params: { locale } }: { params: { locale: string } }) {
   setRequestLocale(locale);
@@ -21,19 +22,21 @@ export default async function FastingPage({ params: { locale } }: { params: { lo
   });
   if (!user?.disclaimerAcceptedAt) redirect('/welcome');
 
-  const events = await fetchFastEvents();
+  const [events, pauseStatus] = await Promise.all([fetchFastEvents(), fetchFastingPause()]);
   const active = events.find((e) => e.status === 'IN_PROGRESS') ?? null;
   const history = events.filter((e) => e.id !== active?.id);
 
-  return <FastingPageContent active={active} history={history} />;
+  return <FastingPageContent active={active} history={history} pauseStatus={pauseStatus} />;
 }
 
 function FastingPageContent({
   active,
   history,
+  pauseStatus,
 }: {
   active: Awaited<ReturnType<typeof fetchFastEvents>>[number] | null;
   history: Awaited<ReturnType<typeof fetchFastEvents>>;
+  pauseStatus: FastingPauseStatus;
 }) {
   const t = useTranslations('Fasting');
 
@@ -51,6 +54,8 @@ function FastingPageContent({
         </p>
 
         <div className="rule animate-rule-in my-10 [animation-delay:360ms]" />
+
+        <FastingPauseToggle initial={pauseStatus} />
 
         <FastTimer active={active} />
 

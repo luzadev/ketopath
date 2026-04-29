@@ -9,9 +9,10 @@ import { startNotificationScheduler } from './modules/notifications/scheduler.js
 async function start(): Promise<void> {
   const app = await buildApp();
 
-  const cronTask = startNotificationScheduler(app.prisma, app.log);
+  const cronHandles = startNotificationScheduler(app.prisma, app.log);
   app.addHook('onClose', async () => {
-    cronTask?.stop();
+    cronHandles?.weekly.stop();
+    cronHandles?.fasting.stop();
   });
 
   try {

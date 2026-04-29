@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { endFast, startFast, type FastEventRow } from './actions';
+import { endFast, startFast, updateFastSymptoms, type FastEventRow } from './actions';
 
 type Protocol = (typeof FASTING_PROTOCOLS)[number];
 
@@ -107,18 +107,21 @@ function ActiveTimer({ event }: { event: FastEventRow }) {
           </Button>
         </div>
       </div>
-      <aside className="md:border-ink/15 animate-fade-up [animation-delay:420ms] md:col-span-5 md:border-l md:pl-10">
-        <p className="editorial-eyebrow">{t('phaseTitle')}</p>
-        <p className="font-display text-pomodoro mt-4 text-2xl font-medium leading-tight">
-          {t(`phases.${phase}.label`)}
-        </p>
-        <p className="font-display text-ink-soft mt-3 text-base italic leading-snug">
-          {t(`phases.${phase}.description`)}
-        </p>
-        <dl className="mt-8 space-y-5 text-sm">
-          <Row label={t('startedAt')} value={formatStart(event.startedAt)} />
-          <Row label={t('target')} value={`${(event.targetDuration / 60).toFixed(1)} h`} />
-        </dl>
+      <aside className="md:border-ink/15 animate-fade-up space-y-10 [animation-delay:420ms] md:col-span-5 md:border-l md:pl-10">
+        <div>
+          <p className="editorial-eyebrow">{t('phaseTitle')}</p>
+          <p className="font-display text-pomodoro mt-4 text-2xl font-medium leading-tight">
+            {t(`phases.${phase}.label`)}
+          </p>
+          <p className="font-display text-ink-soft mt-3 text-base italic leading-snug">
+            {t(`phases.${phase}.description`)}
+          </p>
+          <dl className="mt-8 space-y-5 text-sm">
+            <Row label={t('startedAt')} value={formatStart(event.startedAt)} />
+            <Row label={t('target')} value={`${(event.targetDuration / 60).toFixed(1)} h`} />
+          </dl>
+        </div>
+        <SymptomsDiary event={event} />
       </aside>
     </section>
   );
@@ -230,4 +233,110 @@ const HOUR_FMT = new Intl.DateTimeFormat('it-IT', {
 
 function formatStart(iso: string): string {
   return HOUR_FMT.format(new Date(iso));
+}
+
+function SymptomsDiary({ event }: { event: FastEventRow }) {
+  const t = useTranslations('Fasting');
+  const initial = (event.symptoms as Record<string, unknown> | null) ?? {};
+  const [headache, setHeadache] = useState<boolean>(!!initial.headache);
+  const [energy, setEnergy] = useState<number>(
+    typeof initial.energy === 'number' ? initial.energy : 5,
+  );
+  const [hunger, setHunger] = useState<number>(
+    typeof initial.hunger === 'number' ? initial.hunger : 5,
+  );
+  const [clarity, setClarity] = useState<number>(
+    typeof initial.clarity === 'number' ? initial.clarity : 5,
+  );
+  const [other, setOther] = useState<string>(
+    typeof initial.other === 'string' ? initial.other : '',
+  );
+  const [pending, startTransition] = useTransition();
+  const [saved, setSaved] = useState<boolean>(false);
+
+  function save(): void {
+    startTransition(async () => {
+      setSaved(false);
+      const result = await updateFastSymptoms(event.id, {
+        headache,
+        energy,
+        hunger,
+        clarity,
+        other: other.trim() || undefined,
+      });
+      if (result.ok) {
+        setSaved(true);
+        window.setTimeout(() => setSaved(false), 2500);
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-5">
+      <p className="editorial-eyebrow">{t('symptomsTitle')}</p>
+      <p className="font-display text-ink-soft text-sm italic leading-snug">{t('symptomsHint')}</p>
+      <label className="flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          checked={headache}
+          onChange={(e) => setHeadache(e.target.checked)}
+          className="border-ink h-4 w-4 cursor-pointer accent-current"
+        />
+        <span className="font-display text-ink text-base leading-tight">
+          {t('symptomHeadache')}
+        </span>
+      </label>
+      <SymptomSlider label={t('symptomEnergy')} value={energy} onChange={setEnergy} />
+      <SymptomSlider label={t('symptomHunger')} value={hunger} onChange={setHunger} />
+      <SymptomSlider label={t('symptomClarity')} value={clarity} onChange={setClarity} />
+      <div>
+        <p className="editorial-eyebrow mb-2">{t('symptomOther')}</p>
+        <textarea
+          value={other}
+          onChange={(e) => setOther(e.target.value)}
+          rows={2}
+          maxLength={500}
+          placeholder={t('symptomOtherPlaceholder')}
+          className="border-ink/30 focus:border-ink font-display text-ink w-full resize-none border-b bg-transparent py-2 text-sm leading-snug outline-none"
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="button" variant="outline" onClick={save} disabled={pending}>
+          {pending ? t('saving') : t('symptomsSave')}
+        </Button>
+        {saved ? (
+          <span className="font-display text-oliva text-sm italic" role="status">
+            {t('symptomsSaved')}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SymptomSlider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="editorial-eyebrow">{label}</p>
+        <p className="text-ink font-mono text-sm tabular-nums">{value}/10</p>
+      </div>
+      <input
+        type="range"
+        min={1}
+        max={10}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-2 w-full cursor-pointer accent-current"
+      />
+    </div>
+  );
 }

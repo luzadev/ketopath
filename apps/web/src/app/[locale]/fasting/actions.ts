@@ -25,6 +25,56 @@ function cookieHeader(): string {
   return headers().get('cookie') ?? '';
 }
 
+export interface BreakFastSuggestion {
+  id: string;
+  name: string;
+  kcal: number;
+  proteinG: number;
+  prepMinutes: number;
+  description: string | null;
+}
+
+export async function fetchBreakFastSuggestions(
+  fastEventId: string,
+): Promise<BreakFastSuggestion[]> {
+  const res = await fetch(`${API_URL}/me/fast-events/${fastEventId}/break-fast-suggestions`, {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const data = (await res.json()) as { suggestions: BreakFastSuggestion[] };
+  return data.suggestions;
+}
+
+export interface FastingPauseStatus {
+  fastingPausedUntil: string | null;
+  paused: boolean;
+}
+
+export async function fetchFastingPause(): Promise<FastingPauseStatus> {
+  const res = await fetch(`${API_URL}/me/fasting/pause`, {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return { fastingPausedUntil: null, paused: false };
+  return (await res.json()) as FastingPauseStatus;
+}
+
+export async function setFastingPause(
+  until: Date | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const body = until === null ? { until: null } : { until: until.toISOString() };
+  const res = await fetch(`${API_URL}/me/fasting/pause`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', cookie: cookieHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  if (!res.ok) return { ok: false, error: `api_error_${res.status}` };
+  revalidatePath('/fasting');
+  return { ok: true };
+}
+
 export async function fetchFastEvents(): Promise<FastEventRow[]> {
   const res = await fetch(`${API_URL}/me/fast-events`, {
     headers: { cookie: cookieHeader() },
@@ -60,6 +110,32 @@ export async function startFast(input: FastEventStartInput): Promise<StartResult
   const data = (await res.json()) as { event: { id: string } };
   revalidatePath('/fasting');
   return { ok: true, id: data.event.id };
+}
+
+export interface FastSymptomsInput {
+  headache?: boolean;
+  energy?: number;
+  hunger?: number;
+  clarity?: number;
+  other?: string;
+}
+
+export async function updateFastSymptoms(
+  id: string,
+  symptoms: FastSymptomsInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const res = await fetch(`${API_URL}/me/fast-events/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', cookie: cookieHeader() },
+    body: JSON.stringify({ symptoms }),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: body.error ?? `api_error_${res.status}` };
+  }
+  revalidatePath('/fasting');
+  return { ok: true };
 }
 
 export type EndResult = { ok: true } | { ok: false; error: string };
