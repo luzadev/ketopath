@@ -36,6 +36,11 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
           (a, b) => MEAL_ORDER.indexOf(a.meal) - MEAL_ORDER.indexOf(b.meal),
         );
         const dayKcal = slots.reduce((sum, s) => sum + (s.selected?.kcal ?? 0), 0);
+        // Nessuno slot → giorno di digiuno completo (ESE_24).
+        const isFastingDay = slots.length === 0;
+        // Solo CENA con dailyKcal ridotto → giorno "leggero" del 5:2.
+        const isLightDay = !isFastingDay && slots.length === 1 && slots[0].meal === 'CENA';
+
         return (
           <section key={dayKey} aria-labelledby={`day-${dayKey}`} className="space-y-5">
             <header className="border-ink/15 grid items-baseline gap-2 border-b pb-3 sm:grid-cols-[auto_1fr_auto]">
@@ -47,16 +52,31 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
                 className="font-display text-ink text-2xl font-medium leading-none tracking-tight sm:text-3xl"
               >
                 {t(`days.${dayKey}`)}
+                {isFastingDay ? (
+                  <span className="font-display text-ink-dim ml-3 text-base italic">
+                    · {t('fastingDay')}
+                  </span>
+                ) : isLightDay ? (
+                  <span className="font-display text-ink-dim ml-3 text-base italic">
+                    · {t('lightDay')}
+                  </span>
+                ) : null}
               </h2>
               <span className="text-ink-soft font-mono text-[11px] uppercase tracking-widest">
-                {t('dayTotal', { kcal: Math.round(dayKcal) })}
+                {isFastingDay ? '— kcal' : t('dayTotal', { kcal: Math.round(dayKcal) })}
               </span>
             </header>
-            <div className="divide-ink/10 grid grid-cols-1 divide-y sm:grid-cols-2 sm:gap-x-8 sm:divide-y-0 lg:grid-cols-4 lg:gap-x-6">
-              {slots.map((slot, slotIdx) => (
-                <SlotCard key={slot.id} slot={slot} index={slotIdx} />
-              ))}
-            </div>
+            {isFastingDay ? (
+              <p className="font-display text-ink-soft text-base italic leading-snug">
+                {t('fastingDayHint')}
+              </p>
+            ) : (
+              <div className="divide-ink/10 grid grid-cols-1 divide-y sm:grid-cols-2 sm:gap-x-8 sm:divide-y-0 lg:grid-cols-4 lg:gap-x-6">
+                {slots.map((slot, slotIdx) => (
+                  <SlotCard key={slot.id} slot={slot} index={slotIdx} />
+                ))}
+              </div>
+            )}
           </section>
         );
       })}

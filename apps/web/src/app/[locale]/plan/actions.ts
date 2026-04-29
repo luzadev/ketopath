@@ -25,6 +25,14 @@ export interface CurrentPlan {
   id: string;
   weekStart: string;
   slots: PlanSlot[];
+  fastingProtocol:
+    | 'FOURTEEN_TEN'
+    | 'SIXTEEN_EIGHT'
+    | 'EIGHTEEN_SIX'
+    | 'TWENTY_FOUR'
+    | 'ESE_24'
+    | 'FIVE_TWO'
+    | null;
 }
 
 function cookieHeader(): string {

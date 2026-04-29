@@ -91,10 +91,91 @@ export function matchMeals(opts: MatchOptions): MatchResult[] {
   return results.slice(0, opts.topN ?? 5);
 }
 
+export type MealShare = MatchOptions['mealShare'];
+
 // Default share per pasto (somma 1.0). Può essere sovrascritta dall'utente.
-export const DEFAULT_MEAL_SHARE = {
+export const DEFAULT_MEAL_SHARE: MealShare = {
   COLAZIONE: 0.25,
   PRANZO: 0.35,
   SPUNTINO: 0.1,
   CENA: 0.3,
-} as const;
+};
+
+export type FastingProtocolKey =
+  | 'FOURTEEN_TEN'
+  | 'SIXTEEN_EIGHT'
+  | 'EIGHTEEN_SIX'
+  | 'TWENTY_FOUR'
+  | 'ESE_24'
+  | 'FIVE_TWO';
+
+/**
+ * Piano del singolo giorno per un certo protocollo IF.
+ * - `share`: quote per pasto (sommano a `kcalMultiplier`, non a 1, perché un
+ *   giorno di digiuno completo ha tutto a 0).
+ * - `kcalMultiplier`: moltiplicatore sul TDEE/kcalTarget del giorno.
+ *   - 1.0 → giorno normale
+ *   - 0.0 → giorno di digiuno completo (il piano salta il giorno intero)
+ *   - 0.25 → giorno "fasting day" del 5:2 (~500 kcal su 2000)
+ */
+export interface ProtocolDayPlan {
+  share: MealShare;
+  kcalMultiplier: number;
+}
+
+const ALL_ZERO: MealShare = { COLAZIONE: 0, PRANZO: 0, SPUNTINO: 0, CENA: 0 };
+
+// PRD §5.6 + §9.4 — finestra alimentare per protocollo, declinata per giorno
+// della settimana. `dayOfWeek` è Mon-anchored: 0=Lunedì … 6=Domenica.
+//
+// 14:10  → 10h, tutti i pasti, ogni giorno.
+// 16:8   → 8h, niente colazione (brunch + cena + spuntino), ogni giorno.
+// 18:6   → 6h, niente colazione, pranzo grande + cena + spuntino piccolo.
+// 20:4   → 4h, un solo pasto sostanzioso a cena + spuntino opzionale.
+// ESE 24h → mercoledì digiuno completo (kcalMultiplier=0), altri giorni
+//           default. Variante "una volta a settimana" del classico Eat-Stop-Eat.
+// 5:2    → lunedì + giovedì giorni "magri" (~500 kcal, un solo pasto a cena),
+//          gli altri 5 giorni default.
+export function protocolPlanForDay(
+  protocol: FastingProtocolKey | null | undefined,
+  dayOfWeek: number,
+): ProtocolDayPlan {
+  switch (protocol) {
+    case 'SIXTEEN_EIGHT':
+      return {
+        share: { COLAZIONE: 0, PRANZO: 0.5, SPUNTINO: 0.1, CENA: 0.4 },
+        kcalMultiplier: 1,
+      };
+    case 'EIGHTEEN_SIX':
+      return {
+        share: { COLAZIONE: 0, PRANZO: 0.55, SPUNTINO: 0.05, CENA: 0.4 },
+        kcalMultiplier: 1,
+      };
+    case 'TWENTY_FOUR':
+      return {
+        share: { COLAZIONE: 0, PRANZO: 0, SPUNTINO: 0.1, CENA: 0.9 },
+        kcalMultiplier: 1,
+      };
+    case 'ESE_24':
+      // Mercoledì (dayOfWeek === 2) digiuno completo, altrimenti normale.
+      return dayOfWeek === 2
+        ? { share: ALL_ZERO, kcalMultiplier: 0 }
+        : { share: DEFAULT_MEAL_SHARE, kcalMultiplier: 1 };
+    case 'FIVE_TWO':
+      // Lunedì (0) e giovedì (3) "fasting days": un solo pasto a cena con
+      // kcal complessive ridotte (~25% di TDEE, target classico ~500 kcal).
+      // Nota: la share somma comunque a 1 (è la quota del *giorno ridotto*),
+      // mentre la riduzione totale viene applicata via kcalMultiplier.
+      return dayOfWeek === 0 || dayOfWeek === 3
+        ? {
+            share: { COLAZIONE: 0, PRANZO: 0, SPUNTINO: 0, CENA: 1 },
+            kcalMultiplier: 0.25,
+          }
+        : { share: DEFAULT_MEAL_SHARE, kcalMultiplier: 1 };
+    case 'FOURTEEN_TEN':
+    case null:
+    case undefined:
+    default:
+      return { share: DEFAULT_MEAL_SHARE, kcalMultiplier: 1 };
+  }
+}

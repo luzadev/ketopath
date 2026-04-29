@@ -391,6 +391,19 @@
     "hideAlternatives": "Nascondi",
     "swap": "Scegli",
     "dayTotal": "{kcal} kcal totali",
+    "window": "Finestra alimentare",
+    "fastingDay": "Giorno di digiuno",
+    "fastingDayHint": "Acqua, tè e tisane. Niente cibo solido.",
+    "lightDay": "Giorno leggero",
+    "lightDayHint": "Solo cena, kcal ridotte (~25% del giornaliero abituale).",
+    "protocolLabel": {
+      "FOURTEEN_TEN": "14:10 — finestra di 10h",
+      "SIXTEEN_EIGHT": "16:8 — finestra di 8h",
+      "EIGHTEEN_SIX": "18:6 — finestra di 6h",
+      "TWENTY_FOUR": "20:4 — finestra di 4h",
+      "ESE_24": "ESE 24h — un giorno di digiuno completo a settimana",
+      "FIVE_TWO": "5:2 — due giorni leggeri a settimana"
+    },
     "meals": {
       "COLAZIONE": "Colazione",
       "PRANZO": "Pranzo",

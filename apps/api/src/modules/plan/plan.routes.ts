@@ -1,9 +1,10 @@
 import {
-  DEFAULT_MEAL_SHARE,
   calculateBmr,
   calculateTdee,
   macrosForPhase,
   matchMeals,
+  protocolPlanForDay,
+  type FastingProtocolKey,
   type RecipeCandidate,
 } from '@ketopath/shared';
 import type { FastifyPluginAsync } from 'fastify';
@@ -84,9 +85,15 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
     const tdee = calculateTdee(bmr, profile.activityLevel);
     const phaseInt = phaseToInt(profile.currentPhase);
     // Deficit base solo in fase 1; in fase 2/3 si avvicina a TDEE.
-    const kcalTarget = Math.round(phaseInt === 1 ? tdee - 500 : phaseInt === 2 ? tdee - 200 : tdee);
-    const dailyTarget = macrosForPhase({ kcalTarget, weightKg: weightCurrentKg, phase: phaseInt });
+    const baseKcal = Math.round(phaseInt === 1 ? tdee - 500 : phaseInt === 2 ? tdee - 200 : tdee);
+    const baseDailyTarget = macrosForPhase({
+      kcalTarget: baseKcal,
+      weightKg: weightCurrentKg,
+      phase: phaseInt,
+    });
     const exclusions = profile.user.preferences?.exclusions ?? [];
+    const fastingProtocol =
+      (profile.user.preferences?.fastingProtocol as FastingProtocolKey | null | undefined) ?? null;
 
     const weekStart = startOfWeek(new Date());
 
@@ -101,12 +108,26 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
 
     const plannedSlots: Array<{ day: number; meal: string; recipeId: string | null }> = [];
     for (let day = 0; day < 7; day++) {
-      // Per ogni pasto, le ricette già scelte negli ultimi 2 giorni sono "recenti".
+      const dayPlan = protocolPlanForDay(fastingProtocol, day);
+      // Giorno di digiuno completo (ESE_24): salta tutto.
+      if (dayPlan.kcalMultiplier === 0) continue;
+
+      const dailyKcal = Math.round(baseKcal * dayPlan.kcalMultiplier);
+      const dailyTarget = macrosForPhase({
+        kcalTarget: dailyKcal,
+        weightKg: weightCurrentKg,
+        phase: phaseInt,
+      });
+
+      // Ricette scelte negli ultimi 2 giorni sono "recenti".
       const recentlyConsumedIds: string[] = plannedSlots
         .filter((s) => day - s.day <= 2 && s.recipeId)
         .map((s) => s.recipeId!);
 
       for (const meal of MEALS) {
+        // Pasto disabilitato dal protocollo: non creiamo proprio lo slot.
+        if (dayPlan.share[meal] === 0) continue;
+
         const top = matchMeals({
           candidates,
           meal,
@@ -114,7 +135,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
           excludedTags: exclusions,
           recentlyConsumedIds,
           dailyTarget,
-          mealShare: DEFAULT_MEAL_SHARE,
+          mealShare: dayPlan.share,
           topN: 5,
         });
         const selected = top[0];
@@ -135,7 +156,8 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       plan: {
         id: plan.id,
         weekStart: plan.weekStart.toISOString().slice(0, 10),
-        dailyTarget,
+        dailyTarget: baseDailyTarget,
+        fastingProtocol,
       },
     });
   });
@@ -174,25 +196,33 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   fastify.get('/me/meal-plans/current', { preHandler: requireAuth() }, async (request, reply) => {
-    const plan = await fastify.prisma.mealPlan.findFirst({
-      where: { userId: request.user!.id, status: 'ACTIVE' },
-      orderBy: { weekStart: 'desc' },
-      include: {
-        slots: {
-          include: {
-            selected: { select: { id: true, name: true, kcal: true } },
-            alternatives: { select: { id: true, name: true, kcal: true } },
+    const userId = request.user!.id;
+    const [plan, prefs] = await Promise.all([
+      fastify.prisma.mealPlan.findFirst({
+        where: { userId, status: 'ACTIVE' },
+        orderBy: { weekStart: 'desc' },
+        include: {
+          slots: {
+            include: {
+              selected: { select: { id: true, name: true, kcal: true } },
+              alternatives: { select: { id: true, name: true, kcal: true } },
+            },
+            orderBy: [{ dayOfWeek: 'asc' }, { meal: 'asc' }],
           },
-          orderBy: [{ dayOfWeek: 'asc' }, { meal: 'asc' }],
         },
-      },
-    });
+      }),
+      fastify.prisma.preferences.findUnique({
+        where: { userId },
+        select: { fastingProtocol: true },
+      }),
+    ]);
     if (!plan) return reply.code(404).send({ error: 'plan_not_found' });
     return {
       plan: {
         id: plan.id,
         weekStart: plan.weekStart.toISOString().slice(0, 10),
         slots: plan.slots,
+        fastingProtocol: prefs?.fastingProtocol ?? null,
       },
     };
   });

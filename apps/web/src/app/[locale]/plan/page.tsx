@@ -62,6 +62,14 @@ function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurren
             <p className="font-display text-ink-soft animate-fade-up mt-5 max-w-2xl text-xl italic leading-snug [animation-delay:240ms]">
               {plan ? formatWeek(plan.weekStart) : t('noPlan')}
             </p>
+            {plan?.fastingProtocol ? (
+              <p className="animate-fade-up mt-4 [animation-delay:300ms]">
+                <span className="editorial-eyebrow">{t('window')}</span>{' '}
+                <span className="font-display text-pomodoro ml-2 text-base italic">
+                  {t(`protocolLabel.${plan.fastingProtocol}`)}
+                </span>
+              </p>
+            ) : null}
           </div>
           <div className="animate-fade-up flex flex-col items-stretch gap-3 [animation-delay:360ms] md:col-span-4 md:items-end">
             <form action={regeneratePlan}>
