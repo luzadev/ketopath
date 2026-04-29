@@ -39,3 +39,6 @@ Thumbs.db
 
 # Misc
 .cache/
+
+# Claude Code per-user settings
+.claude/settings.local.json

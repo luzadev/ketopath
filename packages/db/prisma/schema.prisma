@@ -1,0 +1,101 @@
+// KetoPath — schema Prisma
+// Schema iniziale: solo le 3 entità di base (User, Profile, Preferences).
+// Le altre entità del PRD §8 (MealPlan, Recipe, WeightEntry, ecc.) verranno
+// aggiunte in step successivi, allineate alle feature corrispondenti.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  COACH
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  INTENSE
+}
+
+enum Phase {
+  INTENSIVE
+  TRANSITION
+  MAINTENANCE
+}
+
+enum CookingTime {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum FastingProtocol {
+  FOURTEEN_TEN
+  SIXTEEN_EIGHT
+  EIGHTEEN_SIX
+  TWENTY_FOUR
+  ESE_24
+  FIVE_TWO
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  profile     Profile?
+  preferences Preferences?
+
+  @@map("users")
+}
+
+model Profile {
+  id              String        @id @default(cuid())
+  userId          String        @unique @map("user_id")
+  age             Int
+  gender          Gender
+  heightCm        Int           @map("height_cm")
+  weightStartKg   Decimal       @map("weight_start_kg") @db.Decimal(5, 2)
+  weightCurrentKg Decimal       @map("weight_current_kg") @db.Decimal(5, 2)
+  weightGoalKg    Decimal       @map("weight_goal_kg") @db.Decimal(5, 2)
+  activityLevel   ActivityLevel @map("activity_level")
+  targetDate      DateTime?     @map("target_date") @db.Date
+  currentPhase    Phase         @default(INTENSIVE) @map("current_phase")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Preferences {
+  id                   String           @id @default(cuid())
+  userId               String           @unique @map("user_id")
+  exclusions           String[]         @default([])
+  cuisinePreferences   String[]         @default([]) @map("cuisine_preferences")
+  cookingTime          CookingTime      @default(MEDIUM) @map("cooking_time")
+  fastingProtocol      FastingProtocol? @map("fasting_protocol")
+  notificationSettings Json             @default("{}") @map("notification_settings")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("preferences")
+}

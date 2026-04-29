@@ -21,6 +21,12 @@
     "typecheck": "tsc -b",
     "test": "pnpm --filter \"./packages/*\" --filter \"./apps/*\" -r --if-present test",
     "test:e2e": "pnpm --filter @ketopath/web test:e2e",
+    "db:generate": "pnpm --filter @ketopath/db db:generate",
+    "db:migrate": "pnpm --filter @ketopath/db db:migrate",
+    "db:migrate:deploy": "pnpm --filter @ketopath/db db:migrate:deploy",
+    "db:studio": "pnpm --filter @ketopath/db db:studio",
+    "db:format": "pnpm --filter @ketopath/db db:format",
+    "db:seed": "pnpm --filter @ketopath/db db:seed",
     "prepare": "husky"
   },
   "devDependencies": {
