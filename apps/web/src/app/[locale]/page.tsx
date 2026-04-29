@@ -27,6 +27,9 @@ function HomeContent({ userName }: { userName: string | null }) {
           <Button asChild>
             <Link href="/profile">{t('completeProfile')}</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href="/plan">{t('viewPlan')}</Link>
+          </Button>
           <SignOutButton label={t('signOut')} />
         </div>
       ) : (

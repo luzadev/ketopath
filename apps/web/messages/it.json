@@ -7,7 +7,8 @@
     "disclaimer": "Le informazioni fornite da questa app non sostituiscono il parere di un medico.",
     "signedInAs": "Accesso effettuato come {name}",
     "signOut": "Esci",
-    "completeProfile": "Completa il tuo profilo"
+    "completeProfile": "Completa il tuo profilo",
+    "viewPlan": "Vedi il piano settimanale"
   },
   "Welcome": {
     "title": "Prima di iniziare",
@@ -59,6 +60,33 @@
       "haveAccount": "Hai già un account? <link>Accedi</link>",
       "error": "Non è stato possibile completare la registrazione. Riprova.",
       "disclaimer": "Procedendo accetti che i tuoi dati siano trattati come descritto nell'informativa sulla privacy. KetoPath non sostituisce il parere medico."
+    }
+  },
+  "Plan": {
+    "title": "Il tuo piano settimanale",
+    "weekOf": "Settimana del {date}",
+    "noPlan": "Non hai ancora un piano. Generalo per ricevere ricette adatte alla tua fase.",
+    "generate": "Genera piano",
+    "regenerate": "Rigenera",
+    "noRecipe": "Nessuna ricetta selezionata",
+    "showAlternatives": "Vedi {n} alternative",
+    "hideAlternatives": "Nascondi alternative",
+    "swap": "Scegli",
+    "dayTotal": "{kcal} kcal totali",
+    "meals": {
+      "COLAZIONE": "Colazione",
+      "PRANZO": "Pranzo",
+      "SPUNTINO": "Spuntino",
+      "CENA": "Cena"
+    },
+    "days": {
+      "monday": "Lunedì",
+      "tuesday": "Martedì",
+      "wednesday": "Mercoledì",
+      "thursday": "Giovedì",
+      "friday": "Venerdì",
+      "saturday": "Sabato",
+      "sunday": "Domenica"
     }
   },
   "Profile": {

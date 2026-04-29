@@ -1,0 +1,76 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
+
+const API_URL = process.env.API_URL ?? 'http://localhost:4000';
+
+interface SlotRecipe {
+  id: string;
+  name: string;
+  kcal: number;
+}
+
+export interface PlanSlot {
+  id: string;
+  dayOfWeek: number;
+  meal: 'COLAZIONE' | 'PRANZO' | 'SPUNTINO' | 'CENA';
+  recipeId: string | null;
+  status: string;
+  selected: SlotRecipe | null;
+  alternatives: SlotRecipe[];
+}
+
+export interface CurrentPlan {
+  id: string;
+  weekStart: string;
+  slots: PlanSlot[];
+}
+
+function cookieHeader(): string {
+  return headers().get('cookie') ?? '';
+}
+
+export async function fetchCurrentPlan(): Promise<CurrentPlan | null> {
+  const res = await fetch(`${API_URL}/me/meal-plans/current`, {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`api_error_${res.status}`);
+  const data = (await res.json()) as { plan: CurrentPlan };
+  return data.plan;
+}
+
+export type RegenerateResult = { ok: true } | { ok: false; error: string };
+
+export async function regeneratePlan(): Promise<RegenerateResult> {
+  const res = await fetch(`${API_URL}/me/meal-plans`, {
+    method: 'POST',
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: body.error ?? `api_error_${res.status}` };
+  }
+  revalidatePath('/plan');
+  return { ok: true };
+}
+
+export type SwapResult = { ok: true } | { ok: false; error: string };
+
+export async function swapSlotRecipe(slotId: string, recipeId: string): Promise<SwapResult> {
+  const res = await fetch(`${API_URL}/me/meal-plans/slots/${slotId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', cookie: cookieHeader() },
+    body: JSON.stringify({ recipeId }),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: body.error ?? `api_error_${res.status}` };
+  }
+  revalidatePath('/plan');
+  return { ok: true };
+}

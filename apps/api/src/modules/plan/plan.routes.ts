@@ -131,6 +131,39 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
     });
   });
 
+  fastify.patch(
+    '/me/meal-plans/slots/:slotId',
+    { preHandler: requireAuth() },
+    async (request, reply) => {
+      const slotId = (request.params as { slotId: string }).slotId;
+      const body = request.body as { recipeId?: unknown };
+      if (typeof body.recipeId !== 'string') {
+        return reply.code(400).send({ error: 'invalid_body' });
+      }
+      const userId = request.user!.id;
+
+      const slot = await fastify.prisma.mealSlot.findFirst({
+        where: { id: slotId, plan: { userId } },
+        include: { alternatives: { select: { id: true } } },
+      });
+      if (!slot) return reply.code(404).send({ error: 'slot_not_found' });
+
+      const allowedIds = new Set([slot.recipeId, ...slot.alternatives.map((a) => a.id)]);
+      if (!allowedIds.has(body.recipeId)) {
+        return reply.code(400).send({ error: 'recipe_not_in_alternatives' });
+      }
+
+      const updated = await fastify.prisma.mealSlot.update({
+        where: { id: slotId },
+        data: { recipeId: body.recipeId },
+        include: {
+          selected: { select: { id: true, name: true, kcal: true } },
+        },
+      });
+      return { slot: updated };
+    },
+  );
+
   fastify.get('/me/meal-plans/current', { preHandler: requireAuth() }, async (request, reply) => {
     const plan = await fastify.prisma.mealPlan.findFirst({
       where: { userId: request.user!.id, status: 'ACTIVE' },
