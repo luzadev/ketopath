@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ketopath
+          POSTGRES_PASSWORD: ketopath
+          POSTGRES_DB: ketopath
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ketopath"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://ketopath:ketopath@localhost:5432/ketopath?schema=public
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'a-test-secret-of-at-least-32-bytes-padding!!' }}
+      BETTER_AUTH_URL: http://localhost:3000
+      NODE_ENV: test
+      CORS_ORIGINS: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Apply migrations
+        run: pnpm --filter @ketopath/db exec prisma migrate deploy
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build apps
+        run: |
+          pnpm --filter @ketopath/api build
+          pnpm --filter @ketopath/web build
