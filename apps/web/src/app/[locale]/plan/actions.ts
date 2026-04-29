@@ -9,6 +9,10 @@ interface SlotRecipe {
   id: string;
   name: string;
   kcal: number;
+  proteinG: number;
+  fatG: number;
+  netCarbG: number;
+  prepMinutes: number;
 }
 
 export interface PlanSlot {
@@ -66,6 +70,20 @@ export async function regeneratePlan(_formData?: FormData): Promise<void> {
 }
 
 export type SwapResult = { ok: true } | { ok: false; error: string };
+
+export async function regenerateSlot(slotId: string): Promise<SwapResult> {
+  const res = await fetch(`${API_URL}/me/meal-plans/slots/${slotId}/regenerate`, {
+    method: 'POST',
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: body.error ?? `api_error_${res.status}` };
+  }
+  revalidatePath('/plan');
+  return { ok: true };
+}
 
 export async function swapSlotRecipe(slotId: string, recipeId: string): Promise<SwapResult> {
   const res = await fetch(`${API_URL}/me/meal-plans/slots/${slotId}`, {

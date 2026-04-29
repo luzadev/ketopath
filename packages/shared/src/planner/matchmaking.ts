@@ -16,6 +16,7 @@ export interface RecipeCandidate {
   netCarbG: number;
   exclusionTags: ReadonlyArray<string>;
   phases: ReadonlyArray<1 | 2 | 3>;
+  prepMinutes?: number;
 }
 
 export interface MacroTargets {
@@ -38,6 +39,11 @@ export interface MatchOptions {
   // Quote del pasto sul totale giornaliero (sommano a 1.0).
   mealShare: { COLAZIONE: number; PRANZO: number; SPUNTINO: number; CENA: number };
   topN?: number; // default 5
+  // Tempo massimo accettabile in cucina per pasto (in minuti). Se la ricetta
+  // supera la soglia, lo score viene penalizzato proporzionalmente.
+  // Soft cap, non hard filter: lo SPUNTINO tipicamente è < 5 min comunque,
+  // mentre la CENA può tollerare elaborazioni più lunghe.
+  maxPrepMinutes?: number;
 }
 
 export interface MatchResult extends RecipeCandidate {
@@ -83,6 +89,12 @@ export function matchMeals(opts: MatchOptions): MatchResult[] {
 
     let score = Math.sqrt(dKcal * dKcal + dPro * dPro + dFat * dFat + dCarb * dCarb);
     if (recentSet.has(r.id)) score += 1.5;
+    // Penalty proporzionale per ricette oltre il tempo cucina dichiarato.
+    // 0.05 punti per ogni 5 min di sforamento — cumulativo ma morbido.
+    if (opts.maxPrepMinutes != null && r.prepMinutes != null) {
+      const overflow = Math.max(0, r.prepMinutes - opts.maxPrepMinutes);
+      score += overflow * 0.01;
+    }
 
     results.push({ ...r, score });
   }
@@ -92,6 +104,22 @@ export function matchMeals(opts: MatchOptions): MatchResult[] {
 }
 
 export type MealShare = MatchOptions['mealShare'];
+
+// PRD §5.1 — soglia di tempo cucina per livello dichiarato.
+// Soglia ≠ filtro stretto: oltre la soglia il match-score viene penalizzato.
+export function maxPrepMinutesFor(level: 'LOW' | 'MEDIUM' | 'HIGH' | null | undefined): number {
+  switch (level) {
+    case 'LOW':
+      return 15;
+    case 'HIGH':
+      return 60;
+    case 'MEDIUM':
+    case null:
+    case undefined:
+    default:
+      return 30;
+  }
+}
 
 // Default share per pasto (somma 1.0). Può essere sovrascritta dall'utente.
 export const DEFAULT_MEAL_SHARE: MealShare = {

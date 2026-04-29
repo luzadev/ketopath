@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { swapSlotRecipe, type CurrentPlan, type PlanSlot } from './actions';
+import { regenerateSlot, swapSlotRecipe, type CurrentPlan, type PlanSlot } from './actions';
 
 const MEAL_ORDER: PlanSlot['meal'][] = ['COLAZIONE', 'PRANZO', 'SPUNTINO', 'CENA'];
 const DAY_KEYS = [
@@ -20,6 +20,26 @@ const DAY_KEYS = [
 ] as const;
 const DAY_NUMERAL = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 
+function aggregateMacros(slots: PlanSlot[]): {
+  kcal: number;
+  proteinG: number;
+  fatG: number;
+  netCarbG: number;
+} {
+  return slots.reduce(
+    (acc, s) => {
+      if (!s.selected) return acc;
+      return {
+        kcal: acc.kcal + s.selected.kcal,
+        proteinG: acc.proteinG + s.selected.proteinG,
+        fatG: acc.fatG + s.selected.fatG,
+        netCarbG: acc.netCarbG + s.selected.netCarbG,
+      };
+    },
+    { kcal: 0, proteinG: 0, fatG: 0, netCarbG: 0 },
+  );
+}
+
 export function PlanWeek({ plan }: { plan: CurrentPlan }) {
   const t = useTranslations('Plan');
 
@@ -29,13 +49,32 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
     byDay.get(slot.dayOfWeek)!.push(slot);
   }
 
+  const weekTotals = aggregateMacros(plan.slots);
+  const activeDays = Array.from(byDay.values()).filter((s) => s.length > 0).length;
+  const weekAvg =
+    activeDays > 0
+      ? {
+          kcal: Math.round(weekTotals.kcal / activeDays),
+          proteinG: Math.round(weekTotals.proteinG / activeDays),
+          fatG: Math.round(weekTotals.fatG / activeDays),
+          netCarbG: Math.round(weekTotals.netCarbG / activeDays),
+        }
+      : { kcal: 0, proteinG: 0, fatG: 0, netCarbG: 0 };
+
   return (
     <div className="space-y-14">
+      <section className="border-ink/15 bg-carta-light/40 grid grid-cols-2 gap-x-8 gap-y-4 border p-5 sm:grid-cols-4">
+        <MacroSummary label={t('avgKcal')} value={weekAvg.kcal} unit="kcal" big />
+        <MacroSummary label={t('avgProtein')} value={weekAvg.proteinG} unit="g" />
+        <MacroSummary label={t('avgFat')} value={weekAvg.fatG} unit="g" />
+        <MacroSummary label={t('avgNetCarb')} value={weekAvg.netCarbG} unit="g" />
+      </section>
+
       {DAY_KEYS.map((dayKey, idx) => {
         const slots = (byDay.get(idx) ?? []).sort(
           (a, b) => MEAL_ORDER.indexOf(a.meal) - MEAL_ORDER.indexOf(b.meal),
         );
-        const dayKcal = slots.reduce((sum, s) => sum + (s.selected?.kcal ?? 0), 0);
+        const dayMacros = aggregateMacros(slots);
         // Nessuno slot → giorno di digiuno completo (ESE_24).
         const isFastingDay = slots.length === 0;
         // Solo CENA con dailyKcal ridotto → giorno "leggero" del 5:2.
@@ -63,7 +102,9 @@ export function PlanWeek({ plan }: { plan: CurrentPlan }) {
                 ) : null}
               </h2>
               <span className="text-ink-soft font-mono text-[11px] uppercase tracking-widest">
-                {isFastingDay ? '— kcal' : t('dayTotal', { kcal: Math.round(dayKcal) })}
+                {isFastingDay
+                  ? '— kcal'
+                  : `${Math.round(dayMacros.kcal)} kcal · P ${Math.round(dayMacros.proteinG)} · G ${Math.round(dayMacros.fatG)} · C ${Math.round(dayMacros.netCarbG)}`}
               </span>
             </header>
             {isFastingDay ? (
@@ -98,6 +139,13 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
     });
   }
 
+  function regenerate() {
+    startTransition(async () => {
+      await regenerateSlot(slot.id);
+      setOpen(false);
+    });
+  }
+
   return (
     <article className="group relative flex flex-col gap-3 py-5 sm:py-2">
       <header className="flex items-baseline justify-between gap-3">
@@ -107,6 +155,16 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
           </span>
           <span>{t(`meals.${slot.meal}`)}</span>
         </p>
+        <button
+          type="button"
+          onClick={regenerate}
+          disabled={pending}
+          aria-label={t('regenerateSlot')}
+          title={t('regenerateSlot')}
+          className="text-ink-dim hover:text-pomodoro font-mono text-xs leading-none transition-colors disabled:opacity-40"
+        >
+          ↻
+        </button>
       </header>
       {slot.selected ? (
         <Link
@@ -162,5 +220,31 @@ function SlotCard({ slot, index }: { slot: PlanSlot; index: number }) {
         </div>
       ) : null}
     </article>
+  );
+}
+
+function MacroSummary({
+  label,
+  value,
+  unit,
+  big = false,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  big?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="editorial-eyebrow">{label}</span>
+      <span
+        className={`font-mono tabular-nums ${
+          big ? 'text-ink text-3xl font-medium' : 'text-ink text-2xl'
+        }`}
+      >
+        {value}
+        <span className="font-display text-ink-soft ml-1 text-xs italic">{unit}</span>
+      </span>
+    </div>
   );
 }

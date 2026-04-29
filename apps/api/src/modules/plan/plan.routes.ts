@@ -10,6 +10,7 @@ import {
   isTrainingDay,
   macrosForPhase,
   matchMeals,
+  maxPrepMinutesFor,
   mealShareForFrequency,
   protocolPlanForDay,
   type DietHistory,
@@ -68,6 +69,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         fatG: true,
         netCarbG: true,
         phases: true,
+        prepMinutes: true,
         ingredients: {
           select: { ingredient: { select: { exclusionGroups: true } } },
         },
@@ -92,6 +94,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         netCarbG: r.netCarbG,
         exclusionTags: Array.from(tags),
         phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
+        prepMinutes: r.prepMinutes,
       };
     });
 
@@ -149,6 +152,10 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
     const exclusions = profile.user.preferences?.exclusions ?? [];
     const fastingProtocol =
       (profile.user.preferences?.fastingProtocol as FastingProtocolKey | null | undefined) ?? null;
+    const cookingTime =
+      (profile.user.preferences?.cookingTime as 'LOW' | 'MEDIUM' | 'HIGH' | null | undefined) ??
+      null;
+    const maxPrepMinutes = maxPrepMinutesFor(cookingTime);
 
     const weekStart = startOfWeek(new Date());
 
@@ -199,6 +206,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
           recentlyConsumedIds,
           dailyTarget,
           mealShare: effectiveShare,
+          maxPrepMinutes,
           topN: 5,
         });
         const selected = top[0];
@@ -258,6 +266,194 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
     },
   );
 
+  // PRD §5.1 — rigenera UN solo slot: ricalcola le top5 ricette tenendo
+  // conto dei pasti del giorno già scelti (coerenza dei macros).
+  fastify.post(
+    '/me/meal-plans/slots/:slotId/regenerate',
+    { preHandler: requireAuth() },
+    async (request, reply) => {
+      const slotId = (request.params as { slotId: string }).slotId;
+      const userId = request.user!.id;
+
+      const slot = await fastify.prisma.mealSlot.findFirst({
+        where: { id: slotId, plan: { userId } },
+        include: {
+          plan: {
+            include: {
+              slots: {
+                include: {
+                  selected: {
+                    select: {
+                      id: true,
+                      kcal: true,
+                      proteinG: true,
+                      fatG: true,
+                      netCarbG: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!slot) return reply.code(404).send({ error: 'slot_not_found' });
+
+      const profile = await fastify.prisma.profile.findUnique({
+        where: { userId },
+        include: { user: { include: { preferences: true } } },
+      });
+      if (!profile) return reply.code(409).send({ error: 'profile_required' });
+
+      const conditions = parseConditions(profile.medicalConditions);
+      if (hasExcludingCondition(conditions)) {
+        return reply.code(409).send({ error: 'medical_block', conditions });
+      }
+
+      const recipes = await fastify.prisma.recipe.findMany({
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          kcal: true,
+          proteinG: true,
+          fatG: true,
+          netCarbG: true,
+          phases: true,
+          prepMinutes: true,
+          ingredients: { select: { ingredient: { select: { exclusionGroups: true } } } },
+        },
+      });
+
+      const candidates: RecipeCandidate[] = recipes.map((r) => {
+        const tags = new Set<string>();
+        for (const ri of r.ingredients) for (const g of ri.ingredient.exclusionGroups) tags.add(g);
+        return {
+          id: r.id,
+          name: r.name,
+          category: r.category,
+          kcal: r.kcal,
+          proteinG: r.proteinG,
+          fatG: r.fatG,
+          netCarbG: r.netCarbG,
+          exclusionTags: Array.from(tags),
+          phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
+          prepMinutes: r.prepMinutes,
+        };
+      });
+
+      const weightCurrentKg = Number(profile.weightCurrentKg);
+      const bodyFatPct = profile.bodyFatPct ? Number(profile.bodyFatPct) : null;
+      let bmr = bodyFatPct
+        ? calculateBmrKatchMcArdle(weightCurrentKg, bodyFatPct)
+        : calculateBmr({
+            weightKg: weightCurrentKg,
+            heightCm: profile.heightCm,
+            ageYears: profile.age,
+            gender: profile.gender,
+          });
+      bmr *= bmrAdjustmentForConditions(conditions);
+      bmr *= bmrAdjustForDietHistory(profile.dietHistory as DietHistory | null);
+      const tdee = calculateTdee(bmr, profile.activityLevel);
+      const phaseInt = phaseToInt(profile.currentPhase);
+
+      const { kcalTarget: baseKcal } = computeDailyKcalTarget({
+        tdee,
+        weightCurrentKg,
+        targetWeeklyLossKg: profile.targetWeeklyLossKg,
+        phase: phaseInt,
+      });
+
+      const fastingProtocol =
+        (profile.user.preferences?.fastingProtocol as FastingProtocolKey | null | undefined) ??
+        null;
+      const dayPlan = protocolPlanForDay(fastingProtocol, slot.dayOfWeek);
+      const mealsPerDay = profile.user.preferences?.mealsPerDay ?? null;
+      const effectiveShare =
+        !fastingProtocol && mealsPerDay ? mealShareForFrequency(mealsPerDay) : dayPlan.share;
+
+      // Allenamento — extra del giorno se è training day.
+      const trainingDays = profile.user.preferences?.trainingDays ?? [];
+      const trainingType =
+        (profile.user.preferences?.trainingType as TrainingType | null | undefined) ?? null;
+      const sessionMinutes = profile.user.preferences?.sessionMinutes ?? null;
+      const trainingExtra =
+        isTrainingDay(slot.dayOfWeek, trainingDays) && trainingType && sessionMinutes
+          ? extraKcalForSession({
+              type: trainingType,
+              durationMinutes: sessionMinutes,
+              weightKg: weightCurrentKg,
+            })
+          : 0;
+      const dailyKcal = Math.round(baseKcal * dayPlan.kcalMultiplier + trainingExtra);
+      const dailyTarget = macrosForPhase({
+        kcalTarget: dailyKcal,
+        weightKg: weightCurrentKg,
+        phase: phaseInt,
+      });
+
+      // Macros già consumati negli altri pasti dello stesso giorno.
+      const sameDay = slot.plan.slots.filter(
+        (s) => s.dayOfWeek === slot.dayOfWeek && s.id !== slot.id && s.selected,
+      );
+      const consumedSoFar = sameDay.reduce(
+        (acc, s) => ({
+          kcal: acc.kcal + (s.selected?.kcal ?? 0),
+          proteinG: acc.proteinG + (s.selected?.proteinG ?? 0),
+          fatG: acc.fatG + (s.selected?.fatG ?? 0),
+          netCarbG: acc.netCarbG + (s.selected?.netCarbG ?? 0),
+        }),
+        { kcal: 0, proteinG: 0, fatG: 0, netCarbG: 0 },
+      );
+
+      const exclusions = profile.user.preferences?.exclusions ?? [];
+      const cookingTime =
+        (profile.user.preferences?.cookingTime as 'LOW' | 'MEDIUM' | 'HIGH' | null | undefined) ??
+        null;
+
+      // Le ricette già scelte negli ultimi 2 giorni + lo slot corrente sono "recenti".
+      const recentlyConsumedIds = slot.plan.slots
+        .filter((s) => slot.dayOfWeek - s.dayOfWeek <= 2 && s.id !== slot.id && s.recipeId != null)
+        .map((s) => s.recipeId as string);
+      // Aggiungo anche la ricetta attualmente scelta in questo slot per
+      // forzare il matchmaking a proporne un'altra al primo posto.
+      if (slot.recipeId) recentlyConsumedIds.push(slot.recipeId);
+
+      const top = matchMeals({
+        candidates,
+        meal: slot.meal,
+        phase: phaseInt,
+        excludedTags: exclusions,
+        recentlyConsumedIds,
+        consumedSoFar,
+        dailyTarget,
+        mealShare: effectiveShare,
+        maxPrepMinutes: maxPrepMinutesFor(cookingTime),
+        topN: 5,
+      });
+
+      if (top.length === 0) {
+        return reply.code(409).send({ error: 'no_recipes_available' });
+      }
+
+      const newSelected = top[0];
+      const altIds = top.slice(1).map((r) => r.id);
+
+      // Re-set alternatives via Prisma `set` per pulire la M2M.
+      await fastify.prisma.mealSlot.update({
+        where: { id: slotId },
+        data: {
+          recipeId: newSelected.id,
+          alternatives: { set: altIds.map((id) => ({ id })) },
+        },
+      });
+
+      return reply.code(200).send({
+        slot: { id: slotId, recipeId: newSelected.id, alternativeIds: altIds },
+      });
+    },
+  );
+
   fastify.get('/me/meal-plans/current', { preHandler: requireAuth() }, async (request, reply) => {
     const userId = request.user!.id;
     const [plan, prefs] = await Promise.all([
@@ -267,8 +463,28 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         include: {
           slots: {
             include: {
-              selected: { select: { id: true, name: true, kcal: true } },
-              alternatives: { select: { id: true, name: true, kcal: true } },
+              selected: {
+                select: {
+                  id: true,
+                  name: true,
+                  kcal: true,
+                  proteinG: true,
+                  fatG: true,
+                  netCarbG: true,
+                  prepMinutes: true,
+                },
+              },
+              alternatives: {
+                select: {
+                  id: true,
+                  name: true,
+                  kcal: true,
+                  proteinG: true,
+                  fatG: true,
+                  netCarbG: true,
+                  prepMinutes: true,
+                },
+              },
             },
             orderBy: [{ dayOfWeek: 'asc' }, { meal: 'asc' }],
           },
