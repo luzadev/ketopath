@@ -1,15 +1,21 @@
 import {
+  bmrAdjustForDietHistory,
   bmrAdjustmentForConditions,
   calculateBmr,
   calculateBmrKatchMcArdle,
   calculateTdee,
   computeDailyKcalTarget,
+  extraKcalForSession,
   hasExcludingCondition,
+  isTrainingDay,
   macrosForPhase,
   matchMeals,
+  mealShareForFrequency,
   protocolPlanForDay,
+  type DietHistory,
   type FastingProtocolKey,
   type RecipeCandidate,
+  type TrainingType,
 } from '@ketopath/shared';
 import type { FastifyPluginAsync } from 'fastify';
 
@@ -109,8 +115,24 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         });
     // Aggiusto BMR per condizioni che lo influenzano (es. ipotiroidismo -10%).
     bmr *= bmrAdjustmentForConditions(conditions);
+    bmr *= bmrAdjustForDietHistory(profile.dietHistory as DietHistory | null);
     const tdee = calculateTdee(bmr, profile.activityLevel);
     const phaseInt = phaseToInt(profile.currentPhase);
+
+    // Schedule allenamento: kcal extra sui giorni di allenamento.
+    const trainingDays = profile.user.preferences?.trainingDays ?? [];
+    const trainingType =
+      (profile.user.preferences?.trainingType as TrainingType | null | undefined) ?? null;
+    const sessionMinutes = profile.user.preferences?.sessionMinutes ?? null;
+    const sessionExtraKcal =
+      trainingType && sessionMinutes
+        ? extraKcalForSession({
+            type: trainingType,
+            durationMinutes: sessionMinutes,
+            weightKg: weightCurrentKg,
+          })
+        : 0;
+    const mealsPerDay = profile.user.preferences?.mealsPerDay ?? null;
 
     // Deficit dinamico da targetWeeklyLossKg (con caps di sicurezza).
     const { kcalTarget: baseKcal } = computeDailyKcalTarget({
@@ -145,7 +167,15 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       // Giorno di digiuno completo (ESE_24): salta tutto.
       if (dayPlan.kcalMultiplier === 0) continue;
 
-      const dailyKcal = Math.round(baseKcal * dayPlan.kcalMultiplier);
+      // Se non c'è un protocollo IF attivo e l'utente ha dichiarato
+      // mealsPerDay, lo usiamo per ridistribuire le quote per pasto.
+      const effectiveShare =
+        !fastingProtocol && mealsPerDay ? mealShareForFrequency(mealsPerDay) : dayPlan.share;
+
+      // Sui giorni di allenamento aumentiamo le kcal per coprire l'EE
+      // della sessione (Ainsworth 2011 — vedi preferences/training.ts).
+      const trainingExtra = isTrainingDay(day, trainingDays) ? sessionExtraKcal : 0;
+      const dailyKcal = Math.round(baseKcal * dayPlan.kcalMultiplier + trainingExtra);
       const dailyTarget = macrosForPhase({
         kcalTarget: dailyKcal,
         weightKg: weightCurrentKg,
@@ -158,8 +188,8 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         .map((s) => s.recipeId!);
 
       for (const meal of MEALS) {
-        // Pasto disabilitato dal protocollo: non creiamo proprio lo slot.
-        if (dayPlan.share[meal] === 0) continue;
+        // Pasto disabilitato dal protocollo o dalla frequenza: salta lo slot.
+        if (effectiveShare[meal] === 0) continue;
 
         const top = matchMeals({
           candidates,
@@ -168,7 +198,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
           excludedTags: exclusions,
           recentlyConsumedIds,
           dailyTarget,
-          mealShare: dayPlan.share,
+          mealShare: effectiveShare,
           topN: 5,
         });
         const selected = top[0];

@@ -181,6 +181,12 @@ model Profile {
   // PRD §5.1 — % grasso corporeo stimata (US Navy) per BMR Katch-McArdle.
   /// @encrypted
   bodyFatPct      String?       @map("body_fat_pct")
+  // PRD §5.1 — storia delle diete restrittive precedenti, per stimare
+  // l'adattamento metabolico (Fothergill 2016, Rosenbaum 2008). Categoriale:
+  // NONE / SOME / EXTENSIVE / SEVERE. Cifrato perché può alludere a
+  // disturbi alimentari (art. 9 GDPR).
+  /// @encrypted
+  dietHistory     String?       @map("diet_history")
   currentPhase    Phase         @default(INTENSIVE) @map("current_phase")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
@@ -198,6 +204,14 @@ model Preferences {
   cookingTime          CookingTime      @default(MEDIUM) @map("cooking_time")
   fastingProtocol      FastingProtocol? @map("fasting_protocol")
   notificationSettings Json             @default("{}") @map("notification_settings")
+  // PRD §5.1 — schedule allenamento. trainingDays è Mon-anchored (0=Lun..6=Dom).
+  // Per i giorni in lista, il planner alza le kcal in base a tipo+durata.
+  trainingDays         Int[]            @default([]) @map("training_days")
+  trainingType         String?          @map("training_type") // CARDIO|STRENGTH|MIXED|SPORT
+  sessionMinutes       Int?             @map("session_minutes")
+  // PRD §5.1 — pasti/giorno preferiti (1..4). Se null, fallback al default.
+  // Il fastingProtocol ha precedenza: se attivo definisce lui la struttura.
+  mealsPerDay          Int?             @map("meals_per_day")
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
 

@@ -5,10 +5,12 @@ import {
   CUISINE_TAGS,
   EXCLUSION_GROUPS,
   FASTING_PROTOCOL_VALUES,
+  TRAINING_TYPES,
   type CookingTimeLevel,
   type CuisineTag,
   type ExclusionGroup,
   type PreferencesPatch,
+  type TrainingType,
 } from '@ketopath/shared';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -27,6 +29,10 @@ export interface PreferencesValues {
   cuisinePreferences: CuisineTag[];
   cookingTime: CookingTimeLevel;
   fastingProtocol: (typeof FASTING_PROTOCOL_VALUES)[number] | null;
+  trainingDays: number[];
+  trainingType: TrainingType | null;
+  sessionMinutes: number | null;
+  mealsPerDay: number | null;
 }
 
 export const DEFAULT_PREFERENCES_VALUES: PreferencesValues = {
@@ -34,7 +40,13 @@ export const DEFAULT_PREFERENCES_VALUES: PreferencesValues = {
   cuisinePreferences: [],
   cookingTime: 'MEDIUM',
   fastingProtocol: null,
+  trainingDays: [],
+  trainingType: null,
+  sessionMinutes: null,
+  mealsPerDay: null,
 };
+
+const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
 
 interface PreferencesFormProps {
   initial: PreferencesValues;
@@ -86,6 +98,10 @@ export function PreferencesForm({
       cuisinePreferences: values.cuisinePreferences,
       cookingTime: values.cookingTime,
       fastingProtocol: values.fastingProtocol,
+      trainingDays: values.trainingDays,
+      trainingType: values.trainingType,
+      sessionMinutes: values.sessionMinutes,
+      mealsPerDay: values.mealsPerDay,
     });
     setPending(false);
     if (!result.ok) {
@@ -197,6 +213,108 @@ export function PreferencesForm({
           </div>
         </fieldset>
       ) : null}
+
+      <fieldset className="space-y-5">
+        <legend className="font-display text-ink text-2xl font-medium leading-tight tracking-tight">
+          {t('trainingTitle')}
+        </legend>
+        <p className="font-display text-ink-soft text-base italic leading-snug">
+          {t('trainingHint')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {DAY_LABELS.map((label, idx) => (
+            <Chip
+              key={idx}
+              label={label}
+              active={values.trainingDays.includes(idx)}
+              onToggle={() =>
+                setValues((prev) => ({
+                  ...prev,
+                  trainingDays: prev.trainingDays.includes(idx)
+                    ? prev.trainingDays.filter((d) => d !== idx)
+                    : [...prev.trainingDays, idx].sort((a, b) => a - b),
+                }))
+              }
+            />
+          ))}
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <p className="editorial-eyebrow mb-3">{t('trainingType')}</p>
+            <Select
+              value={values.trainingType ?? 'NONE'}
+              onValueChange={(v) =>
+                setValues((prev) => ({
+                  ...prev,
+                  trainingType: v === 'NONE' ? null : (v as TrainingType),
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NONE">{t('trainingNone')}</SelectItem>
+                {TRAINING_TYPES.map((tt) => (
+                  <SelectItem key={tt} value={tt}>
+                    {t(`trainingTypeLabel.${tt}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <p className="editorial-eyebrow mb-3">{t('sessionMinutes')}</p>
+            <input
+              type="number"
+              min={10}
+              max={240}
+              step={5}
+              inputMode="numeric"
+              placeholder="60"
+              value={values.sessionMinutes ?? ''}
+              onChange={(e) =>
+                setValues((prev) => ({
+                  ...prev,
+                  sessionMinutes: e.target.value === '' ? null : Number(e.target.value),
+                }))
+              }
+              className="border-ink/30 focus:border-ink w-full border-b bg-transparent py-2 outline-none"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-5">
+        <legend className="font-display text-ink text-2xl font-medium leading-tight tracking-tight">
+          {t('mealsPerDayTitle')}
+        </legend>
+        <p className="font-display text-ink-soft text-base italic leading-snug">
+          {t('mealsPerDayHint')}
+        </p>
+        <div className="max-w-xs">
+          <Select
+            value={values.mealsPerDay != null ? String(values.mealsPerDay) : 'AUTO'}
+            onValueChange={(v) =>
+              setValues((prev) => ({
+                ...prev,
+                mealsPerDay: v === 'AUTO' ? null : Number(v),
+              }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="AUTO">{t('mealsAuto')}</SelectItem>
+              <SelectItem value="1">{t('mealsLabel.1')}</SelectItem>
+              <SelectItem value="2">{t('mealsLabel.2')}</SelectItem>
+              <SelectItem value="3">{t('mealsLabel.3')}</SelectItem>
+              <SelectItem value="4">{t('mealsLabel.4')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </fieldset>
 
       {error ? (
         <p className="font-display text-pomodoro text-base italic" role="alert">

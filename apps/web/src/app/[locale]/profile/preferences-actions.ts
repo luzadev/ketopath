@@ -15,6 +15,10 @@ export interface PreferencesView {
   cuisinePreferences: string[];
   cookingTime: 'LOW' | 'MEDIUM' | 'HIGH';
   fastingProtocol: string | null;
+  trainingDays: number[];
+  trainingType: string | null;
+  sessionMinutes: number | null;
+  mealsPerDay: number | null;
 }
 
 export async function fetchPreferences(): Promise<PreferencesView | null> {

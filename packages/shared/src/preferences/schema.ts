@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { TRAINING_TYPES } from './training.js';
+
 // PRD §5.1 — gruppi di esclusione legati agli ingredienti.
 // Devono coincidere con i tag su `Ingredient.exclusionGroups` nel seed
 // (vedi packages/db/prisma/seed-ingredients.ts).
@@ -45,6 +47,12 @@ export const preferencesPatchSchema = z
     cuisinePreferences: z.array(z.enum(CUISINE_TAGS)).max(CUISINE_TAGS.length).optional(),
     cookingTime: z.enum(COOKING_TIMES).optional(),
     fastingProtocol: z.enum(FASTING_PROTOCOL_VALUES).nullable().optional(),
+    // Schedule allenamento (vedi preferences/training.ts).
+    trainingDays: z.array(z.coerce.number().int().min(0).max(6)).max(7).optional(),
+    trainingType: z.enum(TRAINING_TYPES).nullable().optional(),
+    sessionMinutes: z.coerce.number().int().min(10).max(240).nullable().optional(),
+    // Pasti/giorno preferiti. Il fastingProtocol ha precedenza.
+    mealsPerDay: z.coerce.number().int().min(1).max(4).nullable().optional(),
   })
   .strict();
 

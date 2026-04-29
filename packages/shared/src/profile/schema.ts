@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 import { MEDICAL_CONDITIONS } from '../medical/conditions.js';
 
+import { DIET_HISTORIES } from './diet-history.js';
+
 export const GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
 export const ACTIVITY_LEVELS = ['SEDENTARY', 'LIGHT', 'MODERATE', 'INTENSE'] as const;
 
@@ -23,6 +25,8 @@ export const profileInputSchema = z.object({
   neckCm: z.coerce.number().min(20).max(60).optional(),
   waistCm: z.coerce.number().min(40).max(200).optional(),
   hipsCm: z.coerce.number().min(40).max(200).optional(),
+  // Storia delle diete restrittive precedenti (vedi diet-history.ts).
+  dietHistory: z.enum(DIET_HISTORIES).optional(),
 });
 
 export type ProfileInput = z.input<typeof profileInputSchema>;

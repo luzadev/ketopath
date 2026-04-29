@@ -1,7 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ACTIVITY_LEVELS, GENDERS, profileInputSchema, type ProfileInput } from '@ketopath/shared';
+import {
+  ACTIVITY_LEVELS,
+  DIET_HISTORIES,
+  GENDERS,
+  profileInputSchema,
+  type ProfileInput,
+} from '@ketopath/shared';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -56,6 +62,10 @@ export function ProfileForm({
             weightCurrentKg: initial.weightCurrentKg,
             weightGoalKg: initial.weightGoalKg,
             activityLevel: initial.activityLevel,
+            ...(initial.targetWeeklyLossKg != null
+              ? { targetWeeklyLossKg: initial.targetWeeklyLossKg }
+              : {}),
+            ...(initial.dietHistory ? { dietHistory: initial.dietHistory } : {}),
           },
         }
       : {}),
@@ -243,6 +253,34 @@ export function ProfileForm({
                 </FormControl>
                 <p className="font-display text-ink-soft text-sm italic leading-snug">
                   {t('targetWeeklyLossKgHint')}
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dietHistory"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>{t('dietHistory')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectPlaceholder')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {DIET_HISTORIES.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {t(`dietHistoryLabel.${d}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="font-display text-ink-soft text-sm italic leading-snug">
+                  {t('dietHistoryHint')}
                 </p>
                 <FormMessage />
               </FormItem>

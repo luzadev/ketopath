@@ -46,6 +46,10 @@ export function PreferencesSection({ initial }: { initial: PreferencesView | nul
 
 function toFormValues(view: PreferencesView): PreferencesValues {
   return {
+    trainingDays: view.trainingDays,
+    trainingType: view.trainingType as PreferencesValues['trainingType'],
+    sessionMinutes: view.sessionMinutes,
+    mealsPerDay: view.mealsPerDay,
     exclusions: view.exclusions as ExclusionGroup[],
     cuisinePreferences: view.cuisinePreferences as CuisineTag[],
     cookingTime: view.cookingTime as CookingTimeLevel,

@@ -9,5 +9,7 @@ export * from './nutrition/types.js';
 export * from './planner/macros.js';
 export * from './planner/matchmaking.js';
 export * from './planner/types.js';
+export * from './preferences/training.js';
+export * from './profile/diet-history.js';
 export * from './profile/schema.js';
 export * from './tracking/schema.js';

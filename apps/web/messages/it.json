@@ -308,6 +308,26 @@
       "TWENTY_FOUR": "20:4 — avanzato",
       "ESE_24": "ESE 24h",
       "FIVE_TWO": "5:2"
+    },
+    "trainingTitle": "Schedule allenamento",
+    "trainingHint": "Indica i giorni in cui ti alleni di solito: nei training day il piano alza il fabbisogno calorico.",
+    "trainingType": "Tipo di allenamento",
+    "trainingNone": "Nessuno per ora",
+    "trainingTypeLabel": {
+      "CARDIO": "Cardio (corsa, bici)",
+      "STRENGTH": "Forza (pesi)",
+      "MIXED": "Misto / HIIT",
+      "SPORT": "Sport di squadra"
+    },
+    "sessionMinutes": "Durata media (min)",
+    "mealsPerDayTitle": "Frequenza pasti",
+    "mealsPerDayHint": "Quanti pasti preferisci fare al giorno? Se hai un protocollo IF attivo, ha la precedenza lui.",
+    "mealsAuto": "Automatico (4 pasti)",
+    "mealsLabel": {
+      "1": "1 pasto al giorno",
+      "2": "2 pasti (pranzo + cena)",
+      "3": "3 pasti (no spuntino)",
+      "4": "4 pasti (con spuntino)"
     }
   },
   "Notifications": {
@@ -459,6 +479,14 @@
     "hipsCm": "Fianchi",
     "targetWeeklyLossKg": "Velocità di calo (kg/settimana)",
     "targetWeeklyLossKgHint": "Suggerito: 0.4–0.7 kg/settimana. Oltre 1% del peso corporeo è considerato troppo aggressivo.",
+    "dietHistory": "Storia delle diete precedenti",
+    "dietHistoryHint": "Diete restrittive ripetute (yo-yo) abbassano il metabolismo basale del 5-15%. Indicarcelo ci serve a calibrare il deficit con prudenza.",
+    "dietHistoryLabel": {
+      "NONE": "Mai fatto diete restrittive",
+      "SOME": "1-2 diete negli ultimi 3 anni",
+      "EXTENSIVE": "Più diete o effetto yo-yo",
+      "SEVERE": "Periodi di semi-fame o disturbi alim. in remissione"
+    },
     "selectPlaceholder": "Seleziona…",
     "save": "Salva profilo",
     "saving": "Salvataggio…",

@@ -179,3 +179,24 @@ export function protocolPlanForDay(
       return { share: DEFAULT_MEAL_SHARE, kcalMultiplier: 1 };
   }
 }
+
+// PRD §5.1 — Quote per pasto in base alla frequenza dichiarata dall'utente.
+// Usato solo in assenza di un fastingProtocol attivo (che ha precedenza).
+//
+//   1 pasto  → solo cena (OMAD light)
+//   2 pasti  → pranzo + cena
+//   3 pasti  → colazione + pranzo + cena, niente spuntino
+//   4 pasti  → default (con spuntino)
+export function mealShareForFrequency(mealsPerDay: number | null | undefined): MealShare {
+  switch (mealsPerDay) {
+    case 1:
+      return { COLAZIONE: 0, PRANZO: 0, SPUNTINO: 0, CENA: 1 };
+    case 2:
+      return { COLAZIONE: 0, PRANZO: 0.5, SPUNTINO: 0, CENA: 0.5 };
+    case 3:
+      return { COLAZIONE: 0.3, PRANZO: 0.4, SPUNTINO: 0, CENA: 0.3 };
+    case 4:
+    default:
+      return DEFAULT_MEAL_SHARE;
+  }
+}
