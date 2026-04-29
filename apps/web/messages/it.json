@@ -10,6 +10,7 @@
     "completeProfile": "Profilo & calcoli",
     "viewPlan": "Piano della settimana",
     "viewTracking": "Pesata & misure",
+    "viewFasting": "Digiuno intermittente",
     "lettura": "Continua la lettura",
     "inizia": "Inizia",
     "greeting": "Buongiorno, <name>{name}</name>.",
@@ -67,6 +68,77 @@
       "haveAccount": "Hai già un account? <link>Accedi</link>",
       "error": "Non è stato possibile completare la registrazione. Riprova.",
       "disclaimer": "Procedendo accetti che i tuoi dati siano trattati come descritto nell'informativa sulla privacy. KetoPath non sostituisce il parere medico."
+    }
+  },
+  "Fasting": {
+    "title": "Digiuno intermittente",
+    "subtitle": "Una finestra alimentare e una di riposo. Il timer scandisce il ritmo, il corpo fa il resto.",
+    "historyTitle": "Storico sessioni",
+    "activeBadge": "Sessione in corso",
+    "inactiveBadge": "Pronto a iniziare",
+    "startCallToAction": "Scegli un protocollo e parti. Il timer continua a scorrere anche se chiudi l'app.",
+    "chooseProtocol": "Protocollo",
+    "start": "Avvia digiuno",
+    "starting": "Avvio…",
+    "saving": "Salvataggio…",
+    "remaining": "Mancano {time}",
+    "reached": "Obiettivo raggiunto. Puoi rompere il digiuno o proseguire.",
+    "completeReached": "Concludi",
+    "completeEarly": "Concludi adesso",
+    "abort": "Annulla sessione",
+    "confirmAbort": "Sei sicuro di voler annullare questa sessione?",
+    "phaseTitle": "Fase metabolica",
+    "phases": {
+      "postprandial": {
+        "label": "Post-prandiale",
+        "description": "Digestione in corso. Insulina alta, glicemia in salita."
+      },
+      "glycogenolysis": {
+        "label": "Glicogenolisi",
+        "description": "Il fegato libera glucosio dalle scorte di glicogeno. L'insulina cala."
+      },
+      "lipolysis": {
+        "label": "Lipolisi",
+        "description": "Le scorte di grasso iniziano a essere mobilitate per produrre energia."
+      },
+      "ketogenesis": {
+        "label": "Chetogenesi",
+        "description": "Il fegato produce corpi chetonici. Le sensazioni mentali si fanno più nitide."
+      },
+      "autophagy": {
+        "label": "Autofagia",
+        "description": "Le cellule riciclano componenti danneggiati. Pulizia interna profonda."
+      }
+    },
+    "startedAt": "Iniziato",
+    "target": "Obiettivo",
+    "protocolGuideTitle": "Guida ai protocolli",
+    "protocolHints": {
+      "FOURTEEN_TEN": {
+        "title": "Inizio dolce",
+        "description": "Adatto in fase di mantenimento o per chi inizia. 10 ore di alimentazione."
+      },
+      "SIXTEEN_EIGHT": {
+        "title": "Lo standard",
+        "description": "Il protocollo più diffuso. Equilibrio tra sostenibilità e benefici metabolici."
+      },
+      "EIGHTEEN_SIX": {
+        "title": "Più aggressivo",
+        "description": "Inizia a sollecitare la chetogenesi. Per chi è già adattato."
+      },
+      "TWENTY_FOUR": {
+        "title": "Avanzato",
+        "description": "Solo 4 ore di alimentazione. Da praticare con regolarità ma non quotidianamente."
+      }
+    },
+    "emptyHistory": "Nessuna sessione registrata. Avvia il primo digiuno per iniziare a costruire la serie.",
+    "statCompleted": "Sessioni concluse",
+    "statTotal": "Ore totali",
+    "statSessions": "Sessioni totali",
+    "status": {
+      "IN_PROGRESS": "In corso",
+      "COMPLETED": "Completata",
+      "ABORTED": "Annullata"
     }
   },
   "Tracking": {
