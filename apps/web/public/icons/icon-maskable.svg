@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="KetoPath">
+  <!-- Maskable: full-bleed background, contenuto entro safe area centrale (≈ 80%). -->
+  <rect width="512" height="512" fill="#f6f0df"/>
+  <!-- Wordmark centrato; nessun filetto perché può essere mascherato. -->
+  <text x="256" y="320" font-family="'Fraunces', 'Cormorant Garamond', 'Times New Roman', serif" font-size="240" font-weight="500" fill="#221d18" text-anchor="middle" letter-spacing="-10">
+    KP<tspan fill="#9a3f29">.</tspan>
+  </text>
+</svg>

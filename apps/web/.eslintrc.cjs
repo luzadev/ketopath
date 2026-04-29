@@ -5,5 +5,7 @@ module.exports = {
   ignorePatterns: [
     // Service worker servito al browser: out-of-project per il TS parser.
     'public/**/*.js',
+    // Script Node ESM: out-of-project per il TS parser.
+    'scripts/**/*.mjs',
   ],
 };

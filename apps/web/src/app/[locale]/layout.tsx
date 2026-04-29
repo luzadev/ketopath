@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Fraunces, Inter_Tight, JetBrains_Mono } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
@@ -35,6 +35,16 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f6f0df' },
+    { media: '(prefers-color-scheme: dark)', color: '#221d18' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
+  // Su iOS standalone mode mantiene il colore della status bar coerente.
+};
+
 export async function generateMetadata({
   params: { locale },
 }: {
@@ -44,6 +54,21 @@ export async function generateMetadata({
   return {
     title: t('title'),
     description: t('description'),
+    manifest: '/manifest.webmanifest',
+    applicationName: 'KetoPath',
+    appleWebApp: {
+      capable: true,
+      title: 'KetoPath',
+      statusBarStyle: 'default',
+    },
+    icons: {
+      icon: [
+        { url: '/icons/icon.svg', type: 'image/svg+xml' },
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
   };
 }
 

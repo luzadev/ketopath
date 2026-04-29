@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="KetoPath">
+  <!-- Sfondo cream coerente con la palette del masthead. -->
+  <rect width="512" height="512" fill="#f6f0df"/>
+  <!-- Filetto editoriale superiore. -->
+  <rect x="56" y="80" width="400" height="2" fill="#221d18"/>
+  <!-- Filetto editoriale inferiore. -->
+  <rect x="56" y="430" width="400" height="2" fill="#221d18"/>
+  <!-- Eyebrow monospaziato. -->
+  <text x="256" y="118" font-family="ui-monospace, 'JetBrains Mono', monospace" font-size="22" letter-spacing="6" fill="#221d18" text-anchor="middle" opacity="0.65">KETOPATH</text>
+  <!-- Wordmark KP — Fraunces-like serif fallback. -->
+  <text x="256" y="320" font-family="'Fraunces', 'Cormorant Garamond', 'Times New Roman', serif" font-size="280" font-weight="500" fill="#221d18" text-anchor="middle" letter-spacing="-12">
+    KP<tspan fill="#9a3f29">.</tspan>
+  </text>
+  <!-- Dicitura editoriale al piedi. -->
+  <text x="256" y="410" font-family="'Fraunces', serif" font-style="italic" font-size="28" fill="#3d3530" text-anchor="middle" opacity="0.7">una keto italiana</text>
+</svg>

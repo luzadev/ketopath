@@ -47,11 +47,11 @@
     "@vitest/coverage-v8": "^1.6.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,jsx,cjs,mjs}": [
+    "*.{ts,tsx,jsx,cjs}": [
       "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
-    "*.js": [
+    "*.{js,mjs}": [
       "prettier --write"
     ],
     "*.{json,md,yml,yaml,css}": [
