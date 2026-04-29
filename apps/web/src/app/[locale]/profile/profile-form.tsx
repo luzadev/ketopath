@@ -8,8 +8,22 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { saveProfile } from './actions';
 
@@ -22,11 +36,7 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved, setSaved] = useState<Derived | null>(initial?.derived ?? null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ProfileInput>({
+  const form = useForm<ProfileInput>({
     resolver: zodResolver(profileInputSchema),
     ...(initial
       ? {
@@ -43,7 +53,7 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
       : {}),
   });
 
-  const onSubmit = handleSubmit(async (input) => {
+  const onSubmit = form.handleSubmit(async (input) => {
     setServerError(null);
     const result = await saveProfile(input);
     if (!result.ok) {
@@ -56,128 +66,141 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
   });
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5" noValidate>
-      <div className="grid grid-cols-2 gap-4">
-        <Field id="age" label={t('age')} error={errors.age?.message}>
-          <Input id="age" type="number" inputMode="numeric" {...register('age')} />
-        </Field>
-        <Field id="gender" label={t('gender')} error={errors.gender?.message}>
-          <select
-            id="gender"
-            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            {...register('gender')}
-          >
-            <option value="">{t('selectPlaceholder')}</option>
-            {GENDERS.map((g) => (
-              <option key={g} value={g}>
-                {t(`genderOptions.${g}`)}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
-
-      <Field id="heightCm" label={t('heightCm')} error={errors.heightCm?.message}>
-        <Input id="heightCm" type="number" inputMode="numeric" {...register('heightCm')} />
-      </Field>
-
-      <div className="grid grid-cols-3 gap-4">
-        <Field id="weightStartKg" label={t('weightStartKg')} error={errors.weightStartKg?.message}>
-          <Input
-            id="weightStartKg"
-            type="number"
-            step="0.1"
-            inputMode="decimal"
-            {...register('weightStartKg')}
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-5" noValidate>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="age"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('age')}</FormLabel>
+                <FormControl>
+                  <Input type="number" inputMode="numeric" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        <Field
-          id="weightCurrentKg"
-          label={t('weightCurrentKg')}
-          error={errors.weightCurrentKg?.message}
-        >
-          <Input
-            id="weightCurrentKg"
-            type="number"
-            step="0.1"
-            inputMode="decimal"
-            {...register('weightCurrentKg')}
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('gender')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectPlaceholder')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {GENDERS.map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {t(`genderOptions.${g}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        <Field id="weightGoalKg" label={t('weightGoalKg')} error={errors.weightGoalKg?.message}>
-          <Input
-            id="weightGoalKg"
-            type="number"
-            step="0.1"
-            inputMode="decimal"
-            {...register('weightGoalKg')}
-          />
-        </Field>
-      </div>
-
-      <Field id="activityLevel" label={t('activityLevel')} error={errors.activityLevel?.message}>
-        <select
-          id="activityLevel"
-          className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-          {...register('activityLevel')}
-        >
-          <option value="">{t('selectPlaceholder')}</option>
-          {ACTIVITY_LEVELS.map((a) => (
-            <option key={a} value={a}>
-              {t(`activityOptions.${a}`)}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      {serverError ? (
-        <p role="alert" className="text-destructive text-sm">
-          {serverError}
-        </p>
-      ) : null}
-
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? t('saving') : t('save')}
-      </Button>
-
-      {saved ? (
-        <div className="bg-secondary mt-6 rounded-md p-4 text-sm">
-          <p className="font-medium">{t('summary')}</p>
-          <ul className="mt-2 space-y-1">
-            <li>
-              {t('bmr')}: <span className="font-mono">{saved.bmr} kcal</span>
-            </li>
-            <li>
-              {t('tdee')}: <span className="font-mono">{saved.tdee} kcal</span>
-            </li>
-            <li>
-              {t('activityMultiplier')}:{' '}
-              <span className="font-mono">{saved.activityMultiplier}</span>
-            </li>
-          </ul>
-          <p className="text-muted-foreground mt-2 text-xs">{t('hint')}</p>
         </div>
-      ) : null}
-    </form>
-  );
-}
 
-function Field({
-  id,
-  label,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string | undefined;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {error ? <p className="text-destructive text-xs">{error}</p> : null}
-    </div>
+        <FormField
+          control={form.control}
+          name="heightCm"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('heightCm')}</FormLabel>
+              <FormControl>
+                <Input type="number" inputMode="numeric" {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-3 gap-4">
+          {(['weightStartKg', 'weightCurrentKg', 'weightGoalKg'] as const).map((name) => (
+            <FormField
+              key={name}
+              control={form.control}
+              name={name}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t(name)}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      inputMode="decimal"
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+        </div>
+
+        <FormField
+          control={form.control}
+          name="activityLevel"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('activityLevel')}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('selectPlaceholder')} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ACTIVITY_LEVELS.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {t(`activityOptions.${a}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {serverError ? (
+          <p role="alert" className="text-destructive text-sm">
+            {serverError}
+          </p>
+        ) : null}
+
+        <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
+          {form.formState.isSubmitting ? t('saving') : t('save')}
+        </Button>
+
+        {saved ? (
+          <div className="bg-secondary mt-6 rounded-md p-4 text-sm">
+            <p className="font-medium">{t('summary')}</p>
+            <ul className="mt-2 space-y-1">
+              <li>
+                {t('bmr')}: <span className="font-mono">{saved.bmr} kcal</span>
+              </li>
+              <li>
+                {t('tdee')}: <span className="font-mono">{saved.tdee} kcal</span>
+              </li>
+              <li>
+                {t('activityMultiplier')}:{' '}
+                <span className="font-mono">{saved.activityMultiplier}</span>
+              </li>
+            </ul>
+            <p className="text-muted-foreground mt-2 text-xs">{t('hint')}</p>
+          </div>
+        ) : null}
+      </form>
+    </Form>
   );
 }

@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3000;
-const baseURL = `http://localhost:${PORT}`;
+const WEB_PORT = 3000;
+const API_PORT = 4000;
+const baseURL = `http://localhost:${WEB_PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -15,10 +16,19 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: 'pnpm dev',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: 'pnpm --filter @ketopath/api dev',
+      url: `http://localhost:${API_PORT}/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      cwd: '../..',
+    },
+    {
+      command: 'pnpm dev',
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });
