@@ -90,12 +90,22 @@ function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurren
               </Button>
             </form>
             {plan ? (
-              <Link
-                href="/shopping"
-                className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
-              >
-                Lista della spesa →
-              </Link>
+              <>
+                <Link
+                  href="/shopping"
+                  className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+                >
+                  {t('linkShopping')} →
+                </Link>
+                <a
+                  href="/api/plan-export"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+                >
+                  {t('exportPdf')} ↗
+                </a>
+              </>
             ) : null}
           </div>
         </div>

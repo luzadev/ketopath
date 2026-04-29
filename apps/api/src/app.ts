@@ -10,6 +10,7 @@ import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { meRoutes } from './modules/me/me.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
+import { planExportRoutes } from './modules/plan/export.routes.js';
 import { planRoutes } from './modules/plan/plan.routes.js';
 import { preferencesRoutes } from './modules/preferences/preferences.routes.js';
 import { profileRoutes } from './modules/profile/profile.routes.js';
@@ -60,6 +61,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(checkInRoutes);
   await app.register(trackingExportRoutes);
   await app.register(planRoutes);
+  await app.register(planExportRoutes);
   await app.register(shoppingRoutes);
   await app.register(notificationsRoutes);
 
