@@ -24,6 +24,9 @@ function HomeContent({ userName }: { userName: string | null }) {
       {userName ? (
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-foreground text-sm">{t('signedInAs', { name: userName })}</span>
+          <Button asChild>
+            <Link href="/profile">{t('completeProfile')}</Link>
+          </Button>
           <SignOutButton label={t('signOut')} />
         </div>
       ) : (

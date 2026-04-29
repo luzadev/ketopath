@@ -6,7 +6,8 @@
     "ctaSecondary": "Scopri come funziona",
     "disclaimer": "Le informazioni fornite da questa app non sostituiscono il parere di un medico.",
     "signedInAs": "Accesso effettuato come {name}",
-    "signOut": "Esci"
+    "signOut": "Esci",
+    "completeProfile": "Completa il tuo profilo"
   },
   "Metadata": {
     "title": "KetoPath — Chetogenica e digiuno intermittente personalizzati",
@@ -39,6 +40,36 @@
       "haveAccount": "Hai già un account? <link>Accedi</link>",
       "error": "Non è stato possibile completare la registrazione. Riprova.",
       "disclaimer": "Procedendo accetti che i tuoi dati siano trattati come descritto nell'informativa sulla privacy. KetoPath non sostituisce il parere medico."
+    }
+  },
+  "Profile": {
+    "title": "Il tuo profilo",
+    "subtitle": "Inserisci i tuoi dati per calcolare BMR e TDEE personalizzati.",
+    "age": "Età",
+    "gender": "Sesso",
+    "heightCm": "Altezza (cm)",
+    "weightStartKg": "Peso iniziale (kg)",
+    "weightCurrentKg": "Peso attuale (kg)",
+    "weightGoalKg": "Peso obiettivo (kg)",
+    "activityLevel": "Livello di attività",
+    "selectPlaceholder": "Seleziona…",
+    "save": "Salva profilo",
+    "saving": "Salvataggio in corso…",
+    "summary": "Calcolo personalizzato",
+    "bmr": "Metabolismo basale (BMR)",
+    "tdee": "Fabbisogno totale (TDEE)",
+    "activityMultiplier": "Moltiplicatore attività",
+    "hint": "I valori sono stime basate sulla formula Mifflin-St Jeor. Non sostituiscono il parere di un nutrizionista.",
+    "genderOptions": {
+      "MALE": "Maschio",
+      "FEMALE": "Femmina",
+      "OTHER": "Altro / preferisco non specificare"
+    },
+    "activityOptions": {
+      "SEDENTARY": "Sedentario (lavoro d'ufficio)",
+      "LIGHT": "Leggero (sport 1-3 volte a settimana)",
+      "MODERATE": "Moderato (sport 3-5 volte a settimana)",
+      "INTENSE": "Intenso (sport 6+ volte a settimana)"
     }
   }
 }

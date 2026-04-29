@@ -8,6 +8,7 @@ import { env } from './config/env.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { meRoutes } from './modules/me/me.routes.js';
+import { profileRoutes } from './modules/profile/profile.routes.js';
 import { authPlugin } from './plugins/auth.js';
 import { prismaPlugin } from './plugins/prisma.js';
 
@@ -43,6 +44,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(dbRoutes);
   await app.register(meRoutes);
+  await app.register(profileRoutes);
 
   return app;
 }
