@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { pushSupported, subscribe, getCurrentSubscription } from '@/lib/notifications/push-client';
 
 import { regeneratePlan } from '../plan/actions';
-import { saveConditions } from '../profile/actions';
+import { fetchProfile, saveConditions } from '../profile/actions';
 import { savePreferences, type PreferencesView } from '../profile/preferences-actions';
 import { ProfileForm as ProfileFormComponent } from '../profile/profile-form';
 import type { ProfileForm } from '../profile/profile-form';
@@ -457,18 +457,39 @@ function StepNotifications({ onContinue }: { onContinue: () => void }) {
   );
 }
 
+interface PlanSummary {
+  bmr: number;
+  tdee: number;
+  currentPhase: string;
+}
+
 function StepDone({ goal }: { goal: Goal | null }) {
   const t = useTranslations('Onboarding');
   const router = useRouter();
   const [planStatus, setPlanStatus] = useState<'idle' | 'pending' | 'ready' | 'error'>('idle');
   const [iosInstallHint, setIosInstallHint] = useState(false);
+  const [planSummary, setPlanSummary] = useState<PlanSummary | null>(null);
 
   // Genera il primo piano se non esiste — best-effort.
   useEffect(() => {
     if (planStatus !== 'idle') return;
     setPlanStatus('pending');
     regeneratePlan()
-      .then(() => setPlanStatus('ready'))
+      .then(async () => {
+        setPlanStatus('ready');
+        // Carica il summary profilo per il riassunto
+        const profile = (await fetchProfile()) as {
+          derived?: { bmr: number; tdee: number };
+          currentPhase?: string;
+        } | null;
+        if (profile?.derived) {
+          setPlanSummary({
+            bmr: profile.derived.bmr,
+            tdee: profile.derived.tdee,
+            currentPhase: profile.currentPhase ?? 'INTENSIVE',
+          });
+        }
+      })
       .catch(() => setPlanStatus('error'));
   }, [planStatus]);
 
@@ -498,6 +519,43 @@ function StepDone({ goal }: { goal: Goal | null }) {
               : t('doneHint')}
         </p>
       </header>
+
+      {planSummary ? (
+        <section className="border-ink/15 bg-carta-light/40 grid grid-cols-2 gap-x-8 gap-y-4 border p-5 sm:grid-cols-4">
+          <div>
+            <p className="editorial-eyebrow">{t('summaryPhase')}</p>
+            <p className="font-display text-pomodoro mt-2 text-2xl font-medium leading-tight">
+              {t(`phaseLabel.${planSummary.currentPhase}`)}
+            </p>
+            <p className="text-ink-soft font-mono text-[10px] uppercase tracking-widest">
+              {t(`phaseDuration.${planSummary.currentPhase}`)}
+            </p>
+          </div>
+          <div>
+            <p className="editorial-eyebrow">{t('summaryBmr')}</p>
+            <p className="text-ink mt-2 font-mono text-3xl font-medium tabular-nums leading-none">
+              {planSummary.bmr}
+              <span className="font-display text-ink-soft ml-1 text-xs italic">kcal</span>
+            </p>
+          </div>
+          <div>
+            <p className="editorial-eyebrow">{t('summaryTdee')}</p>
+            <p className="text-ink mt-2 font-mono text-3xl font-medium tabular-nums leading-none">
+              {planSummary.tdee}
+              <span className="font-display text-ink-soft ml-1 text-xs italic">kcal</span>
+            </p>
+          </div>
+          <div>
+            <p className="editorial-eyebrow">{t('summaryAdherence')}</p>
+            <p className="text-ink mt-2 font-mono text-3xl font-medium tabular-nums leading-none">
+              {planSummary.currentPhase === 'INTENSIVE' ? '90%' : '85%'}
+            </p>
+            <p className="text-ink-soft font-mono text-[10px] uppercase tracking-widest">
+              {t('summaryAdherenceHint')}
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <NextCard

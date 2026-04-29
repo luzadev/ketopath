@@ -1,4 +1,5 @@
 import {
+  PROTOCOL_DEFAULT_MINUTES,
   bmrAdjustForDietHistory,
   bmrAdjustmentForConditions,
   calculateBmr,
@@ -39,6 +40,24 @@ function phaseToInt(p: string): 1 | 2 | 3 {
   if (p === 'INTENSIVE') return 1;
   if (p === 'TRANSITION') return 2;
   return 3;
+}
+
+// PRD §6.3 — il "pasto finale" della giornata determina quando far partire
+// auto il digiuno. Ordine canonico: COLAZIONE, PRANZO, SPUNTINO, CENA. Se uno
+// di questi manca dal giorno (per protocollo IF), l'ultimo presente conta.
+const MEAL_ORDER_MAP: Record<string, number> = {
+  COLAZIONE: 0,
+  PRANZO: 1,
+  SPUNTINO: 2,
+  CENA: 3,
+};
+
+function isMealLastOfDay(meal: string, daySlots: ReadonlyArray<{ meal: string }>): boolean {
+  const myRank = MEAL_ORDER_MAP[meal] ?? -1;
+  const otherRanks = daySlots
+    .filter((s) => s.meal !== meal)
+    .map((s) => MEAL_ORDER_MAP[s.meal] ?? -1);
+  return otherRanks.every((r) => r < myRank);
 }
 
 function parseConditions(raw: string | null): string[] {
@@ -284,6 +303,9 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // PRD §5.2 — aderenza: l'utente segna lo slot come consumato.
+  // PRD §6.3 — se è l'ultimo pasto della giornata e l'utente ha un protocollo
+  // di digiuno attivo nelle preferenze, e nessuna sessione è in corso, parte
+  // automaticamente un nuovo digiuno.
   fastify.post(
     '/me/meal-plans/slots/:slotId/consumed',
     { preHandler: requireAuth() },
@@ -295,7 +317,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
 
       const slot = await fastify.prisma.mealSlot.findFirst({
         where: { id: slotId, plan: { userId } },
-        select: { id: true, consumed: true },
+        select: { id: true, consumed: true, dayOfWeek: true, meal: true, planId: true },
       });
       if (!slot) return reply.code(404).send({ error: 'slot_not_found' });
 
@@ -305,7 +327,46 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         data: { consumed: next, consumedAt: next ? new Date() : null },
         select: { id: true, consumed: true, consumedAt: true },
       });
-      return { slot: updated };
+
+      // Auto-start digiuno se è l'ultimo pasto del giorno consumato.
+      let autoStartedFast: { id: string } | null = null;
+      if (next) {
+        const sameDaySlots = await fastify.prisma.mealSlot.findMany({
+          where: { planId: slot.planId, dayOfWeek: slot.dayOfWeek },
+          select: { id: true, meal: true },
+          orderBy: { meal: 'asc' },
+        });
+        const isLastOfDay = isMealLastOfDay(slot.meal, sameDaySlots);
+        if (isLastOfDay) {
+          const prefs = await fastify.prisma.preferences.findUnique({
+            where: { userId },
+            select: { fastingProtocol: true },
+          });
+          if (prefs?.fastingProtocol) {
+            const active = await fastify.prisma.fastEvent.findFirst({
+              where: { userId, status: 'IN_PROGRESS' },
+              select: { id: true },
+            });
+            if (!active) {
+              const minutes =
+                PROTOCOL_DEFAULT_MINUTES[
+                  prefs.fastingProtocol as keyof typeof PROTOCOL_DEFAULT_MINUTES
+                ] ?? 16 * 60;
+              const created = await fastify.prisma.fastEvent.create({
+                data: {
+                  userId,
+                  protocol: prefs.fastingProtocol,
+                  startedAt: new Date(),
+                  targetDuration: minutes,
+                },
+              });
+              autoStartedFast = { id: created.id };
+            }
+          }
+        }
+      }
+
+      return { slot: updated, autoStartedFast };
     },
   );
 

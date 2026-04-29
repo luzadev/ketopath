@@ -105,7 +105,10 @@ export function NotificationsPanel({ initial }: { initial: NotificationConfig | 
     });
   }
 
-  function handleToggle(key: 'weeklyWeighIn' | 'fastingMilestones', value: boolean): void {
+  function handleToggle(
+    key: 'weeklyWeighIn' | 'fastingMilestones' | 'mealReminders',
+    value: boolean,
+  ): void {
     startTransition(async () => {
       const result = await updateNotificationSettings({ [key]: value });
       if (!result.ok) {
@@ -162,7 +165,13 @@ export function NotificationsPanel({ initial }: { initial: NotificationConfig | 
               checked={cfg.settings.fastingMilestones}
               onChange={(v) => handleToggle('fastingMilestones', v)}
               disabled={pending || !pushReady}
-              comingSoon
+            />
+            <ToggleRow
+              label={t('mealRemindersLabel')}
+              description={t('mealRemindersHint')}
+              checked={cfg.settings.mealReminders ?? false}
+              onChange={(v) => handleToggle('mealReminders', v)}
+              disabled={pending || !pushReady}
             />
           </div>
 

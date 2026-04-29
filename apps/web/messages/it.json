@@ -189,6 +189,7 @@
     "delta": "Variazione",
     "emptyHistory": "Nessuna rilevazione registrata. Inserisci la prima a destra: la tendenza apparirà dopo due o tre pesate.",
     "weeklyTrend": "Trend settimanale",
+    "journey": "Del percorso",
     "projection": "Al ritmo attuale raggiungerai {kg} kg il {date}.",
     "alertEyebrow": "Soglia di allarme",
     "alertMessage": "Il tuo peso è {current} kg, sopra la soglia di {threshold} kg che hai impostato.",
@@ -280,6 +281,21 @@
     "notificationsBlocked": "Hai bloccato le notifiche per questo sito. Le potrai riattivare dalle impostazioni del browser.",
     "notificationsUnsupported": "Il tuo browser non supporta le notifiche push. Su iOS apri prima KetoPath dalla Home.",
     "notificationsError": "Non è stato possibile attivarle. Riprova più tardi dal tuo profilo.",
+    "summaryPhase": "Fase corrente",
+    "summaryBmr": "BMR",
+    "summaryTdee": "Fabbisogno",
+    "summaryAdherence": "Aderenza target",
+    "summaryAdherenceHint": "Per fase 1",
+    "phaseLabel": {
+      "INTENSIVE": "Intensiva",
+      "TRANSITION": "Transizione",
+      "MAINTENANCE": "Mantenimento"
+    },
+    "phaseDuration": {
+      "INTENSIVE": "30-45 giorni",
+      "TRANSITION": "30-60 giorni",
+      "MAINTENANCE": "Per sempre"
+    },
     "doneHeading": "Tutto pronto.",
     "doneHeadingGoal": {
       "LOSE": "Si parte. Un passo alla volta.",
@@ -387,7 +403,9 @@
     "weeklyWeighInLabel": "Promemoria pesata settimanale",
     "weeklyWeighInHint": "Lunedì alle 09:00 ti ricordiamo la pesata della settimana.",
     "fastingMilestonesLabel": "Tappe del digiuno",
-    "fastingMilestonesHint": "Ti avvisiamo all'ingresso in chetogenesi e all'autofagia. Disponibile a breve.",
+    "fastingMilestonesHint": "Idratazione ogni 2h, alert elettroliti oltre le 18h, 30 min prima della fine.",
+    "mealRemindersLabel": "Promemoria pasti",
+    "mealRemindersHint": "Pranzo alle 13:00, spuntino alle 16:00, cena alle 19:00 — solo nei giorni non in pausa.",
     "registeredDevices": "Dispositivi registrati",
     "subscribed": "Notifiche attivate.",
     "unsubscribed": "Notifiche disattivate su questo dispositivo.",
@@ -418,6 +436,7 @@
     "totalLabel": "Totale articoli",
     "estimatedCost": "Spesa stimata",
     "checked": "{n} di {total}",
+    "remainingCost": "Restano",
     "fromRecipes": "Per: {names}",
     "categoryLabel": {
       "verdura": "Verdura",

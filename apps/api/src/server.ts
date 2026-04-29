@@ -13,6 +13,7 @@ async function start(): Promise<void> {
   app.addHook('onClose', async () => {
     cronHandles?.weekly.stop();
     cronHandles?.fasting.stop();
+    cronHandles?.meals.forEach((m) => m.stop());
   });
 
   try {

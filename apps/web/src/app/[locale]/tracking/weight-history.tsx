@@ -67,9 +67,11 @@ const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
 export function WeightHistory({
   entries,
   goalKg,
+  startKg,
 }: {
   entries: WeightEntryRow[];
   goalKg?: number | null;
+  startKg?: number | null;
 }) {
   const t = useTranslations('Tracking');
   if (entries.length === 0) {
@@ -98,6 +100,16 @@ export function WeightHistory({
         })
       : null;
 
+  // PRD §6.4 — % del percorso. (start - current) / (start - goal).
+  // Se start == goal o sign mismatch, ritorna null.
+  const journeyPercent =
+    startKg != null && goalKg != null && startKg !== goalKg
+      ? Math.max(
+          0,
+          Math.min(100, Math.round(((startKg - newest.weightKg) / (startKg - goalKg)) * 100)),
+        )
+      : null;
+
   return (
     <div className="space-y-8">
       <div>
@@ -108,7 +120,7 @@ export function WeightHistory({
         </div>
       </div>
 
-      <div className="border-ink/10 grid grid-cols-2 gap-6 border-y py-5 sm:grid-cols-3">
+      <div className="border-ink/10 grid grid-cols-2 gap-6 border-y py-5 sm:grid-cols-4">
         <div>
           <p className="editorial-eyebrow">{t('current')}</p>
           <p className="text-ink mt-2 font-mono text-3xl font-medium leading-none tracking-tight">
@@ -143,6 +155,15 @@ export function WeightHistory({
               {trend.slopeKgPerWeek > 0 ? '+' : ''}
               {trend.slopeKgPerWeek.toFixed(2)}
               <span className="font-display text-ink-soft ml-1 text-xs italic">kg/sett</span>
+            </p>
+          </div>
+        ) : null}
+        {journeyPercent != null ? (
+          <div>
+            <p className="editorial-eyebrow">{t('journey')}</p>
+            <p className="text-ink mt-2 font-mono text-3xl font-medium leading-none tracking-tight">
+              {journeyPercent}
+              <span className="font-display text-ink-soft ml-1 text-xs italic">%</span>
             </p>
           </div>
         ) : null}

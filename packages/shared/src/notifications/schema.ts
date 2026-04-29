@@ -5,6 +5,8 @@ export const notificationSettingsSchema = z
   .object({
     weeklyWeighIn: z.boolean().default(false),
     fastingMilestones: z.boolean().default(false),
+    // PRD §6.3 — promemoria a 13:00/16:00/19:00 per pranzo/spuntino/cena.
+    mealReminders: z.boolean().default(false),
   })
   .strict();
 
@@ -13,6 +15,7 @@ export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   weeklyWeighIn: false,
   fastingMilestones: false,
+  mealReminders: false,
 };
 
 // Body inviato dal client al backend per registrare una subscription web.

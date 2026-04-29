@@ -18,10 +18,15 @@ import { pushIsEnabled, sendToDevice } from './sender.js';
 
 const WEEKLY_CRON = '0 9 * * 1'; // lunedì alle 09:00
 const FASTING_CRON = '*/5 * * * *'; // ogni 5 minuti
+// PRD §6.3 — orari fissi pranzo/spuntino/cena
+const LUNCH_CRON = '0 13 * * *';
+const SNACK_CRON = '0 16 * * *';
+const DINNER_CRON = '0 19 * * *';
 
 export interface SchedulerHandles {
   weekly: ScheduledTask;
   fasting: ScheduledTask;
+  meals: ScheduledTask[];
 }
 
 export function startNotificationScheduler(
@@ -48,10 +53,24 @@ export function startNotificationScheduler(
     },
     { timezone: 'Europe/Rome' },
   );
-  log.info(
-    '[notifications] cron scheduled — weekly weigh-in (Mon 09:00) + fasting milestones (every 5 min)',
+  const meals: ScheduledTask[] = [
+    [LUNCH_CRON, 'PRANZO'] as const,
+    [SNACK_CRON, 'SPUNTINO'] as const,
+    [DINNER_CRON, 'CENA'] as const,
+  ].map(([expr, slot]) =>
+    // eslint-disable-next-line import/no-named-as-default-member
+    cron.schedule(
+      expr,
+      () => {
+        void runMealReminderJob(prisma, log, slot);
+      },
+      { timezone: 'Europe/Rome' },
+    ),
   );
-  return { weekly, fasting };
+  log.info(
+    '[notifications] cron scheduled — weekly weigh-in (Mon 09:00), fasting milestones (every 5 min), meal reminders (13/16/19 daily)',
+  );
+  return { weekly, fasting, meals };
 }
 
 export async function runWeeklyWeighInJob(
@@ -218,4 +237,74 @@ export async function runFastingMilestonesJob(
     log.info({ checked: active.length, sent, expired }, '[notifications] fasting milestones job');
   }
   return { checked: active.length, sent, expired };
+}
+
+// PRD §6.3 — promemoria pasti agli orari italiani standard.
+// Ignoriamo gli utenti in pausa (fastingPausedUntil futuro). Per gli utenti
+// con fastingProtocol attivo che esclude un pasto (es. 16:8 senza colazione),
+// se il pasto richiesto è 0% nello share del giorno corrente, saltiamo.
+const MEAL_COPY: Record<'PRANZO' | 'SPUNTINO' | 'CENA', { title: string; body: string }> = {
+  PRANZO: {
+    title: 'Ora di pranzo',
+    body: "Vedi cosa c'è nel piano di oggi.",
+  },
+  SPUNTINO: {
+    title: 'Spuntino',
+    body: "Una pausa veloce: dai un'occhiata al piano.",
+  },
+  CENA: {
+    title: 'È quasi ora di cena',
+    body: 'Apri KetoPath per la ricetta di stasera.',
+  },
+};
+
+export async function runMealReminderJob(
+  prisma: ExtendedPrismaClient,
+  log: FastifyBaseLogger,
+  meal: 'PRANZO' | 'SPUNTINO' | 'CENA',
+): Promise<{ candidates: number; sent: number; expired: number }> {
+  const candidates = await prisma.user.findMany({
+    where: {
+      preferences: { isNot: null },
+      deviceTokens: { some: {} },
+    },
+    select: {
+      id: true,
+      fastingPausedUntil: true,
+      preferences: { select: { notificationSettings: true } },
+      deviceTokens: true,
+    },
+  });
+
+  const now = Date.now();
+  let sent = 0;
+  let expired = 0;
+  for (const u of candidates) {
+    const settings = readSettings(u.preferences?.notificationSettings ?? null);
+    if (!settings.mealReminders) continue;
+    if (u.fastingPausedUntil && u.fastingPausedUntil.getTime() > now) continue;
+
+    const copy = MEAL_COPY[meal];
+    for (const token of u.deviceTokens) {
+      const r = await sendToDevice(token, {
+        title: copy.title,
+        body: copy.body,
+        url: '/plan',
+      });
+      if (r.ok) sent++;
+      if (r.expired) {
+        expired++;
+        await prisma.deviceToken.delete({ where: { id: token.id } }).catch(() => {
+          /* ignora race */
+        });
+      }
+    }
+  }
+  if (sent > 0 || expired > 0) {
+    log.info(
+      { meal, candidates: candidates.length, sent, expired },
+      '[notifications] meal reminder job',
+    );
+  }
+  return { candidates: candidates.length, sent, expired };
 }

@@ -64,6 +64,24 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
   );
   const checkedCount = useMemo(() => Object.values(checked).filter(Boolean).length, [checked]);
 
+  // PRD §6.5 — totale stimato sui rimanenti (non spuntati). Heuristica
+  // identica a shopping/page.tsx: g/ml ÷1000, altrimenti ×1.
+  const remainingCost = useMemo(() => {
+    let total = 0;
+    for (const g of list.groups) {
+      for (const it of g.items) {
+        if (checked[lineKey(it)]) continue;
+        if (it.priceAvgEur == null) continue;
+        if (it.unit === 'g' || it.unit === 'ml') {
+          total += (it.quantity / 1000) * it.priceAvgEur;
+        } else {
+          total += it.quantity * it.priceAvgEur;
+        }
+      }
+    }
+    return total;
+  }, [list.groups, checked]);
+
   function toggle(line: ShoppingLine): void {
     const key = lineKey(line);
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -71,9 +89,18 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
 
   return (
     <div className="space-y-12">
-      <p className="font-display text-ink-soft text-base italic leading-snug">
-        {t('checked', { n: checkedCount, total: totalCount })}
-      </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-4">
+        <p className="font-display text-ink-soft text-base italic leading-snug">
+          {t('checked', { n: checkedCount, total: totalCount })}
+        </p>
+        {remainingCost > 0 ? (
+          <p className="text-ink font-mono text-sm tabular-nums">
+            {t('remainingCost')}{' '}
+            <span className="font-display text-ink-soft text-xs italic">€</span>{' '}
+            {remainingCost.toFixed(2)}
+          </p>
+        ) : null}
+      </div>
 
       {list.groups.map((group, groupIdx) => (
         <section
@@ -99,46 +126,54 @@ export function ShoppingChecklist({ list }: { list: ShoppingList }) {
           </header>
 
           <ul className="divide-ink/10 divide-y">
-            {group.items.map((line) => {
-              const key = lineKey(line);
-              const isChecked = !!checked[key];
-              return (
-                <li key={key}>
-                  <button
-                    type="button"
-                    onClick={() => toggle(line)}
-                    aria-pressed={isChecked}
-                    className="hover:bg-ink/5 group grid w-full grid-cols-[1.25rem_1fr_auto] items-baseline gap-4 py-4 pr-2 text-left transition-colors"
-                  >
-                    <span
-                      aria-hidden
-                      className={`border-ink h-3 w-3 translate-y-1 border-[1.5px] transition-colors ${
-                        isChecked ? 'bg-ink' : 'bg-transparent'
-                      }`}
-                    />
-                    <span className="flex flex-col gap-1">
+            {[...group.items]
+              .sort((a, b) => {
+                // PRD §6.5 — gli articoli spuntati vanno in fondo.
+                const ac = checked[lineKey(a)] ? 1 : 0;
+                const bc = checked[lineKey(b)] ? 1 : 0;
+                if (ac !== bc) return ac - bc;
+                return a.name.localeCompare(b.name, 'it');
+              })
+              .map((line) => {
+                const key = lineKey(line);
+                const isChecked = !!checked[key];
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      onClick={() => toggle(line)}
+                      aria-pressed={isChecked}
+                      className="hover:bg-ink/5 group grid w-full grid-cols-[1.25rem_1fr_auto] items-baseline gap-4 py-4 pr-2 text-left transition-colors"
+                    >
                       <span
-                        className={`font-display text-ink text-lg leading-tight transition-colors ${
-                          isChecked ? 'text-ink-dim line-through' : ''
+                        aria-hidden
+                        className={`border-ink h-3 w-3 translate-y-1 border-[1.5px] transition-colors ${
+                          isChecked ? 'bg-ink' : 'bg-transparent'
+                        }`}
+                      />
+                      <span className="flex flex-col gap-1">
+                        <span
+                          className={`font-display text-ink text-lg leading-tight transition-colors ${
+                            isChecked ? 'text-ink-dim line-through' : ''
+                          }`}
+                        >
+                          {line.name}
+                        </span>
+                        <span className="text-ink-soft font-mono text-[10px] uppercase tracking-widest">
+                          {t('fromRecipes', { names: line.recipes.join(' · ') })}
+                        </span>
+                      </span>
+                      <span
+                        className={`text-ink font-mono text-sm tabular-nums transition-colors ${
+                          isChecked ? 'text-ink-dim' : ''
                         }`}
                       >
-                        {line.name}
+                        {formatQuantity(line.quantity)} {line.unit}
                       </span>
-                      <span className="text-ink-soft font-mono text-[10px] uppercase tracking-widest">
-                        {t('fromRecipes', { names: line.recipes.join(' · ') })}
-                      </span>
-                    </span>
-                    <span
-                      className={`text-ink font-mono text-sm tabular-nums transition-colors ${
-                        isChecked ? 'text-ink-dim' : ''
-                      }`}
-                    >
-                      {formatQuantity(line.quantity)} {line.unit}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         </section>
       ))}

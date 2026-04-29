@@ -20,7 +20,7 @@ export interface NotificationDevice {
 
 export interface NotificationConfig {
   pushEnabled: boolean;
-  settings: { weeklyWeighIn: boolean; fastingMilestones: boolean };
+  settings: { weeklyWeighIn: boolean; fastingMilestones: boolean; mealReminders: boolean };
   devices: NotificationDevice[];
 }
 
@@ -70,7 +70,7 @@ export async function unregisterDevice(deviceId: string): Promise<ActionResult> 
 }
 
 export async function updateNotificationSettings(
-  patch: Partial<{ weeklyWeighIn: boolean; fastingMilestones: boolean }>,
+  patch: Partial<{ weeklyWeighIn: boolean; fastingMilestones: boolean; mealReminders: boolean }>,
 ): Promise<ActionResult> {
   const res = await fetch(`${API_URL}/me/notifications/settings`, {
     method: 'PATCH',

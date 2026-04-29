@@ -15,6 +15,7 @@ import { WeightHistory } from './weight-history';
 
 type ProfileLike = {
   weightGoalKg?: number;
+  weightStartKg?: number;
   alertWeightKg?: number | null;
 } | null;
 
@@ -57,6 +58,7 @@ function TrackingPageContent({
   const t = useTranslations('Tracking');
   const latest = entries[0] ?? null;
   const goalKg = typeof profile?.weightGoalKg === 'number' ? profile.weightGoalKg : null;
+  const startKg = typeof profile?.weightStartKg === 'number' ? profile.weightStartKg : null;
   const alertKg = typeof profile?.alertWeightKg === 'number' ? profile.alertWeightKg : null;
   const alertActive = alertKg != null && latest != null && latest.weightKg >= alertKg;
 
@@ -110,7 +112,7 @@ function TrackingPageContent({
           </section>
           <aside className="md:border-ink/15 animate-fade-up [animation-delay:420ms] md:col-span-5 md:border-l md:pl-10">
             <p className="editorial-eyebrow mb-6">{t('history')}</p>
-            <WeightHistory entries={entries} goalKg={goalKg} />
+            <WeightHistory entries={entries} goalKg={goalKg} startKg={startKg} />
           </aside>
         </div>
       </main>
