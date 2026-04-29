@@ -104,6 +104,7 @@ function SignedInBlock({
       </div>
       <ul className="space-y-px">
         <NavItem href="/plan" label={t('viewPlan')} eyebrow="Cucina" />
+        <NavItem href="/tracking" label={t('viewTracking')} eyebrow="Tracking" />
         <NavItem href="/profile" label={t('completeProfile')} eyebrow="Profilo" />
       </ul>
       <SignOutButton label={t('signOut')} />

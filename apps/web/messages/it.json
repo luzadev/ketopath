@@ -9,6 +9,7 @@
     "signOut": "Esci",
     "completeProfile": "Profilo & calcoli",
     "viewPlan": "Piano della settimana",
+    "viewTracking": "Pesata & misure",
     "lettura": "Continua la lettura",
     "inizia": "Inizia",
     "greeting": "Buongiorno, <name>{name}</name>.",
@@ -67,6 +68,29 @@
       "error": "Non è stato possibile completare la registrazione. Riprova.",
       "disclaimer": "Procedendo accetti che i tuoi dati siano trattati come descritto nell'informativa sulla privacy. KetoPath non sostituisce il parere medico."
     }
+  },
+  "Tracking": {
+    "title": "Pesata e misure",
+    "subtitle": "Pochi numeri, una volta a settimana. La tendenza emerge dalla regolarità — non dalla pesata di oggi.",
+    "newEntry": "Nuova rilevazione",
+    "history": "Storico",
+    "date": "Data",
+    "weightKg": "Peso (kg)",
+    "measurements": "Misure (cm) — opzionali",
+    "waist": "Girovita",
+    "hips": "Fianchi",
+    "thigh": "Coscia",
+    "arm": "Braccio",
+    "subjective": "Indicatori soggettivi (1–10)",
+    "energy": "Energia",
+    "sleep": "Sonno",
+    "hunger": "Fame",
+    "save": "Registra",
+    "saving": "Salvataggio…",
+    "saved": "Registrato.",
+    "current": "Peso attuale",
+    "delta": "Variazione",
+    "emptyHistory": "Nessuna rilevazione registrata. Inserisci la prima a destra: la tendenza apparirà dopo due o tre pesate."
   },
   "Plan": {
     "title": "Il tuo piano",
