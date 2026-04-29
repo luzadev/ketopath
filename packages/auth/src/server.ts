@@ -8,9 +8,11 @@ const env = readAuthEnv();
 
 const isGoogleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
-export const enabledSocialProviders = isGoogleConfigured ? (['google'] as const) : ([] as const);
+export type SocialProvider = 'google';
 
-export type SocialProvider = (typeof enabledSocialProviders)[number];
+export const enabledSocialProviders: ReadonlyArray<SocialProvider> = isGoogleConfigured
+  ? ['google']
+  : [];
 
 const googleProvider = isGoogleConfigured
   ? {

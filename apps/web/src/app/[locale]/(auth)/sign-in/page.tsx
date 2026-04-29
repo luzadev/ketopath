@@ -2,6 +2,8 @@ import { enabledSocialProviders } from '@ketopath/auth';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { SignInForm } from './sign-in-form';
 
 export default function SignInPage({ params: { locale } }: { params: { locale: string } }) {
@@ -9,12 +11,16 @@ export default function SignInPage({ params: { locale } }: { params: { locale: s
   const t = useTranslations('Auth.SignIn');
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-8 px-6 py-16">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-        <p className="text-sm text-slate-600">{t('subtitle')}</p>
-      </header>
-      <SignInForm googleEnabled={enabledSocialProviders.includes('google')} />
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('subtitle')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SignInForm googleEnabled={enabledSocialProviders.includes('google')} />
+        </CardContent>
+      </Card>
     </main>
   );
 }

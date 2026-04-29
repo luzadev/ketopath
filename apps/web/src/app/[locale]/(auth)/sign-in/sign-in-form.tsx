@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState, type FormEvent } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { authClient } from '@/lib/auth-client';
 
 export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
@@ -46,67 +49,59 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        <label className="block space-y-1">
-          <span className="text-sm font-medium text-slate-700">{t('emailLabel')}</span>
-          <input
+        <div className="space-y-1.5">
+          <Label htmlFor="email">{t('emailLabel')}</Label>
+          <Input
+            id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-sm font-medium text-slate-700">{t('passwordLabel')}</span>
-          <input
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">{t('passwordLabel')}</Label>
+          <Input
+            id="password"
             type="password"
             required
             autoComplete="current-password"
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
-        </label>
+        </div>
         {error ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-destructive text-sm">
             {error}
           </p>
         ) : null}
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
-        >
+        <Button type="submit" disabled={pending} className="w-full">
           {pending ? t('submitting') : t('submit')}
-        </button>
+        </Button>
       </form>
       {googleEnabled ? (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
+              <div className="border-border w-full border-t" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-white px-2 text-xs uppercase tracking-wider text-slate-500">
+              <span className="bg-background text-muted-foreground px-2 text-xs uppercase tracking-wider">
                 {t('or')}
               </span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleGoogle}
-            className="w-full rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-          >
+          <Button type="button" variant="outline" onClick={handleGoogle} className="w-full">
             {t('google')}
-          </button>
+          </Button>
         </>
       ) : null}
-      <p className="text-center text-sm text-slate-600">
+      <p className="text-muted-foreground text-center text-sm">
         {t.rich('noAccount', {
           link: (chunks) => (
-            <Link href="/sign-up" className="font-medium text-emerald-700 hover:underline">
+            <Link href="/sign-up" className="text-primary font-medium hover:underline">
               {chunks}
             </Link>
           ),
