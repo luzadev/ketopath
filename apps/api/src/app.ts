@@ -5,7 +5,9 @@ import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import { env } from './config/env.js';
+import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { prismaPlugin } from './plugins/prisma.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -33,8 +35,10 @@ export async function buildApp(): Promise<FastifyInstance> {
     timeWindow: '1 minute',
   });
   await app.register(sensible);
+  await app.register(prismaPlugin);
 
   await app.register(healthRoutes);
+  await app.register(dbRoutes);
 
   return app;
 }
