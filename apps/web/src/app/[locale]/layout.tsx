@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
+import { CookieBanner } from '@/components/cookie-banner';
 import { locales, type Locale } from '@/i18n';
 
 import '@/styles/globals.css';
@@ -48,9 +49,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={inter.variable}>
-      <body className="min-h-screen bg-white font-sans text-slate-900 antialiased">
+      <body className="bg-background text-foreground min-h-screen font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <CookieBanner />
         </NextIntlClientProvider>
       </body>
     </html>

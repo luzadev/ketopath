@@ -9,6 +9,11 @@
     "signOut": "Esci",
     "completeProfile": "Completa il tuo profilo"
   },
+  "CookieBanner": {
+    "aria": "Informativa cookie",
+    "message": "Usiamo solo cookie essenziali per l'autenticazione e la sessione. Niente analytics o tracker di terze parti.",
+    "dismiss": "Ho capito"
+  },
   "Metadata": {
     "title": "KetoPath — Chetogenica e digiuno intermittente personalizzati",
     "description": "Web app italiana per la gestione strutturata di chetogenica e digiuno intermittente, con piani adattivi, tracking e lista della spesa automatica."
