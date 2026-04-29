@@ -47,23 +47,32 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         fatG: true,
         netCarbG: true,
         phases: true,
+        ingredients: {
+          select: { ingredient: { select: { exclusionGroups: true } } },
+        },
       },
     });
     if (recipes.length === 0) {
       return reply.code(409).send({ error: 'recipe_catalog_empty' });
     }
 
-    const candidates: RecipeCandidate[] = recipes.map((r) => ({
-      id: r.id,
-      name: r.name,
-      category: r.category,
-      kcal: r.kcal,
-      proteinG: r.proteinG,
-      fatG: r.fatG,
-      netCarbG: r.netCarbG,
-      exclusionTags: [],
-      phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
-    }));
+    const candidates: RecipeCandidate[] = recipes.map((r) => {
+      const tags = new Set<string>();
+      for (const ri of r.ingredients) {
+        for (const g of ri.ingredient.exclusionGroups) tags.add(g);
+      }
+      return {
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        kcal: r.kcal,
+        proteinG: r.proteinG,
+        fatG: r.fatG,
+        netCarbG: r.netCarbG,
+        exclusionTags: Array.from(tags),
+        phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
+      };
+    });
 
     const weightCurrentKg = Number(profile.weightCurrentKg);
     const bmr = calculateBmr({

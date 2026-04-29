@@ -17,7 +17,7 @@ export default async function WelcomePage({ params: { locale } }: { params: { lo
     where: { id: session.user.id },
     select: { disclaimerAcceptedAt: true },
   });
-  if (user?.disclaimerAcceptedAt) redirect('/profile');
+  if (user?.disclaimerAcceptedAt) redirect('/onboarding');
 
   return <WelcomePageContent />;
 }

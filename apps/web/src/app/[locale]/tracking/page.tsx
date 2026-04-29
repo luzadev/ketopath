@@ -20,7 +20,7 @@ export default async function TrackingPage({ params: { locale } }: { params: { l
     select: { disclaimerAcceptedAt: true, profile: { select: { id: true } } },
   });
   if (!user?.disclaimerAcceptedAt) redirect('/welcome');
-  if (!user.profile) redirect('/profile');
+  if (!user.profile) redirect('/onboarding');
 
   const entries = await fetchWeightEntries();
 

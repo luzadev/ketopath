@@ -165,6 +165,76 @@
     "delta": "Variazione",
     "emptyHistory": "Nessuna rilevazione registrata. Inserisci la prima a destra: la tendenza apparirà dopo due o tre pesate."
   },
+  "Onboarding": {
+    "title": "Configura il tuo percorso",
+    "subtitle": "Tre passaggi: parametri personali, preferenze, e via al primo piano.",
+    "stepsTitle": "Tappe",
+    "stepEyebrow": "Tappa {n} di {total}",
+    "next": "Salva e continua",
+    "back": "← Indietro",
+    "steps": {
+      "profile": "Anagrafica e attività",
+      "preferences": "Esclusioni e cucine",
+      "done": "Pronti a partire"
+    },
+    "profileHeading": "I numeri che ti riguardano",
+    "profileHint": "Età, sesso, altezza, peso e attività: bastano per calcolare BMR, TDEE e i target di macros.",
+    "preferencesHeading": "Cosa eviti, cosa ami",
+    "preferencesHint": "Le esclusioni filtrano davvero le ricette del piano. Le cucine sono un suggerimento al matchmaking.",
+    "doneHeading": "Tutto pronto.",
+    "doneHint": "Puoi generare il primo piano della settimana adesso, oppure esplorare l'app a tuo ritmo.",
+    "goToPlan": "Genera il primo piano",
+    "skipToHome": "Esplora l'app →"
+  },
+  "Preferences": {
+    "eyebrow": "Preferenze",
+    "title": "Cucina su misura",
+    "subtitle": "Le esclusioni filtrano gli ingredienti, le cucine influenzano il matchmaking, il tempo decide quante ricette elaborate proporre.",
+    "exclusionsTitle": "Esclusioni alimentari",
+    "exclusionsHint": "Tutte le ricette che contengono almeno uno di questi gruppi verranno escluse dal piano.",
+    "cuisinesTitle": "Cucine preferite",
+    "cuisinesHint": "Indicaci le tradizioni che preferisci. È un suggerimento, non un vincolo.",
+    "cookingTimeTitle": "Tempo in cucina",
+    "cookingTimeHint": "Quanto tempo vuoi dedicare alla preparazione, in media?",
+    "fastingTitle": "Protocollo digiuno predefinito",
+    "fastingHint": "Sarà selezionato in /fasting alla prossima sessione.",
+    "fastingNone": "Nessuno per ora",
+    "save": "Salva preferenze",
+    "saving": "Salvataggio…",
+    "saved": "Preferenze aggiornate.",
+    "errorGeneric": "Non è stato possibile salvare. Riprova.",
+    "exclusionLabel": {
+      "lactose": "Lattosio",
+      "egg": "Uova",
+      "fish": "Pesce",
+      "nuts": "Frutta secca",
+      "gluten": "Glutine",
+      "pork": "Maiale",
+      "beef": "Manzo"
+    },
+    "cuisineLabel": {
+      "mediterranea": "Mediterranea",
+      "italiana": "Italiana classica",
+      "pugliese": "Pugliese",
+      "siciliana": "Siciliana",
+      "toscana": "Toscana",
+      "medio-orientale": "Medio-orientale",
+      "nordica": "Nordica"
+    },
+    "cookingTimeLabel": {
+      "LOW": "Veloce · fino a 15 min",
+      "MEDIUM": "Medio · 15–30 min",
+      "HIGH": "Elaborato · oltre 30 min"
+    },
+    "fastingProtocolLabel": {
+      "FOURTEEN_TEN": "14:10 — inizio dolce",
+      "SIXTEEN_EIGHT": "16:8 — lo standard",
+      "EIGHTEEN_SIX": "18:6 — più aggressivo",
+      "TWENTY_FOUR": "20:4 — avanzato",
+      "ESE_24": "ESE 24h",
+      "FIVE_TWO": "5:2"
+    }
+  },
   "Notifications": {
     "eyebrow": "Notifiche",
     "title": "Promemoria al momento giusto",

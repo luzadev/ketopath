@@ -21,7 +21,7 @@ export default async function PlanPage({ params: { locale } }: { params: { local
     select: { disclaimerAcceptedAt: true, profile: { select: { id: true } } },
   });
   if (!user?.disclaimerAcceptedAt) redirect('/welcome');
-  if (!user.profile) redirect('/profile');
+  if (!user.profile) redirect('/onboarding');
 
   const plan = await fetchCurrentPlan();
 

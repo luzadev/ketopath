@@ -9,6 +9,8 @@ import { getServerSession } from '@/lib/auth';
 import { fetchProfile } from './actions';
 import { fetchNotificationConfig } from './notifications-actions';
 import { NotificationsPanel } from './notifications-panel';
+import { fetchPreferences } from './preferences-actions';
+import { PreferencesSection } from './preferences-section';
 import { ProfileForm } from './profile-form';
 
 export default async function ProfilePage({ params: { locale } }: { params: { locale: string } }) {
@@ -24,16 +26,21 @@ export default async function ProfilePage({ params: { locale } }: { params: { lo
 
   const profile = (await fetchProfile()) as Parameters<typeof ProfileForm>[0]['initial'];
   const notifications = await fetchNotificationConfig();
+  const preferences = await fetchPreferences();
 
-  return <ProfilePageContent initial={profile} notifications={notifications} />;
+  return (
+    <ProfilePageContent initial={profile} notifications={notifications} preferences={preferences} />
+  );
 }
 
 function ProfilePageContent({
   initial,
   notifications,
+  preferences,
 }: {
   initial: Parameters<typeof ProfileForm>[0]['initial'];
   notifications: Awaited<ReturnType<typeof fetchNotificationConfig>>;
+  preferences: Awaited<ReturnType<typeof fetchPreferences>>;
 }) {
   const t = useTranslations('Profile');
 
@@ -56,9 +63,15 @@ function ProfilePageContent({
           <ProfileForm initial={initial} />
         </div>
 
-        <div className="rule animate-rule-in my-16 [animation-delay:480ms]" />
+        <div className="rule animate-rule-in my-16 [animation-delay:420ms]" />
 
-        <div className="animate-fade-up [animation-delay:540ms]">
+        <div className="animate-fade-up [animation-delay:480ms]">
+          <PreferencesSection initial={preferences} />
+        </div>
+
+        <div className="rule animate-rule-in my-16 [animation-delay:600ms]" />
+
+        <div className="animate-fade-up [animation-delay:660ms]">
           <NotificationsPanel initial={notifications} />
         </div>
       </main>

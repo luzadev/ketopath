@@ -30,7 +30,15 @@ import { saveProfile } from './actions';
 type Derived = { bmr: number; tdee: number; activityMultiplier: number };
 type Profile = ProfileInput & { derived?: Derived };
 
-export function ProfileForm({ initial }: { initial: Profile | null }) {
+export function ProfileForm({
+  initial,
+  onSaved,
+  saveLabel,
+}: {
+  initial: Profile | null;
+  onSaved?: (profile: Profile) => void;
+  saveLabel?: string;
+}) {
   const t = useTranslations('Profile');
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -62,7 +70,11 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
     }
     const profile = result.profile as Profile;
     if (profile.derived) setSaved(profile.derived);
-    router.refresh();
+    if (onSaved) {
+      onSaved(profile);
+    } else {
+      router.refresh();
+    }
   });
 
   return (
@@ -191,7 +203,7 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
               size="lg"
               className="w-full sm:w-auto"
             >
-              {form.formState.isSubmitting ? t('saving') : t('save')}
+              {form.formState.isSubmitting ? t('saving') : (saveLabel ?? t('save'))}
             </Button>
           </div>
         </fieldset>

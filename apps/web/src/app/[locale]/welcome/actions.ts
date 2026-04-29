@@ -16,5 +16,5 @@ export async function acceptDisclaimer(): Promise<void> {
   });
 
   revalidatePath('/', 'layout');
-  redirect('/profile');
+  redirect('/onboarding');
 }
