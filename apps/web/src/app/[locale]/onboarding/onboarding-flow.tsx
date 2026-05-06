@@ -740,5 +740,6 @@ function toFormValues(view: PreferencesView): PreferencesValues {
     trainingType: view.trainingType as PreferencesValues['trainingType'],
     sessionMinutes: view.sessionMinutes,
     mealsPerDay: view.mealsPerDay,
+    bannedIngredientIds: view.bannedIngredientIds ?? [],
   };
 }

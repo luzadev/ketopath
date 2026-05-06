@@ -334,6 +334,13 @@
     "subtitle": "Le esclusioni filtrano gli ingredienti, le cucine influenzano il matchmaking, il tempo decide quante ricette elaborate proporre.",
     "exclusionsTitle": "Esclusioni alimentari",
     "exclusionsHint": "Tutte le ricette che contengono almeno uno di questi gruppi verranno escluse dal piano.",
+    "bannedIngredientsTitle": "Ingredienti specifici da evitare",
+    "bannedIngredientsHint": "Cerca un ingrediente per nome (es. salmone, tofu, peperone). Le ricette che lo contengono verranno escluse dal piano. Massimo 50.",
+    "bannedIngredientsSearchPlaceholder": "Cerca un ingrediente…",
+    "bannedIngredientsSearching": "Sto cercando…",
+    "bannedIngredientsEmpty": "Nessun ingrediente bandito per ora.",
+    "bannedIngredientsRemove": "Rimuovi",
+    "bannedIngredientsCap": "Hai raggiunto il massimo di 50 ingredienti.",
     "cuisinesTitle": "Cucine preferite",
     "cuisinesHint": "Indicaci le tradizioni che preferisci. È un suggerimento, non un vincolo.",
     "cookingTimeTitle": "Tempo in cucina",
@@ -538,6 +545,9 @@
     "avgProtein": "Proteine medie",
     "avgFat": "Grassi medi",
     "avgNetCarb": "Carb. netti medi",
+    "todayPanelTitle": "Oggi · macros del giorno",
+    "todayPanelTargetHint": "Consumati / target — pianificati in chiaro",
+    "todayPanelFasting": "Niente pasti pianificati per oggi: è un giorno di digiuno completo.",
     "fastingDay": "Giorno di digiuno",
     "fastingDayHint": "Acqua, tè e tisane. Niente cibo solido.",
     "lightDay": "Giorno leggero",
@@ -564,6 +574,35 @@
       "friday": "Venerdì",
       "saturday": "Sabato",
       "sunday": "Domenica"
+    }
+  },
+  "Achievements": {
+    "eyebrow": "Traguardi",
+    "title": "Le tappe del tuo percorso",
+    "subtitle": "Hai sbloccato {got} traguardi su {total}. Continua così.",
+    "locked": "Da sbloccare",
+    "category": {
+      "tracking": "Tracking",
+      "plan": "Piano",
+      "fasting": "Digiuno"
+    },
+    "key": {
+      "first_weigh_in": {
+        "title": "Prima pesata",
+        "hint": "Hai registrato il tuo peso per la prima volta."
+      },
+      "first_plan": {
+        "title": "Primo piano",
+        "hint": "Hai generato il tuo primo piano settimanale."
+      },
+      "first_fast_complete": {
+        "title": "Primo digiuno completato",
+        "hint": "Hai portato a termine la tua prima sessione di digiuno."
+      },
+      "ten_meals_consumed": {
+        "title": "Dieci pasti spuntati",
+        "hint": "Hai marcato come consumati 10 pasti dal tuo piano."
+      }
     }
   },
   "Profile": {

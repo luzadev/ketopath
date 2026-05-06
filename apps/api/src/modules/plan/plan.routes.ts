@@ -24,6 +24,7 @@ import {
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { evaluateAndPersist, notifyUnlocked } from '../achievements/service.js';
 
 const MEALS = ['COLAZIONE', 'PRANZO', 'SPUNTINO', 'CENA'] as const;
 
@@ -93,7 +94,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         prepMinutes: true,
         ingredients: {
           select: {
-            ingredient: { select: { exclusionGroups: true, phase2Week: true } },
+            ingredient: { select: { id: true, exclusionGroups: true, phase2Week: true } },
           },
         },
       },
@@ -117,8 +118,10 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
 
     const candidates: RecipeCandidate[] = allowedRecipes.map((r) => {
       const tags = new Set<string>();
+      const ingredientIds: string[] = [];
       for (const ri of r.ingredients) {
         for (const g of ri.ingredient.exclusionGroups) tags.add(g);
+        ingredientIds.push(ri.ingredient.id);
       }
       return {
         id: r.id,
@@ -129,6 +132,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         fatG: r.fatG,
         netCarbG: r.netCarbG,
         exclusionTags: Array.from(tags),
+        ingredientIds,
         phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
         prepMinutes: r.prepMinutes,
       };
@@ -186,6 +190,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       phase: phaseInt,
     });
     const exclusions = profile.user.preferences?.exclusions ?? [];
+    const bannedIngredientIds = profile.user.preferences?.bannedIngredientIds ?? [];
     const fastingProtocol =
       (profile.user.preferences?.fastingProtocol as FastingProtocolKey | null | undefined) ?? null;
     const cookingTime =
@@ -239,6 +244,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
           meal,
           phase: phaseInt,
           excludedTags: exclusions,
+          bannedIngredientIds,
           recentlyConsumedIds,
           dailyTarget,
           mealShare: effectiveShare,
@@ -259,6 +265,13 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
+    const ach = await evaluateAndPersist(fastify.prisma, userId);
+    if (ach.newlyUnlocked.length > 0) {
+      void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
+        /* notifica best-effort */
+      });
+    }
+
     return reply.code(201).send({
       plan: {
         id: plan.id,
@@ -266,6 +279,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         dailyTarget: baseDailyTarget,
         fastingProtocol,
       },
+      newlyUnlocked: ach.newlyUnlocked,
     });
   });
 
@@ -366,7 +380,18 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
-      return { slot: updated, autoStartedFast };
+      let newlyUnlocked: string[] = [];
+      if (next) {
+        const ach = await evaluateAndPersist(fastify.prisma, userId);
+        newlyUnlocked = ach.newlyUnlocked;
+        if (newlyUnlocked.length > 0) {
+          void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
+            /* notifica best-effort */
+          });
+        }
+      }
+
+      return { slot: updated, autoStartedFast, newlyUnlocked };
     },
   );
 
@@ -450,13 +475,19 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
           netCarbG: true,
           phases: true,
           prepMinutes: true,
-          ingredients: { select: { ingredient: { select: { exclusionGroups: true } } } },
+          ingredients: {
+            select: { ingredient: { select: { id: true, exclusionGroups: true } } },
+          },
         },
       });
 
       const candidates: RecipeCandidate[] = recipes.map((r) => {
         const tags = new Set<string>();
-        for (const ri of r.ingredients) for (const g of ri.ingredient.exclusionGroups) tags.add(g);
+        const ingredientIds: string[] = [];
+        for (const ri of r.ingredients) {
+          for (const g of ri.ingredient.exclusionGroups) tags.add(g);
+          ingredientIds.push(ri.ingredient.id);
+        }
         return {
           id: r.id,
           name: r.name,
@@ -466,6 +497,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
           fatG: r.fatG,
           netCarbG: r.netCarbG,
           exclusionTags: Array.from(tags),
+          ingredientIds,
           phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
           prepMinutes: r.prepMinutes,
         };
@@ -536,6 +568,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
       );
 
       const exclusions = profile.user.preferences?.exclusions ?? [];
+      const bannedIngredientIds = profile.user.preferences?.bannedIngredientIds ?? [];
       const cookingTime =
         (profile.user.preferences?.cookingTime as 'LOW' | 'MEDIUM' | 'HIGH' | null | undefined) ??
         null;
@@ -553,6 +586,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
         meal: slot.meal,
         phase: phaseInt,
         excludedTags: exclusions,
+        bannedIngredientIds,
         recentlyConsumedIds,
         consumedSoFar,
         dailyTarget,

@@ -15,6 +15,7 @@ function serialize(prefs: {
   trainingType: string | null;
   sessionMinutes: number | null;
   mealsPerDay: number | null;
+  bannedIngredientIds: string[];
 }) {
   return {
     exclusions: prefs.exclusions,
@@ -25,6 +26,7 @@ function serialize(prefs: {
     trainingType: prefs.trainingType,
     sessionMinutes: prefs.sessionMinutes,
     mealsPerDay: prefs.mealsPerDay,
+    bannedIngredientIds: prefs.bannedIngredientIds,
   };
 }
 
@@ -37,6 +39,7 @@ const EMPTY_PREFS = {
   trainingType: null,
   sessionMinutes: null,
   mealsPerDay: null,
+  bannedIngredientIds: [],
 };
 
 export const preferencesRoutes: FastifyPluginAsync = async (fastify) => {
@@ -64,6 +67,7 @@ export const preferencesRoutes: FastifyPluginAsync = async (fastify) => {
       trainingType: data.trainingType ?? null,
       sessionMinutes: data.sessionMinutes ?? null,
       mealsPerDay: data.mealsPerDay ?? null,
+      bannedIngredientIds: data.bannedIngredientIds ?? [],
     };
     const update: Record<string, unknown> = {};
     if (data.exclusions !== undefined) update.exclusions = data.exclusions;
@@ -74,6 +78,8 @@ export const preferencesRoutes: FastifyPluginAsync = async (fastify) => {
     if (data.trainingType !== undefined) update.trainingType = data.trainingType;
     if (data.sessionMinutes !== undefined) update.sessionMinutes = data.sessionMinutes;
     if (data.mealsPerDay !== undefined) update.mealsPerDay = data.mealsPerDay;
+    if (data.bannedIngredientIds !== undefined)
+      update.bannedIngredientIds = data.bannedIngredientIds;
 
     const prefs = await fastify.prisma.preferences.upsert({
       where: { userId },
@@ -82,5 +88,34 @@ export const preferencesRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     return { preferences: serialize(prefs) };
+  });
+
+  // PRD §6 — catalogo ingredienti per la UI di esclusioni granulari.
+  // Ricerca case-insensitive per nome, oppure filtro per ids (per resolvere
+  // i bannati attualmente salvati). Max 50 risultati.
+  fastify.get('/me/ingredients', { preHandler: requireAuth() }, async (request) => {
+    const query = request.query as { q?: string; ids?: string };
+    const q = query.q?.trim() ?? '';
+    const idsRaw = query.ids?.trim() ?? '';
+    const where =
+      idsRaw.length > 0
+        ? {
+            id: {
+              in: idsRaw
+                .split(',')
+                .filter((s) => s.length > 0)
+                .slice(0, 50),
+            },
+          }
+        : q.length > 0
+          ? { name: { contains: q, mode: 'insensitive' as const } }
+          : {};
+    const ingredients = await fastify.prisma.ingredient.findMany({
+      where,
+      select: { id: true, name: true, category: true, exclusionGroups: true },
+      orderBy: { name: 'asc' },
+      take: 50,
+    });
+    return { ingredients };
   });
 };

@@ -44,6 +44,13 @@ export interface CurrentPlan {
   phase2Week: number | null;
 }
 
+export interface DailyTarget {
+  kcal: number;
+  proteinG: number;
+  fatG: number;
+  netCarbG: number;
+}
+
 function cookieHeader(): string {
   return headers().get('cookie') ?? '';
 }
@@ -57,6 +64,32 @@ export async function fetchCurrentPlan(): Promise<CurrentPlan | null> {
   if (!res.ok) throw new Error(`api_error_${res.status}`);
   const data = (await res.json()) as { plan: CurrentPlan };
   return data.plan;
+}
+
+export async function fetchDailyTarget(): Promise<DailyTarget | null> {
+  const res = await fetch(`${API_URL}/me/profile`, {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as {
+    profile?: {
+      derived?: {
+        kcalTarget?: number;
+        proteinTargetG?: number;
+        fatTargetG?: number;
+        netCarbTargetG?: number;
+      };
+    };
+  };
+  const d = data.profile?.derived;
+  if (!d || d.kcalTarget == null || d.proteinTargetG == null) return null;
+  return {
+    kcal: d.kcalTarget,
+    proteinG: d.proteinTargetG,
+    fatG: d.fatTargetG ?? 0,
+    netCarbG: d.netCarbTargetG ?? 0,
+  };
 }
 
 // Server action invocata via `<form action={regeneratePlan}>`. La firma è

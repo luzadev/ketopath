@@ -6,6 +6,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { Masthead } from '@/components/masthead';
 import { getServerSession } from '@/lib/auth';
 
+import { fetchAchievements } from './achievements-actions';
+import { AchievementsPanel } from './achievements-panel';
 import { fetchProfile } from './actions';
 import { DataPanel } from './data-panel';
 import { fetchNotificationConfig } from './notifications-actions';
@@ -28,9 +30,15 @@ export default async function ProfilePage({ params: { locale } }: { params: { lo
   const profile = (await fetchProfile()) as Parameters<typeof ProfileForm>[0]['initial'];
   const notifications = await fetchNotificationConfig();
   const preferences = await fetchPreferences();
+  const achievements = await fetchAchievements();
 
   return (
-    <ProfilePageContent initial={profile} notifications={notifications} preferences={preferences} />
+    <ProfilePageContent
+      initial={profile}
+      notifications={notifications}
+      preferences={preferences}
+      achievements={achievements}
+    />
   );
 }
 
@@ -38,10 +46,12 @@ function ProfilePageContent({
   initial,
   notifications,
   preferences,
+  achievements,
 }: {
   initial: Parameters<typeof ProfileForm>[0]['initial'];
   notifications: Awaited<ReturnType<typeof fetchNotificationConfig>>;
   preferences: Awaited<ReturnType<typeof fetchPreferences>>;
+  achievements: Awaited<ReturnType<typeof fetchAchievements>>;
 }) {
   const t = useTranslations('Profile');
 
@@ -79,6 +89,12 @@ function ProfilePageContent({
         <div className="rule animate-rule-in my-16 [animation-delay:780ms]" />
 
         <div className="animate-fade-up [animation-delay:840ms]">
+          <AchievementsPanel unlocked={achievements} />
+        </div>
+
+        <div className="rule animate-rule-in my-16 [animation-delay:900ms]" />
+
+        <div className="animate-fade-up [animation-delay:960ms]">
           <DataPanel />
         </div>
       </main>

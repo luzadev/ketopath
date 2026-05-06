@@ -13,8 +13,13 @@ import {
   type TrainingType,
 } from '@ketopath/shared';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import {
+  fetchIngredientsByIds,
+  searchIngredients,
+  type IngredientView,
+} from '@/app/[locale]/profile/preferences-actions';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -33,6 +38,7 @@ export interface PreferencesValues {
   trainingType: TrainingType | null;
   sessionMinutes: number | null;
   mealsPerDay: number | null;
+  bannedIngredientIds: string[];
 }
 
 export const DEFAULT_PREFERENCES_VALUES: PreferencesValues = {
@@ -44,6 +50,7 @@ export const DEFAULT_PREFERENCES_VALUES: PreferencesValues = {
   trainingType: null,
   sessionMinutes: null,
   mealsPerDay: null,
+  bannedIngredientIds: [],
 };
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -102,6 +109,7 @@ export function PreferencesForm({
       trainingType: values.trainingType,
       sessionMinutes: values.sessionMinutes,
       mealsPerDay: values.mealsPerDay,
+      bannedIngredientIds: values.bannedIngredientIds,
     });
     setPending(false);
     if (!result.ok) {
@@ -131,6 +139,11 @@ export function PreferencesForm({
           ))}
         </div>
       </fieldset>
+
+      <BannedIngredientsField
+        value={values.bannedIngredientIds}
+        onChange={(next) => setValues((prev) => ({ ...prev, bannedIngredientIds: next }))}
+      />
 
       <fieldset className="space-y-5">
         <legend className="font-display text-ink text-2xl font-medium leading-tight tracking-tight">
@@ -378,5 +391,144 @@ function Chip({
     >
       {label}
     </button>
+  );
+}
+
+function BannedIngredientsField({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const t = useTranslations('Preferences');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<IngredientView[]>([]);
+  const [resolved, setResolved] = useState<Map<string, IngredientView>>(new Map());
+  const [searching, setSearching] = useState(false);
+
+  // Risolvi i nomi degli ingredient già bannati al mount (per i chip).
+  useEffect(() => {
+    const missing = value.filter((id) => !resolved.has(id));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    void fetchIngredientsByIds(missing).then((list) => {
+      if (cancelled) return;
+      setResolved((prev) => {
+        const next = new Map(prev);
+        for (const ing of list) next.set(ing.id, ing);
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+    // resolved è intenzionalmente fuori: vogliamo solo reagire ai bannati cambiati
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  // Debounce ricerca per nome.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setResults([]);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(() => {
+      void searchIngredients(q).then((list) => {
+        setResults(list);
+        setSearching(false);
+      });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  function add(ing: IngredientView): void {
+    if (value.includes(ing.id)) return;
+    if (value.length >= 50) return;
+    setResolved((prev) => new Map(prev).set(ing.id, ing));
+    onChange([...value, ing.id]);
+    setQuery('');
+    setResults([]);
+  }
+  function remove(id: string): void {
+    onChange(value.filter((x) => x !== id));
+  }
+
+  return (
+    <fieldset className="space-y-5">
+      <legend className="font-display text-ink text-2xl font-medium leading-tight tracking-tight">
+        {t('bannedIngredientsTitle')}
+      </legend>
+      <p className="font-display text-ink-soft text-base italic leading-snug">
+        {t('bannedIngredientsHint')}
+      </p>
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('bannedIngredientsSearchPlaceholder')}
+          maxLength={80}
+          className="border-ink/30 focus:border-ink font-display text-ink w-full border-b bg-transparent py-2 outline-none"
+        />
+        {results.length > 0 ? (
+          <ul className="border-ink/15 bg-carta-light absolute z-10 mt-1 max-h-60 w-full overflow-auto border shadow-sm">
+            {results.map((ing) => (
+              <li key={ing.id}>
+                <button
+                  type="button"
+                  onClick={() => add(ing)}
+                  disabled={value.includes(ing.id) || value.length >= 50}
+                  className="hover:bg-ink/5 font-display text-ink flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-sm leading-tight disabled:opacity-40"
+                >
+                  <span>{ing.name}</span>
+                  {ing.category ? (
+                    <span className="text-ink-dim font-mono text-[10px] uppercase tracking-widest">
+                      {ing.category}
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {searching && results.length === 0 ? (
+          <p className="text-ink-dim mt-1 font-mono text-[10px] uppercase tracking-widest">
+            {t('bannedIngredientsSearching')}
+          </p>
+        ) : null}
+      </div>
+      {value.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {value.map((id) => {
+            const ing = resolved.get(id);
+            return (
+              <span
+                key={id}
+                className="border-pomodoro/40 text-pomodoro inline-flex items-center gap-2 rounded-full border px-4 py-2"
+              >
+                <span className="font-display text-sm leading-tight">{ing?.name ?? id}</span>
+                <button
+                  type="button"
+                  onClick={() => remove(id)}
+                  aria-label={t('bannedIngredientsRemove')}
+                  title={t('bannedIngredientsRemove')}
+                  className="hover:text-ink font-mono text-xs leading-none"
+                >
+                  ×
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="font-display text-ink-dim text-sm italic">{t('bannedIngredientsEmpty')}</p>
+      )}
+      {value.length >= 50 ? (
+        <p className="font-display text-ink-soft text-xs italic">{t('bannedIngredientsCap')}</p>
+      ) : null}
+    </fieldset>
   );
 }

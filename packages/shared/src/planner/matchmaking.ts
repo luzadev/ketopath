@@ -15,6 +15,9 @@ export interface RecipeCandidate {
   fatG: number;
   netCarbG: number;
   exclusionTags: ReadonlyArray<string>;
+  // PRD §6 — ingredient ids della ricetta. Usati per applicare le esclusioni
+  // granulari per singolo ingrediente (`bannedIngredientIds`).
+  ingredientIds?: ReadonlyArray<string>;
   phases: ReadonlyArray<1 | 2 | 3>;
   prepMinutes?: number;
 }
@@ -31,6 +34,9 @@ export interface MatchOptions {
   meal: RecipeCandidate['category'];
   phase: 1 | 2 | 3;
   excludedTags: ReadonlyArray<string>;
+  // PRD §6 — ids di Ingredient che l'utente ha bandito espressamente.
+  // Una ricetta è scartata se contiene almeno uno di questi ingredients.
+  bannedIngredientIds?: ReadonlyArray<string>;
   recentlyConsumedIds?: ReadonlyArray<string>;
   // Macros già consumati nello stesso giorno; usati per bilanciare le scelte
   // successive (la cena tiene conto di colazione/pranzo/spuntino).
@@ -74,6 +80,7 @@ export function matchMeals(opts: MatchOptions): MatchResult[] {
 
   const recentSet = new Set(opts.recentlyConsumedIds ?? []);
   const exclusionSet = new Set(opts.excludedTags);
+  const bannedSet = new Set(opts.bannedIngredientIds ?? []);
 
   const results: MatchResult[] = [];
 
@@ -81,6 +88,8 @@ export function matchMeals(opts: MatchOptions): MatchResult[] {
     if (r.category !== opts.meal) continue;
     if (!r.phases.includes(opts.phase)) continue;
     if (r.exclusionTags.some((tag) => exclusionSet.has(tag))) continue;
+    if (bannedSet.size > 0 && r.ingredientIds && r.ingredientIds.some((id) => bannedSet.has(id)))
+      continue;
 
     const dKcal = (r.kcal - mealTarget.kcal) / Math.max(1, mealTarget.kcal);
     const dPro = (r.proteinG - mealTarget.proteinG) / Math.max(1, mealTarget.proteinG);

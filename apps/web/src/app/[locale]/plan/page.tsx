@@ -8,7 +8,7 @@ import { Masthead } from '@/components/masthead';
 import { Button } from '@/components/ui/button';
 import { getServerSession } from '@/lib/auth';
 
-import { fetchCurrentPlan, regeneratePlan } from './actions';
+import { fetchCurrentPlan, fetchDailyTarget, regeneratePlan } from './actions';
 import { PlanWeek } from './plan-week';
 
 export default async function PlanPage({ params: { locale } }: { params: { locale: string } }) {
@@ -23,9 +23,9 @@ export default async function PlanPage({ params: { locale } }: { params: { local
   if (!user?.disclaimerAcceptedAt) redirect('/welcome');
   if (!user.profile) redirect('/onboarding');
 
-  const plan = await fetchCurrentPlan();
+  const [plan, dailyTarget] = await Promise.all([fetchCurrentPlan(), fetchDailyTarget()]);
 
-  return <PlanPageContent plan={plan} />;
+  return <PlanPageContent plan={plan} dailyTarget={dailyTarget} />;
 }
 
 const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
@@ -45,7 +45,13 @@ function formatWeek(weekStart: string): string {
   return `${startStr} – ${endStr}`;
 }
 
-function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurrentPlan>> }) {
+function PlanPageContent({
+  plan,
+  dailyTarget,
+}: {
+  plan: Awaited<ReturnType<typeof fetchCurrentPlan>>;
+  dailyTarget: Awaited<ReturnType<typeof fetchDailyTarget>>;
+}) {
   const t = useTranslations('Plan');
 
   return (
@@ -114,7 +120,7 @@ function PlanPageContent({ plan }: { plan: Awaited<ReturnType<typeof fetchCurren
 
         {plan ? (
           <div className="animate-fade-up [animation-delay:480ms]">
-            <PlanWeek plan={plan} />
+            <PlanWeek plan={plan} dailyTarget={dailyTarget} />
           </div>
         ) : null}
       </main>

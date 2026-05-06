@@ -104,8 +104,25 @@ model User {
   fastEvents    FastEvent[]
   mealPlans     MealPlan[]
   deviceTokens  DeviceToken[]
+  achievements  Achievement[]
 
   @@map("users")
+}
+
+// PRD §6 — sistema achievement: badge sbloccati man mano che l'utente
+// raggiunge milestone (prima pesata, primo digiuno, primo piano, ecc.).
+// `key` identifica univocamente l'achievement (vedi packages/shared).
+model Achievement {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  key        String
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId])
+  @@map("achievements")
 }
 
 // Better Auth — sessione utente firmata.
@@ -223,6 +240,9 @@ model Preferences {
   // PRD §5.1 — pasti/giorno preferiti (1..4). Se null, fallback al default.
   // Il fastingProtocol ha precedenza: se attivo definisce lui la struttura.
   mealsPerDay          Int?             @map("meals_per_day")
+  // PRD §6 — esclusioni granulari per ingredient (override/aggiunte rispetto
+  // ai gruppi exclusionGroups). Memorizzate come array di Ingredient.id.
+  bannedIngredientIds  String[]         @default([]) @map("banned_ingredient_ids")
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
 

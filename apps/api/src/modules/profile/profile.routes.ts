@@ -1,11 +1,16 @@
 import {
   ACTIVITY_MULTIPLIERS,
+  bmrAdjustForDietHistory,
+  bmrAdjustmentForConditions,
   calculateBmr,
   calculateBmrKatchMcArdle,
   calculateTdee,
+  computeDailyKcalTarget,
   estimateBodyFatPercentageUSNavy,
+  macrosForPhase,
   profileInputSchema,
   type ActivityLevel,
+  type DietHistory,
   type Gender,
 } from '@ketopath/shared';
 import type { FastifyPluginAsync } from 'fastify';
@@ -36,7 +41,7 @@ function serialize(
   if (!profile) return null;
   const weightCurrentKg = Number(profile.weightCurrentKg);
   const bodyFatPct = profile.bodyFatPct ? Number(profile.bodyFatPct) : null;
-  const bmr = bodyFatPct
+  let bmr = bodyFatPct
     ? calculateBmrKatchMcArdle(weightCurrentKg, bodyFatPct)
     : calculateBmr({
         weightKg: weightCurrentKg,
@@ -44,7 +49,23 @@ function serialize(
         ageYears: profile.age,
         gender: profile.gender,
       });
+  const conditions = parseConditions(profile.medicalConditions);
+  bmr *= bmrAdjustmentForConditions(conditions);
+  bmr *= bmrAdjustForDietHistory(profile.dietHistory as DietHistory | null);
   const tdee = calculateTdee(bmr, profile.activityLevel);
+  const phaseInt =
+    profile.currentPhase === 'INTENSIVE' ? 1 : profile.currentPhase === 'TRANSITION' ? 2 : 3;
+  const { kcalTarget } = computeDailyKcalTarget({
+    tdee,
+    weightCurrentKg,
+    targetWeeklyLossKg: profile.targetWeeklyLossKg,
+    phase: phaseInt,
+  });
+  const macroTarget = macrosForPhase({
+    kcalTarget,
+    weightKg: weightCurrentKg,
+    phase: phaseInt,
+  });
   return {
     age: profile.age,
     gender: profile.gender,
@@ -55,7 +76,7 @@ function serialize(
     activityLevel: profile.activityLevel,
     targetDate: profile.targetDate,
     targetWeeklyLossKg: profile.targetWeeklyLossKg,
-    medicalConditions: parseConditions(profile.medicalConditions),
+    medicalConditions: conditions,
     bodyFatPct,
     alertWeightKg: profile.alertWeightKg ? Number(profile.alertWeightKg) : null,
     dietHistory: profile.dietHistory,
@@ -65,6 +86,10 @@ function serialize(
       tdee: Math.round(tdee),
       activityMultiplier: ACTIVITY_MULTIPLIERS[profile.activityLevel],
       bmrFormula: bodyFatPct ? 'katch_mcardle' : 'mifflin_st_jeor',
+      kcalTarget: Math.round(kcalTarget),
+      proteinTargetG: Math.round(macroTarget.proteinG),
+      fatTargetG: Math.round(macroTarget.fatG),
+      netCarbTargetG: Math.round(macroTarget.netCarbG),
     },
   };
 }

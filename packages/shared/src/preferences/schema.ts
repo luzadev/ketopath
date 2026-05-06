@@ -53,6 +53,9 @@ export const preferencesPatchSchema = z
     sessionMinutes: z.coerce.number().int().min(10).max(240).nullable().optional(),
     // Pasti/giorno preferiti. Il fastingProtocol ha precedenza.
     mealsPerDay: z.coerce.number().int().min(1).max(4).nullable().optional(),
+    // PRD §6 — esclusioni granulari su singoli ingredient. Cap a 50 per evitare
+    // di soffocare il matchmaking (in pratica più di così è una dieta diversa).
+    bannedIngredientIds: z.array(z.string().min(1).max(120)).max(50).optional(),
   })
   .strict();
 

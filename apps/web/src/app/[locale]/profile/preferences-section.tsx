@@ -54,5 +54,6 @@ function toFormValues(view: PreferencesView): PreferencesValues {
     cuisinePreferences: view.cuisinePreferences as CuisineTag[],
     cookingTime: view.cookingTime as CookingTimeLevel,
     fastingProtocol: view.fastingProtocol as PreferencesValues['fastingProtocol'],
+    bannedIngredientIds: view.bannedIngredientIds ?? [],
   };
 }

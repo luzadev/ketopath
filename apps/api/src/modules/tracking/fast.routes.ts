@@ -6,6 +6,7 @@ import {
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { evaluateAndPersist, notifyUnlocked } from '../achievements/service.js';
 
 export const fastRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/me/fast-events', { preHandler: requireAuth() }, async (request) => {
@@ -71,7 +72,17 @@ export const fastRoutes: FastifyPluginAsync = async (fastify) => {
       where: { id },
       data: updateData,
     });
-    return { event: { id: event.id, status: event.status } };
+    let newlyUnlocked: string[] = [];
+    if (event.status === 'COMPLETED') {
+      const ach = await evaluateAndPersist(fastify.prisma, request.user!.id);
+      newlyUnlocked = ach.newlyUnlocked;
+      if (newlyUnlocked.length > 0) {
+        void notifyUnlocked(fastify.prisma, request.user!.id, ach.newlyUnlocked).catch(() => {
+          /* notifica best-effort */
+        });
+      }
+    }
+    return { event: { id: event.id, status: event.status }, newlyUnlocked };
   });
 
   // PRD §5.3 — modalità "giorno libero". Mette in pausa i reminder fino a

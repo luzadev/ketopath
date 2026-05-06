@@ -19,6 +19,39 @@ export interface PreferencesView {
   trainingType: string | null;
   sessionMinutes: number | null;
   mealsPerDay: number | null;
+  bannedIngredientIds: string[];
+}
+
+export interface IngredientView {
+  id: string;
+  name: string;
+  category: string | null;
+  exclusionGroups: string[];
+}
+
+export async function searchIngredients(query: string): Promise<IngredientView[]> {
+  const url = new URL(`${API_URL}/me/ingredients`);
+  if (query.trim()) url.searchParams.set('q', query.trim());
+  const res = await fetch(url.toString(), {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const body = (await res.json()) as { ingredients: IngredientView[] };
+  return body.ingredients;
+}
+
+export async function fetchIngredientsByIds(ids: string[]): Promise<IngredientView[]> {
+  if (ids.length === 0) return [];
+  const url = new URL(`${API_URL}/me/ingredients`);
+  url.searchParams.set('ids', ids.join(','));
+  const res = await fetch(url.toString(), {
+    headers: { cookie: cookieHeader() },
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const body = (await res.json()) as { ingredients: IngredientView[] };
+  return body.ingredients;
 }
 
 export async function fetchPreferences(): Promise<PreferencesView | null> {

@@ -110,4 +110,22 @@ describe('matchMeals', () => {
     });
     expect(out).toHaveLength(0);
   });
+
+  it('filters by banned ingredient ids', () => {
+    const withIds: RecipeCandidate[] = recipes.map((r) => ({
+      ...r,
+      ingredientIds: r.id === 'r1' ? ['ing-egg', 'ing-spinach'] : ['ing-avocado'],
+    }));
+    const out = matchMeals({
+      candidates: withIds,
+      meal: 'COLAZIONE',
+      phase: 1,
+      excludedTags: [],
+      bannedIngredientIds: ['ing-egg'],
+      dailyTarget: { kcal: 1900, proteinG: 130, fatG: 130, netCarbG: 25 },
+      mealShare: DEFAULT_MEAL_SHARE,
+    });
+    expect(out.find((r) => r.id === 'r1')).toBeUndefined();
+    expect(out.find((r) => r.id === 'r2')).toBeDefined();
+  });
 });

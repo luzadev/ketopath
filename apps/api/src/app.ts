@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 
 import { env } from './config/env.js';
 import { Sentry } from './lib/sentry.js';
+import { achievementsRoutes } from './modules/achievements/achievements.routes.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { gdprRoutes } from './modules/me/gdpr.routes.js';
@@ -66,6 +67,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(planExportRoutes);
   await app.register(shoppingRoutes);
   await app.register(notificationsRoutes);
+  await app.register(achievementsRoutes);
 
   if (env.SENTRY_DSN) {
     app.setErrorHandler((err, request, reply) => {

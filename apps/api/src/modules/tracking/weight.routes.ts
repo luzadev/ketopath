@@ -2,6 +2,7 @@ import { weightEntryInputSchema } from '@ketopath/shared';
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { evaluateAndPersist, notifyUnlocked } from '../achievements/service.js';
 
 export const weightRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/me/weight-entries', { preHandler: requireAuth() }, async (request) => {
@@ -57,8 +58,16 @@ export const weightRoutes: FastifyPluginAsync = async (fastify) => {
       },
     });
 
-    return reply
-      .code(201)
-      .send({ entry: { id: entry.id, date: entry.date.toISOString().slice(0, 10) } });
+    const ach = await evaluateAndPersist(fastify.prisma, userId);
+    if (ach.newlyUnlocked.length > 0) {
+      void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
+        /* notifica best-effort */
+      });
+    }
+
+    return reply.code(201).send({
+      entry: { id: entry.id, date: entry.date.toISOString().slice(0, 10) },
+      newlyUnlocked: ach.newlyUnlocked,
+    });
   });
 };
