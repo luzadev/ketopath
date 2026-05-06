@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
+import { CursorGlow } from '@/components/cursor-glow';
 import { Masthead } from '@/components/masthead';
 import { Button } from '@/components/ui/button';
 import { getServerSession } from '@/lib/auth';
@@ -51,52 +52,78 @@ function ShoppingPageContent({ list }: { list: ShoppingList | null }) {
   );
 
   return (
-    <div className="mx-auto min-h-screen max-w-5xl px-6 sm:px-10">
-      <Masthead issueLabel="N. 09 — La spesa" />
-      <main className="py-12 sm:py-16">
-        <div className="grid items-end gap-6 md:grid-cols-12">
-          <div className="md:col-span-8">
-            <p className="editorial-eyebrow animate-fade-up">Capitolo IX</p>
-            <h1 className="font-display text-display text-ink animate-fade-up mt-3 font-medium leading-[0.95] tracking-tight [animation-delay:120ms]">
-              {t('title')}
-              <span className="text-pomodoro">.</span>
-            </h1>
-            <p className="font-display text-ink-soft animate-fade-up mt-5 max-w-2xl text-xl italic leading-snug [animation-delay:240ms]">
-              {list ? formatWeek(list.plan.weekStart) : t('noPlan')}
+    <div className="relative">
+      <div className="mx-auto min-h-screen max-w-7xl px-6 sm:px-10">
+        <Masthead issueLabel="N. 09 — La spesa" />
+        <main className="relative overflow-hidden pb-24 pt-10 sm:pt-12">
+          <CursorGlow color="hsl(var(--oliva))" size={520} />
+          <div
+            aria-hidden
+            className="mesh-blob mesh-blob--oliva animate-float-y -right-32 top-12 h-[28rem] w-[28rem] opacity-50"
+          />
+          <div
+            aria-hidden
+            className="mesh-blob mesh-blob--pomodoro animate-float-x -left-24 top-72 h-72 w-72 opacity-35"
+          />
+          <span
+            aria-hidden
+            className="font-display text-stroke-thin text-chapter pointer-events-none absolute -right-4 -top-12 select-none italic"
+          >
+            IX
+          </span>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-32 hidden md:block"
+            style={{ writingMode: 'vertical-rl' }}
+          >
+            <p className="text-ink-soft font-mono text-xs uppercase tracking-[0.4em]">
+              Capitolo IX — La spesa
             </p>
           </div>
-          {list ? (
-            <aside className="animate-fade-up [animation-delay:360ms] md:col-span-4 md:text-right">
-              <p className="editorial-eyebrow">{t('totalLabel')}</p>
-              <p className="font-display text-ink mt-2 font-mono text-3xl tabular-nums">
-                {totalItems}
-              </p>
-              {typeof estimatedCost === 'number' && estimatedCost > 0 ? (
-                <p className="text-ink-soft mt-3 font-mono text-xs uppercase tracking-widest">
-                  {t('estimatedCost')}{' '}
-                  <span className="text-ink not-italic">€ {estimatedCost.toFixed(2)}</span>
+          <h1 className="font-display text-mega bleed-left animate-fade-up relative mt-8 font-medium [animation-delay:120ms]">
+            <span className="text-ink block">
+              {t('title')}
+              <span className="text-pomodoro">.</span>
+            </span>
+          </h1>
+
+          <div className="relative mt-12 grid grid-cols-12 items-end gap-6">
+            <p className="font-display text-ink-soft animate-fade-up col-span-12 max-w-2xl text-2xl italic leading-snug [animation-delay:240ms] md:col-span-7 md:col-start-2">
+              {list ? formatWeek(list.plan.weekStart) : t('noPlan')}
+            </p>
+            {list ? (
+              <aside className="animate-fade-up col-span-12 [animation-delay:360ms] md:col-span-3 md:col-start-10 md:text-right">
+                <p className="editorial-eyebrow">{t('totalLabel')}</p>
+                <p className="font-display text-ink mt-2 font-mono text-3xl tabular-nums">
+                  {totalItems}
                 </p>
-              ) : null}
-            </aside>
-          ) : (
-            <div className="animate-fade-up [animation-delay:360ms] md:col-span-4 md:text-right">
-              <Button asChild size="lg">
-                <Link href="/plan">{t('viewPlan')}</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div className="rule animate-rule-in my-10 [animation-delay:420ms]" />
-
-        {list ? (
-          <div className="animate-fade-up [animation-delay:480ms]">
-            <ShoppingChecklist list={list} />
+                {typeof estimatedCost === 'number' && estimatedCost > 0 ? (
+                  <p className="text-ink-soft mt-3 font-mono text-xs uppercase tracking-widest">
+                    {t('estimatedCost')}{' '}
+                    <span className="text-ink not-italic">€ {estimatedCost.toFixed(2)}</span>
+                  </p>
+                ) : null}
+              </aside>
+            ) : (
+              <div className="animate-fade-up col-span-12 [animation-delay:360ms] md:col-span-3 md:col-start-10 md:text-right">
+                <Button asChild size="lg">
+                  <Link href="/plan">{t('viewPlan')}</Link>
+                </Button>
+              </div>
+            )}
           </div>
-        ) : null}
-      </main>
 
-      <div className="rule-thick mt-16" />
+          <div className="rule animate-rule-in relative my-12 [animation-delay:420ms]" />
+
+          {list ? (
+            <div className="animate-fade-up relative [animation-delay:480ms]">
+              <ShoppingChecklist list={list} />
+            </div>
+          ) : null}
+        </main>
+
+        <div className="rule-thick" />
+      </div>
     </div>
   );
 }

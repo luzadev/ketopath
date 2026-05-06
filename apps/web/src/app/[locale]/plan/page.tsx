@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
+import { CursorGlow } from '@/components/cursor-glow';
 import { Masthead } from '@/components/masthead';
 import { Button } from '@/components/ui/button';
 import { getServerSession } from '@/lib/auth';
@@ -55,75 +56,109 @@ function PlanPageContent({
   const t = useTranslations('Plan');
 
   return (
-    <div className="mx-auto min-h-screen max-w-6xl px-6 sm:px-10">
-      <Masthead issueLabel="N. 05 — Cucina" />
-      <main className="py-12 sm:py-16">
-        <div className="grid items-end gap-6 md:grid-cols-12">
-          <div className="md:col-span-8">
-            <p className="editorial-eyebrow animate-fade-up">Capitolo V</p>
-            <h1 className="font-display text-display text-ink animate-fade-up mt-3 font-medium leading-[0.95] tracking-tight [animation-delay:120ms]">
+    <div className="relative">
+      <div className="mx-auto min-h-screen max-w-7xl px-6 sm:px-10">
+        <Masthead issueLabel="N. 05 — Cucina" />
+        <main className="relative overflow-hidden py-10 sm:py-12">
+          <CursorGlow color="hsl(var(--pomodoro))" size={520} />
+          <div
+            aria-hidden
+            className="mesh-blob mesh-blob--pomodoro animate-float-x -left-32 top-12 h-[28rem] w-[28rem] opacity-50"
+          />
+          <div
+            aria-hidden
+            className="mesh-blob mesh-blob--oliva animate-float-y -right-32 top-64 h-80 w-80 opacity-40"
+          />
+
+          {/* Chapter "V" gigante in stroke */}
+          <span
+            aria-hidden
+            className="font-display text-stroke-thin text-chapter pointer-events-none absolute -right-4 -top-12 select-none italic"
+          >
+            V
+          </span>
+
+          {/* Eyebrow verticale destra */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-32 hidden md:block"
+            style={{ writingMode: 'vertical-rl' }}
+          >
+            <p className="text-ink-soft font-mono text-xs uppercase tracking-[0.4em]">
+              Capitolo V — Cucina
+            </p>
+          </div>
+
+          {/* Titolo che sborda */}
+          <h1 className="font-display text-mega bleed-left animate-fade-up relative mt-12 font-medium [animation-delay:120ms]">
+            <span className="text-ink block italic">
               {t('title')}
               <span className="text-pomodoro">.</span>
-            </h1>
-            <p className="font-display text-ink-soft animate-fade-up mt-5 max-w-2xl text-xl italic leading-snug [animation-delay:240ms]">
-              {plan ? formatWeek(plan.weekStart) : t('noPlan')}
-            </p>
-            {plan?.fastingProtocol ? (
-              <p className="animate-fade-up mt-4 [animation-delay:300ms]">
-                <span className="editorial-eyebrow">{t('window')}</span>{' '}
-                <span className="font-display text-pomodoro ml-2 text-base italic">
-                  {t(`protocolLabel.${plan.fastingProtocol}`)}
-                </span>
-              </p>
-            ) : null}
-            {plan?.currentPhase === 'TRANSITION' && plan.phase2Week ? (
-              <p className="animate-fade-up mt-3 [animation-delay:330ms]">
-                <span className="editorial-eyebrow">{t('phase2Eyebrow')}</span>{' '}
-                <span className="font-display text-oliva ml-2 text-base italic">
-                  {t('phase2Week', { n: plan.phase2Week })}
-                </span>
-              </p>
-            ) : plan?.currentPhase === 'MAINTENANCE' ? (
-              <p className="animate-fade-up mt-3 [animation-delay:330ms]">
-                <span className="editorial-eyebrow">{t('phase3Eyebrow')}</span>
-              </p>
-            ) : null}
-          </div>
-          <div className="animate-fade-up flex flex-col items-stretch gap-3 [animation-delay:360ms] md:col-span-4 md:items-end">
-            <form action={regeneratePlan}>
-              <Button type="submit" variant={plan ? 'outline' : 'default'} size="lg">
-                {plan ? t('regenerate') : t('generate')}
-              </Button>
-            </form>
-            {plan ? (
-              <>
-                <Link
-                  href="/shopping"
-                  className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
-                >
-                  {t('linkShopping')} →
-                </Link>
-                <a
-                  href="/api/plan-export"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
-                >
-                  {t('exportPdf')} ↗
-                </a>
-              </>
-            ) : null}
-          </div>
-        </div>
+            </span>
+          </h1>
 
-        <div className="rule animate-rule-in my-10 [animation-delay:420ms]" />
-
-        {plan ? (
-          <div className="animate-fade-up [animation-delay:480ms]">
-            <PlanWeek plan={plan} dailyTarget={dailyTarget} />
+          <div className="relative mt-12 grid grid-cols-12 items-end gap-6">
+            <div className="col-span-12 md:col-span-7 md:col-start-2">
+              <p className="font-display text-ink-soft animate-fade-up text-2xl italic leading-snug [animation-delay:240ms]">
+                {plan ? formatWeek(plan.weekStart) : t('noPlan')}
+              </p>
+              <div className="animate-fade-up mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-2 [animation-delay:300ms]">
+                {plan?.fastingProtocol ? (
+                  <span className="flex items-baseline gap-2">
+                    <span className="editorial-eyebrow">{t('window')}</span>
+                    <span className="font-display text-pomodoro text-base italic">
+                      {t(`protocolLabel.${plan.fastingProtocol}`)}
+                    </span>
+                  </span>
+                ) : null}
+                {plan?.currentPhase === 'TRANSITION' && plan.phase2Week ? (
+                  <span className="flex items-baseline gap-2">
+                    <span className="editorial-eyebrow">{t('phase2Eyebrow')}</span>
+                    <span className="font-display text-oliva text-base italic">
+                      {t('phase2Week', { n: plan.phase2Week })}
+                    </span>
+                  </span>
+                ) : plan?.currentPhase === 'MAINTENANCE' ? (
+                  <span className="editorial-eyebrow">{t('phase3Eyebrow')}</span>
+                ) : null}
+              </div>
+            </div>
+            <div className="animate-fade-up col-span-12 flex flex-col items-stretch gap-3 [animation-delay:360ms] md:col-span-4 md:col-start-9 md:items-end">
+              <form action={regeneratePlan}>
+                <Button type="submit" variant={plan ? 'outline' : 'default'} size="lg">
+                  {plan ? t('regenerate') : t('generate')}
+                </Button>
+              </form>
+              {plan ? (
+                <>
+                  <Link
+                    href="/shopping"
+                    className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+                  >
+                    {t('linkShopping')} →
+                  </Link>
+                  <a
+                    href="/api/plan-export"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-ink-soft decoration-pomodoro hover:text-ink font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px] transition-colors"
+                  >
+                    {t('exportPdf')} ↗
+                  </a>
+                </>
+              ) : null}
+            </div>
           </div>
-        ) : null}
-      </main>
+
+          <div className="rule animate-rule-in my-12 [animation-delay:420ms]" />
+
+          {plan ? (
+            <div className="animate-fade-up relative [animation-delay:480ms]">
+              <PlanWeek plan={plan} dailyTarget={dailyTarget} />
+            </div>
+          ) : null}
+        </main>
+      </div>
     </div>
   );
 }

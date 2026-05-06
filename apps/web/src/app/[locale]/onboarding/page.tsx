@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
+import { CursorGlow } from '@/components/cursor-glow';
 import { Masthead } from '@/components/masthead';
 import { getServerSession } from '@/lib/auth';
 
@@ -47,24 +48,57 @@ function OnboardingPageContent({
   const t = useTranslations('Onboarding');
 
   return (
-    <div className="mx-auto min-h-screen max-w-5xl px-6 sm:px-10">
-      <Masthead issueLabel="N. 03 — Inizio" />
-      <main className="py-12 sm:py-16">
-        <p className="editorial-eyebrow animate-fade-up">Capitolo III</p>
-        <h1 className="font-display text-display text-ink animate-fade-up mt-3 font-medium leading-[0.95] tracking-tight [animation-delay:120ms]">
-          {t('title')}
-          <span className="text-pomodoro">.</span>
-        </h1>
-        <p className="font-display text-ink-soft animate-fade-up mt-6 max-w-2xl text-xl italic leading-snug [animation-delay:240ms]">
-          {t('subtitle')}
-        </p>
+    <div className="relative">
+      <div className="mx-auto min-h-screen max-w-7xl px-6 sm:px-10">
+        <Masthead issueLabel="N. 03 — Inizio" />
+        <main className="relative overflow-hidden pb-24 pt-10 sm:pt-12">
+          <CursorGlow color="hsl(var(--oro))" size={520} />
+          <div
+            aria-hidden
+            className="mesh-blob mesh-blob--oro animate-float-y -right-24 top-12 h-[28rem] w-[28rem] opacity-50"
+          />
+          <div
+            aria-hidden
+            className="mesh-blob mesh-blob--pomodoro animate-float-x -left-32 top-72 h-80 w-80 opacity-40"
+          />
 
-        <div className="rule animate-rule-in my-10 [animation-delay:360ms]" />
+          {/* Chapter "III" gigante in stroke */}
+          <span
+            aria-hidden
+            className="font-display text-stroke-thin text-chapter pointer-events-none absolute -right-4 -top-12 select-none italic"
+          >
+            III
+          </span>
 
-        <OnboardingFlow initialProfile={profile} initialPreferences={preferences} />
-      </main>
+          {/* Eyebrow verticale destra */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-32 hidden md:block"
+            style={{ writingMode: 'vertical-rl' }}
+          >
+            <p className="text-ink-soft font-mono text-xs uppercase tracking-[0.4em]">
+              Capitolo III — Inizio
+            </p>
+          </div>
 
-      <div className="rule-thick mt-16" />
+          {/* Titolo bleed-left */}
+          <h1 className="font-display text-mega bleed-left animate-fade-up relative mt-8 font-medium [animation-delay:120ms]">
+            <span className="text-ink block">{t('title')}</span>
+          </h1>
+
+          <p className="font-display text-ink-soft animate-fade-up relative mt-10 max-w-2xl text-2xl italic leading-snug [animation-delay:240ms] md:ml-[16.66%]">
+            {t('subtitle')}
+          </p>
+
+          <div className="rule animate-rule-in my-12 [animation-delay:360ms]" />
+
+          <div className="relative">
+            <OnboardingFlow initialProfile={profile} initialPreferences={preferences} />
+          </div>
+        </main>
+
+        <div className="rule-thick" />
+      </div>
     </div>
   );
 }
