@@ -2,6 +2,7 @@ export { prisma } from './client.js';
 export type { ExtendedPrismaClient } from './client.js';
 export {
   ActivityLevel,
+  BillingInterval,
   CookingTime,
   Difficulty,
   FastStatus,
@@ -12,9 +13,12 @@ export {
   Phase,
   Prisma,
   Role,
+  SubscriptionStatus,
 } from '@prisma/client';
 export type {
   Account,
+  Achievement,
+  BillingWebhookEvent,
   DeviceToken,
   FastEvent,
   Ingredient,
@@ -26,6 +30,7 @@ export type {
   Recipe,
   RecipeIngredient,
   Session,
+  Subscription,
   User,
   Verification,
   WeightEntry,

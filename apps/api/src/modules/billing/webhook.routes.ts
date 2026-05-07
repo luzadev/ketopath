@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '@ketopath/db';
 import type { FastifyPluginAsync } from 'fastify';
 // eslint-disable-next-line import/no-named-as-default
 import type Stripe from 'stripe';
@@ -88,7 +88,7 @@ export const stripeWebhookRoutes: FastifyPluginAsync = async (parent) => {
 };
 
 async function dispatchEvent(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   stripe: Stripe,
   event: Stripe.Event,
 ): Promise<void> {

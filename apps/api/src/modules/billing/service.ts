@@ -1,10 +1,10 @@
+import type { ExtendedPrismaClient, Subscription } from '@ketopath/db';
 import {
   computeTrialEndsAt,
   isProActive,
   type SubscriptionSnapshot,
   type SubscriptionStatus as SharedStatus,
 } from '@ketopath/shared';
-import type { PrismaClient, Subscription } from '@prisma/client';
 // eslint-disable-next-line import/no-named-as-default
 import type Stripe from 'stripe';
 
@@ -29,7 +29,7 @@ export function toSnapshot(sub: Subscription | null): SubscriptionSnapshot | nul
  * dalla data di registrazione. Idempotente: se esiste già, non tocca nulla.
  */
 export async function ensureSubscription(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   userId: string,
   signupAt: Date,
 ): Promise<Subscription> {
@@ -45,13 +45,13 @@ export async function ensureSubscription(
 }
 
 export async function getSubscription(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   userId: string,
 ): Promise<Subscription | null> {
   return prisma.subscription.findUnique({ where: { userId } });
 }
 
-export async function isUserPro(prisma: PrismaClient, userId: string): Promise<boolean> {
+export async function isUserPro(prisma: ExtendedPrismaClient, userId: string): Promise<boolean> {
   const sub = await getSubscription(prisma, userId);
   return isProActive(toSnapshot(sub));
 }
@@ -100,7 +100,7 @@ function mapInterval(
  * payload N volte senza side effect.
  */
 export async function applyStripeSubscription(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   stripeSub: Stripe.Subscription,
 ): Promise<void> {
   const userId = stripeSub.metadata?.userId;
@@ -153,7 +153,7 @@ export async function applyStripeSubscription(
  * Invocata da uno scheduler giornaliero (vedi notifications/scheduler).
  * Restituisce il numero di record aggiornati.
  */
-export async function expireFinishedTrials(prisma: PrismaClient, now: Date = new Date()) {
+export async function expireFinishedTrials(prisma: ExtendedPrismaClient, now: Date = new Date()) {
   const res = await prisma.subscription.updateMany({
     where: {
       status: 'TRIALING',

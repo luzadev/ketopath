@@ -18,7 +18,7 @@ export function getStripe(): Stripe {
   _stripe = new Stripe(billingEnv.STRIPE_SECRET_KEY, {
     // Pin esplicito: niente sorprese quando Stripe rilascia una nuova
     // apiVersion. Aggiornare insieme allo `stripe` package.
-    apiVersion: '2025-09-30.clover',
+    apiVersion: '2026-04-22.dahlia',
     typescript: true,
     appInfo: { name: 'KetoPath', version: '0.0.0' },
   });
