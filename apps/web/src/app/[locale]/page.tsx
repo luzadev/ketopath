@@ -739,7 +739,7 @@ function FinalCta() {
 
       <div className="relative grid grid-cols-12 gap-8 pt-16 md:min-h-[60vh]">
         {/* Pull-quote in alto, indentata */}
-        <p className="font-display text-carta/70 col-span-12 max-w-xl text-xl italic leading-snug md:col-span-6 md:col-start-2 md:text-2xl">
+        <p className="font-display text-carta/85 col-span-12 max-w-xl text-xl italic leading-snug md:col-span-6 md:col-start-2 md:text-2xl">
           {t('ctaSectionBody')}
         </p>
 
@@ -887,35 +887,72 @@ function DashboardHero({
     accent === 'oliva' ? 'text-oliva' : accent === 'pomodoro' ? 'text-pomodoro' : 'text-oro';
   const tintGrad =
     accent === 'oliva'
-      ? 'linear-gradient(135deg, hsl(var(--oliva) / 0.18) 0%, hsl(var(--carta-light)) 70%)'
+      ? 'linear-gradient(135deg, hsl(var(--oliva) / 0.32) 0%, hsl(var(--oro) / 0.18) 50%, hsl(var(--carta-light)) 90%)'
       : accent === 'pomodoro'
-        ? 'linear-gradient(135deg, hsl(var(--pomodoro) / 0.18) 0%, hsl(var(--carta-light)) 70%)'
-        : 'linear-gradient(135deg, hsl(var(--oro) / 0.18) 0%, hsl(var(--carta-light)) 70%)';
+        ? 'linear-gradient(135deg, hsl(var(--pomodoro) / 0.32) 0%, hsl(var(--oro) / 0.18) 50%, hsl(var(--carta-light)) 90%)'
+        : 'linear-gradient(135deg, hsl(var(--oro) / 0.32) 0%, hsl(var(--pomodoro) / 0.15) 50%, hsl(var(--carta-light)) 90%)';
   return (
     <Link
       href={href}
-      className="hover-lift border-ink/15 group col-span-12 -rotate-[0.5deg] overflow-hidden border md:col-span-7"
+      className="hover-lift border-ink/20 group col-span-12 -rotate-[0.5deg] overflow-hidden border-2 md:col-span-7"
       style={{ background: tintGrad }}
     >
       <div
         aria-hidden
-        className={`mesh-blob mesh-blob--${accent} animate-float-z -right-16 -top-16 h-60 w-60 opacity-50`}
+        className={`mesh-blob mesh-blob--${accent} animate-float-z -right-16 -top-16 h-72 w-72 opacity-75`}
       />
-      <article className="relative flex min-h-[18rem] flex-col justify-between p-8">
-        <p className={`editorial-eyebrow ${accentClass}`}>{eyebrow}</p>
-        <div>
-          <h2 className="font-display text-ink text-4xl font-medium leading-[1.05] tracking-tight sm:text-5xl">
-            {title}
-          </h2>
-          <p
-            aria-hidden
-            className={`font-display mt-6 text-3xl italic leading-none ${accentClass} transition-transform duration-500 group-hover:translate-x-2`}
-          >
-            →
+      <PlateArt accent={accent} />
+      <article className="relative flex min-h-[20rem] flex-col justify-between p-8 sm:p-10">
+        <div className="flex items-baseline justify-between gap-4">
+          <p className={`editorial-eyebrow ${accentClass}`}>{eyebrow}</p>
+          <p className="text-ink-dim font-mono text-[10px] uppercase tracking-[0.3em]">
+            7 giorni · 21 pasti
           </p>
+        </div>
+        <div>
+          <h2 className="font-display text-ink text-4xl font-medium leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
+            {title}
+            <span className={accentClass}>.</span>
+          </h2>
+          <div className="mt-8 flex items-baseline justify-between gap-4">
+            <p className="font-display text-ink-soft max-w-md text-base italic leading-snug">
+              Il menu adattato al tuo BMR, alle tue esclusioni e ai tempi che hai in cucina.
+            </p>
+            <span
+              aria-hidden
+              className={`font-display text-3xl italic leading-none ${accentClass} transition-transform duration-500 group-hover:translate-x-3`}
+            >
+              →
+            </span>
+          </div>
         </div>
       </article>
     </Link>
+  );
+}
+
+/** Art decorativa "piatto stilizzato" per la card hero. Tre macchie di
+ * colore che richiamano gli ingredienti, ruotate in modo asimmetrico. */
+function PlateArt({ accent }: { accent: 'oliva' | 'pomodoro' | 'oro' }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 200 200"
+      className="pointer-events-none absolute -bottom-8 -right-2 h-44 w-44 opacity-90 sm:h-56 sm:w-56"
+    >
+      <circle
+        cx="100"
+        cy="100"
+        r="78"
+        fill="hsl(var(--carta-light))"
+        stroke={`hsl(var(--${accent}) / 0.45)`}
+        strokeWidth="1.5"
+      />
+      <circle cx="100" cy="100" r="65" fill="none" stroke="hsl(var(--ink) / 0.06)" />
+      <ellipse cx="86" cy="92" rx="20" ry="14" fill="hsl(var(--oliva) / 0.85)" />
+      <ellipse cx="118" cy="84" rx="14" ry="12" fill="hsl(var(--pomodoro) / 0.85)" />
+      <ellipse cx="108" cy="118" rx="22" ry="9" fill="hsl(var(--oro) / 0.8)" />
+    </svg>
   );
 }
 
@@ -934,22 +971,27 @@ function NavItem({
     <li>
       <Link
         href={href}
-        className="border-ink/15 hover:bg-ink hover:text-carta-light group -mx-0 flex items-baseline justify-between gap-4 border-t py-4 transition-colors last:border-b hover:-mx-3 hover:px-3"
+        className="border-ink/15 hover:border-ink group relative flex items-center gap-5 border-t py-5 transition-colors last:border-b"
       >
-        <span className="flex items-baseline gap-4">
-          {chapter ? (
-            <span className="text-ink-dim group-hover:text-carta-light/60 font-mono text-xs">
-              {chapter}
-            </span>
-          ) : null}
-          <span className="flex flex-col gap-1">
-            <span className="editorial-eyebrow group-hover:text-carta-light/60">{eyebrow}</span>
-            <span className="font-display text-xl leading-tight">{label}</span>
+        {chapter ? (
+          <span
+            aria-hidden
+            className="font-display text-ink-dim group-hover:text-pomodoro w-8 shrink-0 text-2xl italic leading-none transition-colors"
+          >
+            {chapter}
+          </span>
+        ) : null}
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="editorial-eyebrow text-ink-dim group-hover:text-pomodoro transition-colors">
+            {eyebrow}
+          </span>
+          <span className="font-display text-ink text-xl leading-tight tracking-tight">
+            {label}
           </span>
         </span>
         <span
           aria-hidden
-          className="font-display text-ink-dim group-hover:text-carta-light text-xl"
+          className="font-display text-ink-dim group-hover:text-pomodoro shrink-0 text-2xl leading-none transition-all duration-300 group-hover:translate-x-1"
         >
           →
         </span>
@@ -978,13 +1020,13 @@ function TrialBanner({ billing }: { billing: BillingStatus | null }) {
         />
         <div className="relative grid items-center gap-8 p-8 md:grid-cols-12 md:gap-12 md:p-12">
           <div className="md:col-span-7">
-            <p className="editorial-eyebrow text-carta-light/60">{t('trialBannerTitle')}</p>
+            <p className="editorial-eyebrow text-carta-light/75">{t('trialBannerTitle')}</p>
             <p className="font-display text-carta mt-3 text-4xl font-medium leading-[1.05] tracking-tight md:text-5xl">
               <span className="text-oro tabular-nums">{derived.trialDaysRemaining}</span>{' '}
               {derived.trialDaysRemaining === 1 ? 'giorno' : 'giorni'}
               <span className="text-pomodoro">.</span>
             </p>
-            <p className="font-display text-carta/70 mt-3 max-w-md text-base italic leading-snug">
+            <p className="font-display text-carta/85 mt-3 max-w-md text-base italic leading-snug">
               Tutto sbloccato fino al {endsAt}. Poi serve un abbonamento per generare nuovi piani.
             </p>
           </div>
@@ -1011,12 +1053,12 @@ function TrialBanner({ billing }: { billing: BillingStatus | null }) {
         />
         <div className="relative grid items-center gap-8 p-8 md:grid-cols-12 md:gap-12 md:p-12">
           <div className="md:col-span-7">
-            <p className="editorial-eyebrow text-carta-light/60">{t('trialEndedBannerTitle')}</p>
+            <p className="editorial-eyebrow text-carta-light/75">{t('trialEndedBannerTitle')}</p>
             <p className="font-display text-carta mt-3 text-4xl font-medium leading-[1.05] tracking-tight md:text-5xl">
               {t('trialEndedBannerTitle')}
               <span className="text-pomodoro">.</span>
             </p>
-            <p className="font-display text-carta/70 mt-3 max-w-md text-base italic leading-snug">
+            <p className="font-display text-carta/85 mt-3 max-w-md text-base italic leading-snug">
               {t('trialEndedBannerBody')}
             </p>
           </div>
