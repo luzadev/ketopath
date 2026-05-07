@@ -59,7 +59,7 @@ function ProfilePageContent({
   return (
     <div className="relative">
       <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
-        <Masthead issueLabel="N. 04 — Profilo" />
+        <Masthead showNav />
         <main className="relative overflow-hidden pb-24 pt-10 sm:pt-12">
           <CursorGlow color="hsl(var(--oliva))" size={520} />
           <div

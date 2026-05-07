@@ -39,7 +39,7 @@ function BillingPageContent({ status }: { status: BillingStatus | null }) {
     return (
       <div className="relative">
         <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
-          <Masthead issueLabel="N. 08 — Abbonamento" />
+          <Masthead showNav />
           <main className="pb-24 pt-12">
             <p className="editorial-eyebrow">{t('errorLoading')}</p>
           </main>
@@ -54,7 +54,7 @@ function BillingPageContent({ status }: { status: BillingStatus | null }) {
   return (
     <div className="relative">
       <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
-        <Masthead issueLabel="N. 08 — Abbonamento" />
+        <Masthead showNav />
         <main className="relative overflow-hidden pb-24 pt-10 sm:pt-12">
           <CursorGlow color="hsl(var(--oro))" size={520} />
           <div

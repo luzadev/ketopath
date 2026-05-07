@@ -64,7 +64,7 @@ function PlanPageContent({
   return (
     <div className="relative">
       <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
-        <Masthead issueLabel="N. 05 — Cucina" />
+        <Masthead showNav />
         <main className="relative overflow-hidden py-10 sm:py-12">
           <CursorGlow color="hsl(var(--pomodoro))" size={520} />
           <div

@@ -111,7 +111,7 @@ function RecipeContent({ recipe }: { recipe: RecipeView }) {
 
   return (
     <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
-      <Masthead issueLabel={`N. 08 — ${t(`categoryLabel.${recipe.category}`)}`} />
+      <Masthead showNav />
       <main className="py-10 sm:py-14">
         <Link
           href="/plan"

@@ -28,7 +28,7 @@ function HomeContent({
   return (
     <div className="relative">
       <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
-        <Masthead />
+        <Masthead showNav={!!userName} />
         {userName ? (
           <SignedInDashboard userName={userName} billing={billing} />
         ) : (
