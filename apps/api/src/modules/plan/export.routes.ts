@@ -7,6 +7,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import PDFDocument from 'pdfkit';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { requirePro } from '../../plugins/require-pro.js';
 
 const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
   day: 'numeric',
@@ -26,7 +27,7 @@ const MEAL_LABELS: Record<string, string> = {
 export const planExportRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/me/meal-plans/export.pdf',
-    { preHandler: requireAuth() },
+    { preHandler: [requireAuth(), requirePro()] },
     async (request, reply) => {
       const userId = request.user!.id;
 

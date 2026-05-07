@@ -7,6 +7,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { env } from './config/env.js';
 import { Sentry } from './lib/sentry.js';
 import { achievementsRoutes } from './modules/achievements/achievements.routes.js';
+import { billingRoutes } from './modules/billing/billing.routes.js';
+import { stripeWebhookRoutes } from './modules/billing/webhook.routes.js';
 import { dbRoutes } from './modules/db/db.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { gdprRoutes } from './modules/me/gdpr.routes.js';
@@ -68,6 +70,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(shoppingRoutes);
   await app.register(notificationsRoutes);
   await app.register(achievementsRoutes);
+  await app.register(billingRoutes);
+  await app.register(stripeWebhookRoutes);
 
   if (env.SENTRY_DSN) {
     app.setErrorHandler((err, request, reply) => {

@@ -76,6 +76,23 @@ enum MealPlanStatus {
   ARCHIVED
 }
 
+// PRD §16.3 / ADR 0004 — stato dell'abbonamento. Mappato 1:1 sullo stato
+// Stripe ma mantenuto in DB come source-of-truth applicativo (l'API non
+// chiama Stripe a ogni request — usa il valore qui).
+enum SubscriptionStatus {
+  TRIALING            // free 30gg post-signup, no carta richiesta
+  ACTIVE              // pagante, in regola
+  PAST_DUE            // pagamento fallito, in retry da Stripe (grace period)
+  CANCEL_AT_PERIOD_END // canceled ma valido fino a fine periodo corrente
+  CANCELED            // canceled ed expired
+  EXPIRED             // trial scaduto senza upgrade
+}
+
+enum BillingInterval {
+  MONTH
+  YEAR
+}
+
 model User {
   id                   String    @id @default(cuid())
   email                String    @unique
@@ -97,6 +114,7 @@ model User {
 
   profile       Profile?
   preferences   Preferences?
+  subscription  Subscription?
   sessions      Session[]
   accounts      Account[]
   weightEntries WeightEntry[]
@@ -107,6 +125,49 @@ model User {
   achievements  Achievement[]
 
   @@map("users")
+}
+
+// ADR 0004 — abbonamento dell'utente. 1:1 con User. Lo stato è la verità
+// applicativa: il webhook Stripe lo aggiorna, ma le route che gating-ano
+// le feature leggono solo da qui (niente roundtrip Stripe).
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique @map("user_id")
+  status               SubscriptionStatus
+  // Trial nativo (30gg post-signup, no carta). Sempre valorizzato.
+  trialEndsAt          DateTime           @map("trial_ends_at")
+  // Stripe: presente solo dopo il primo upgrade (checkout completato).
+  stripeCustomerId     String?            @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
+  stripePriceId        String?            @map("stripe_price_id")
+  // Periodo corrente (Pro). Riflette `current_period_end` di Stripe.
+  currentPeriodEnd     DateTime?          @map("current_period_end")
+  interval             BillingInterval?
+  // Se `cancelAtPeriodEnd = true`, la sub è ancora ACTIVE ma non si rinnoverà.
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  // Quando lo status è effettivamente expired/canceled, archiviamo la data.
+  endedAt              DateTime?          @map("ended_at")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// ADR 0004 — registro idempotenza dei webhook Stripe. Stripe ritenta gli
+// eventi falliti, ricezione multipla è normale: scartiamo i duplicati su
+// `event.id` invece di applicare due volte lo stesso aggiornamento.
+model BillingWebhookEvent {
+  id          String   @id // event.id di Stripe (evt_...)
+  type        String
+  receivedAt  DateTime @default(now()) @map("received_at")
+  processedAt DateTime? @map("processed_at")
+  payload     Json
+
+  @@index([type])
+  @@map("billing_webhook_events")
 }
 
 // PRD §6 — sistema achievement: badge sbloccati man mano che l'utente

@@ -24,6 +24,7 @@ import {
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { requirePro } from '../../plugins/require-pro.js';
 import { evaluateAndPersist, notifyUnlocked } from '../achievements/service.js';
 
 const MEALS = ['COLAZIONE', 'PRANZO', 'SPUNTINO', 'CENA'] as const;
@@ -72,220 +73,225 @@ function parseConditions(raw: string | null): string[] {
 }
 
 export const planRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.post('/me/meal-plans', { preHandler: requireAuth() }, async (request, reply) => {
-    const userId = request.user!.id;
+  fastify.post(
+    '/me/meal-plans',
+    { preHandler: [requireAuth(), requirePro()] },
+    async (request, reply) => {
+      const userId = request.user!.id;
 
-    const profile = await fastify.prisma.profile.findUnique({
-      where: { userId },
-      include: { user: { include: { preferences: true } } },
-    });
-    if (!profile) return reply.code(409).send({ error: 'profile_required' });
+      const profile = await fastify.prisma.profile.findUnique({
+        where: { userId },
+        include: { user: { include: { preferences: true } } },
+      });
+      if (!profile) return reply.code(409).send({ error: 'profile_required' });
 
-    const recipes = await fastify.prisma.recipe.findMany({
-      select: {
-        id: true,
-        name: true,
-        category: true,
-        kcal: true,
-        proteinG: true,
-        fatG: true,
-        netCarbG: true,
-        phases: true,
-        prepMinutes: true,
-        ingredients: {
-          select: {
-            ingredient: { select: { id: true, exclusionGroups: true, phase2Week: true } },
+      const recipes = await fastify.prisma.recipe.findMany({
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          kcal: true,
+          proteinG: true,
+          fatG: true,
+          netCarbG: true,
+          phases: true,
+          prepMinutes: true,
+          ingredients: {
+            select: {
+              ingredient: { select: { id: true, exclusionGroups: true, phase2Week: true } },
+            },
           },
         },
-      },
-    });
-    if (recipes.length === 0) {
-      return reply.code(409).send({ error: 'recipe_catalog_empty' });
-    }
-
-    // PRD §5.1 — Reintroduzione progressiva: in fase 2 filtriamo le ricette
-    // che contengono ingredienti non ancora reintrodotti per la settimana
-    // corrente di fase 2.
-    const phaseIntForFilter = phaseToInt(profile.currentPhase);
-    const phase2WeekForFilter = currentPhase2Week(profile.user.phase2StartedAt);
-    const allowedRecipes = recipes.filter((r) =>
-      isRecipeAllowedForPhaseWeek(
-        r.ingredients.map((ri) => ({ phase2Week: ri.ingredient.phase2Week })),
-        phaseIntForFilter,
-        phase2WeekForFilter,
-      ),
-    );
-
-    const candidates: RecipeCandidate[] = allowedRecipes.map((r) => {
-      const tags = new Set<string>();
-      const ingredientIds: string[] = [];
-      for (const ri of r.ingredients) {
-        for (const g of ri.ingredient.exclusionGroups) tags.add(g);
-        ingredientIds.push(ri.ingredient.id);
+      });
+      if (recipes.length === 0) {
+        return reply.code(409).send({ error: 'recipe_catalog_empty' });
       }
-      return {
-        id: r.id,
-        name: r.name,
-        category: r.category,
-        kcal: r.kcal,
-        proteinG: r.proteinG,
-        fatG: r.fatG,
-        netCarbG: r.netCarbG,
-        exclusionTags: Array.from(tags),
-        ingredientIds,
-        phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
-        prepMinutes: r.prepMinutes,
-      };
-    });
 
-    // Condizioni escludenti: PRD §14.3 — blocchiamo la generazione e
-    // rimandiamo l'utente al medico (lato UI mostriamo un disclaimer).
-    const conditions = parseConditions(profile.medicalConditions);
-    if (hasExcludingCondition(conditions)) {
-      return reply.code(409).send({ error: 'medical_block', conditions });
-    }
+      // PRD §5.1 — Reintroduzione progressiva: in fase 2 filtriamo le ricette
+      // che contengono ingredienti non ancora reintrodotti per la settimana
+      // corrente di fase 2.
+      const phaseIntForFilter = phaseToInt(profile.currentPhase);
+      const phase2WeekForFilter = currentPhase2Week(profile.user.phase2StartedAt);
+      const allowedRecipes = recipes.filter((r) =>
+        isRecipeAllowedForPhaseWeek(
+          r.ingredients.map((ri) => ({ phase2Week: ri.ingredient.phase2Week })),
+          phaseIntForFilter,
+          phase2WeekForFilter,
+        ),
+      );
 
-    const weightCurrentKg = Number(profile.weightCurrentKg);
-    const bodyFatPct = profile.bodyFatPct ? Number(profile.bodyFatPct) : null;
-    // BMR: Katch-McArdle (FFM-based) se BF% noto, altrimenti Mifflin.
-    let bmr = bodyFatPct
-      ? calculateBmrKatchMcArdle(weightCurrentKg, bodyFatPct)
-      : calculateBmr({
-          weightKg: weightCurrentKg,
-          heightCm: profile.heightCm,
-          ageYears: profile.age,
-          gender: profile.gender,
-        });
-    // Aggiusto BMR per condizioni che lo influenzano (es. ipotiroidismo -10%).
-    bmr *= bmrAdjustmentForConditions(conditions);
-    bmr *= bmrAdjustForDietHistory(profile.dietHistory as DietHistory | null);
-    const tdee = calculateTdee(bmr, profile.activityLevel);
-    const phaseInt = phaseToInt(profile.currentPhase);
+      const candidates: RecipeCandidate[] = allowedRecipes.map((r) => {
+        const tags = new Set<string>();
+        const ingredientIds: string[] = [];
+        for (const ri of r.ingredients) {
+          for (const g of ri.ingredient.exclusionGroups) tags.add(g);
+          ingredientIds.push(ri.ingredient.id);
+        }
+        return {
+          id: r.id,
+          name: r.name,
+          category: r.category,
+          kcal: r.kcal,
+          proteinG: r.proteinG,
+          fatG: r.fatG,
+          netCarbG: r.netCarbG,
+          exclusionTags: Array.from(tags),
+          ingredientIds,
+          phases: r.phases.filter((p): p is 1 | 2 | 3 => p === 1 || p === 2 || p === 3),
+          prepMinutes: r.prepMinutes,
+        };
+      });
 
-    // Schedule allenamento: kcal extra sui giorni di allenamento.
-    const trainingDays = profile.user.preferences?.trainingDays ?? [];
-    const trainingType =
-      (profile.user.preferences?.trainingType as TrainingType | null | undefined) ?? null;
-    const sessionMinutes = profile.user.preferences?.sessionMinutes ?? null;
-    const sessionExtraKcal =
-      trainingType && sessionMinutes
-        ? extraKcalForSession({
-            type: trainingType,
-            durationMinutes: sessionMinutes,
+      // Condizioni escludenti: PRD §14.3 — blocchiamo la generazione e
+      // rimandiamo l'utente al medico (lato UI mostriamo un disclaimer).
+      const conditions = parseConditions(profile.medicalConditions);
+      if (hasExcludingCondition(conditions)) {
+        return reply.code(409).send({ error: 'medical_block', conditions });
+      }
+
+      const weightCurrentKg = Number(profile.weightCurrentKg);
+      const bodyFatPct = profile.bodyFatPct ? Number(profile.bodyFatPct) : null;
+      // BMR: Katch-McArdle (FFM-based) se BF% noto, altrimenti Mifflin.
+      let bmr = bodyFatPct
+        ? calculateBmrKatchMcArdle(weightCurrentKg, bodyFatPct)
+        : calculateBmr({
             weightKg: weightCurrentKg,
-          })
-        : 0;
-    const mealsPerDay = profile.user.preferences?.mealsPerDay ?? null;
+            heightCm: profile.heightCm,
+            ageYears: profile.age,
+            gender: profile.gender,
+          });
+      // Aggiusto BMR per condizioni che lo influenzano (es. ipotiroidismo -10%).
+      bmr *= bmrAdjustmentForConditions(conditions);
+      bmr *= bmrAdjustForDietHistory(profile.dietHistory as DietHistory | null);
+      const tdee = calculateTdee(bmr, profile.activityLevel);
+      const phaseInt = phaseToInt(profile.currentPhase);
 
-    // Deficit dinamico da targetWeeklyLossKg (con caps di sicurezza).
-    const { kcalTarget: baseKcal } = computeDailyKcalTarget({
-      tdee,
-      weightCurrentKg,
-      targetWeeklyLossKg: profile.targetWeeklyLossKg,
-      phase: phaseInt,
-    });
-    const baseDailyTarget = macrosForPhase({
-      kcalTarget: baseKcal,
-      weightKg: weightCurrentKg,
-      phase: phaseInt,
-    });
-    const exclusions = profile.user.preferences?.exclusions ?? [];
-    const bannedIngredientIds = profile.user.preferences?.bannedIngredientIds ?? [];
-    const fastingProtocol =
-      (profile.user.preferences?.fastingProtocol as FastingProtocolKey | null | undefined) ?? null;
-    const cookingTime =
-      (profile.user.preferences?.cookingTime as 'LOW' | 'MEDIUM' | 'HIGH' | null | undefined) ??
-      null;
-    const maxPrepMinutes = maxPrepMinutesFor(cookingTime);
+      // Schedule allenamento: kcal extra sui giorni di allenamento.
+      const trainingDays = profile.user.preferences?.trainingDays ?? [];
+      const trainingType =
+        (profile.user.preferences?.trainingType as TrainingType | null | undefined) ?? null;
+      const sessionMinutes = profile.user.preferences?.sessionMinutes ?? null;
+      const sessionExtraKcal =
+        trainingType && sessionMinutes
+          ? extraKcalForSession({
+              type: trainingType,
+              durationMinutes: sessionMinutes,
+              weightKg: weightCurrentKg,
+            })
+          : 0;
+      const mealsPerDay = profile.user.preferences?.mealsPerDay ?? null;
 
-    const weekStart = startOfWeek(new Date());
-
-    const plan = await fastify.prisma.mealPlan.upsert({
-      where: { userId_weekStart: { userId, weekStart } },
-      create: { userId, weekStart },
-      update: { generatedAt: new Date(), status: 'ACTIVE' },
-    });
-
-    // Wipe existing slots before regenerating, in case the plan already existed.
-    await fastify.prisma.mealSlot.deleteMany({ where: { planId: plan.id } });
-
-    const plannedSlots: Array<{ day: number; meal: string; recipeId: string | null }> = [];
-    for (let day = 0; day < 7; day++) {
-      const dayPlan = protocolPlanForDay(fastingProtocol, day);
-      // Giorno di digiuno completo (ESE_24): salta tutto.
-      if (dayPlan.kcalMultiplier === 0) continue;
-
-      // Se non c'è un protocollo IF attivo e l'utente ha dichiarato
-      // mealsPerDay, lo usiamo per ridistribuire le quote per pasto.
-      const effectiveShare =
-        !fastingProtocol && mealsPerDay ? mealShareForFrequency(mealsPerDay) : dayPlan.share;
-
-      // Sui giorni di allenamento aumentiamo le kcal per coprire l'EE
-      // della sessione (Ainsworth 2011 — vedi preferences/training.ts).
-      const trainingExtra = isTrainingDay(day, trainingDays) ? sessionExtraKcal : 0;
-      const dailyKcal = Math.round(baseKcal * dayPlan.kcalMultiplier + trainingExtra);
-      const dailyTarget = macrosForPhase({
-        kcalTarget: dailyKcal,
+      // Deficit dinamico da targetWeeklyLossKg (con caps di sicurezza).
+      const { kcalTarget: baseKcal } = computeDailyKcalTarget({
+        tdee,
+        weightCurrentKg,
+        targetWeeklyLossKg: profile.targetWeeklyLossKg,
+        phase: phaseInt,
+      });
+      const baseDailyTarget = macrosForPhase({
+        kcalTarget: baseKcal,
         weightKg: weightCurrentKg,
         phase: phaseInt,
       });
+      const exclusions = profile.user.preferences?.exclusions ?? [];
+      const bannedIngredientIds = profile.user.preferences?.bannedIngredientIds ?? [];
+      const fastingProtocol =
+        (profile.user.preferences?.fastingProtocol as FastingProtocolKey | null | undefined) ??
+        null;
+      const cookingTime =
+        (profile.user.preferences?.cookingTime as 'LOW' | 'MEDIUM' | 'HIGH' | null | undefined) ??
+        null;
+      const maxPrepMinutes = maxPrepMinutesFor(cookingTime);
 
-      // Ricette scelte negli ultimi 2 giorni sono "recenti".
-      const recentlyConsumedIds: string[] = plannedSlots
-        .filter((s) => day - s.day <= 2 && s.recipeId)
-        .map((s) => s.recipeId!);
+      const weekStart = startOfWeek(new Date());
 
-      for (const meal of MEALS) {
-        // Pasto disabilitato dal protocollo o dalla frequenza: salta lo slot.
-        if (effectiveShare[meal] === 0) continue;
-
-        const top = matchMeals({
-          candidates,
-          meal,
-          phase: phaseInt,
-          excludedTags: exclusions,
-          bannedIngredientIds,
-          recentlyConsumedIds,
-          dailyTarget,
-          mealShare: effectiveShare,
-          maxPrepMinutes,
-          topN: 5,
-        });
-        const selected = top[0];
-        await fastify.prisma.mealSlot.create({
-          data: {
-            planId: plan.id,
-            dayOfWeek: day,
-            meal,
-            recipeId: selected?.id ?? null,
-            alternatives: { connect: top.slice(1).map((r) => ({ id: r.id })) },
-          },
-        });
-        plannedSlots.push({ day, meal, recipeId: selected?.id ?? null });
-      }
-    }
-
-    const ach = await evaluateAndPersist(fastify.prisma, userId);
-    if (ach.newlyUnlocked.length > 0) {
-      void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
-        /* notifica best-effort */
+      const plan = await fastify.prisma.mealPlan.upsert({
+        where: { userId_weekStart: { userId, weekStart } },
+        create: { userId, weekStart },
+        update: { generatedAt: new Date(), status: 'ACTIVE' },
       });
-    }
 
-    return reply.code(201).send({
-      plan: {
-        id: plan.id,
-        weekStart: plan.weekStart.toISOString().slice(0, 10),
-        dailyTarget: baseDailyTarget,
-        fastingProtocol,
-      },
-      newlyUnlocked: ach.newlyUnlocked,
-    });
-  });
+      // Wipe existing slots before regenerating, in case the plan already existed.
+      await fastify.prisma.mealSlot.deleteMany({ where: { planId: plan.id } });
+
+      const plannedSlots: Array<{ day: number; meal: string; recipeId: string | null }> = [];
+      for (let day = 0; day < 7; day++) {
+        const dayPlan = protocolPlanForDay(fastingProtocol, day);
+        // Giorno di digiuno completo (ESE_24): salta tutto.
+        if (dayPlan.kcalMultiplier === 0) continue;
+
+        // Se non c'è un protocollo IF attivo e l'utente ha dichiarato
+        // mealsPerDay, lo usiamo per ridistribuire le quote per pasto.
+        const effectiveShare =
+          !fastingProtocol && mealsPerDay ? mealShareForFrequency(mealsPerDay) : dayPlan.share;
+
+        // Sui giorni di allenamento aumentiamo le kcal per coprire l'EE
+        // della sessione (Ainsworth 2011 — vedi preferences/training.ts).
+        const trainingExtra = isTrainingDay(day, trainingDays) ? sessionExtraKcal : 0;
+        const dailyKcal = Math.round(baseKcal * dayPlan.kcalMultiplier + trainingExtra);
+        const dailyTarget = macrosForPhase({
+          kcalTarget: dailyKcal,
+          weightKg: weightCurrentKg,
+          phase: phaseInt,
+        });
+
+        // Ricette scelte negli ultimi 2 giorni sono "recenti".
+        const recentlyConsumedIds: string[] = plannedSlots
+          .filter((s) => day - s.day <= 2 && s.recipeId)
+          .map((s) => s.recipeId!);
+
+        for (const meal of MEALS) {
+          // Pasto disabilitato dal protocollo o dalla frequenza: salta lo slot.
+          if (effectiveShare[meal] === 0) continue;
+
+          const top = matchMeals({
+            candidates,
+            meal,
+            phase: phaseInt,
+            excludedTags: exclusions,
+            bannedIngredientIds,
+            recentlyConsumedIds,
+            dailyTarget,
+            mealShare: effectiveShare,
+            maxPrepMinutes,
+            topN: 5,
+          });
+          const selected = top[0];
+          await fastify.prisma.mealSlot.create({
+            data: {
+              planId: plan.id,
+              dayOfWeek: day,
+              meal,
+              recipeId: selected?.id ?? null,
+              alternatives: { connect: top.slice(1).map((r) => ({ id: r.id })) },
+            },
+          });
+          plannedSlots.push({ day, meal, recipeId: selected?.id ?? null });
+        }
+      }
+
+      const ach = await evaluateAndPersist(fastify.prisma, userId);
+      if (ach.newlyUnlocked.length > 0) {
+        void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
+          /* notifica best-effort */
+        });
+      }
+
+      return reply.code(201).send({
+        plan: {
+          id: plan.id,
+          weekStart: plan.weekStart.toISOString().slice(0, 10),
+          dailyTarget: baseDailyTarget,
+          fastingProtocol,
+        },
+        newlyUnlocked: ach.newlyUnlocked,
+      });
+    },
+  );
 
   fastify.patch(
     '/me/meal-plans/slots/:slotId',
-    { preHandler: requireAuth() },
+    { preHandler: [requireAuth(), requirePro()] },
     async (request, reply) => {
       const slotId = (request.params as { slotId: string }).slotId;
       const body = request.body as { recipeId?: unknown };
@@ -322,7 +328,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
   // automaticamente un nuovo digiuno.
   fastify.post(
     '/me/meal-plans/slots/:slotId/consumed',
-    { preHandler: requireAuth() },
+    { preHandler: [requireAuth(), requirePro()] },
     async (request, reply) => {
       const slotId = (request.params as { slotId: string }).slotId;
       const userId = request.user!.id;
@@ -398,7 +404,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
   // PRD §5.1 — toggle "pasto libero". Disponibile solo in Fase 3.
   fastify.post(
     '/me/meal-plans/slots/:slotId/free-meal',
-    { preHandler: requireAuth() },
+    { preHandler: [requireAuth(), requirePro()] },
     async (request, reply) => {
       const slotId = (request.params as { slotId: string }).slotId;
       const userId = request.user!.id;
@@ -424,7 +430,7 @@ export const planRoutes: FastifyPluginAsync = async (fastify) => {
   // conto dei pasti del giorno già scelti (coerenza dei macros).
   fastify.post(
     '/me/meal-plans/slots/:slotId/regenerate',
-    { preHandler: requireAuth() },
+    { preHandler: [requireAuth(), requirePro()] },
     async (request, reply) => {
       const slotId = (request.params as { slotId: string }).slotId;
       const userId = request.user!.id;

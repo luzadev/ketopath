@@ -6,21 +6,34 @@ import { CursorGlow } from '@/components/cursor-glow';
 import { Masthead } from '@/components/masthead';
 import { getServerSession } from '@/lib/auth';
 
+import { fetchBillingStatus, type BillingStatus } from './billing/actions';
 import { SignOutButton } from './sign-out-button';
 
 export default async function HomePage({ params: { locale } }: { params: { locale: string } }) {
   setRequestLocale(locale);
   const session = await getServerSession();
+  const userName = session?.user?.name ?? session?.user?.email ?? null;
+  const billing = userName ? await fetchBillingStatus() : null;
 
-  return <HomeContent userName={session?.user?.name ?? session?.user?.email ?? null} />;
+  return <HomeContent userName={userName} billing={billing} />;
 }
 
-function HomeContent({ userName }: { userName: string | null }) {
+function HomeContent({
+  userName,
+  billing,
+}: {
+  userName: string | null;
+  billing: BillingStatus | null;
+}) {
   return (
     <div className="relative">
       <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
         <Masthead />
-        {userName ? <SignedInDashboard userName={userName} /> : <MarketingLanding />}
+        {userName ? (
+          <SignedInDashboard userName={userName} billing={billing} />
+        ) : (
+          <MarketingLanding />
+        )}
       </div>
     </div>
   );
@@ -800,7 +813,13 @@ function Disclaimer() {
   );
 }
 
-function SignedInDashboard({ userName }: { userName: string }) {
+function SignedInDashboard({
+  userName,
+  billing,
+}: {
+  userName: string;
+  billing: BillingStatus | null;
+}) {
   const t = useTranslations('Home');
   return (
     <main className="relative min-h-[80vh] overflow-hidden pb-24">
@@ -848,6 +867,8 @@ function SignedInDashboard({ userName }: { userName: string }) {
         {t('tagline')}
       </p>
 
+      <TrialBanner billing={billing} />
+
       {/* Nav asimmetrica: card grande "/plan" a sinistra, le altre 4 in colonna a destra */}
       <div className="animate-fade-up relative mt-20 grid grid-cols-12 gap-6 [animation-delay:360ms]">
         <DashboardHero
@@ -861,6 +882,7 @@ function SignedInDashboard({ userName }: { userName: string }) {
           <NavItem href="/fasting" label={t('viewFasting')} eyebrow="Digiuno" chapter="III" />
           <NavItem href="/tracking" label={t('viewTracking')} eyebrow="Tracking" chapter="IV" />
           <NavItem href="/profile" label={t('completeProfile')} eyebrow="Profilo" chapter="V" />
+          <NavItem href="/billing" label={t('viewBilling')} eyebrow="Abbonamento" chapter="VI" />
           <li className="pt-6">
             <SignOutButton label={t('signOut')} />
           </li>
@@ -956,4 +978,60 @@ function NavItem({
       </Link>
     </li>
   );
+}
+
+const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
+  day: 'numeric',
+  month: 'long',
+});
+
+function TrialBanner({ billing }: { billing: BillingStatus | null }) {
+  const t = useTranslations('Billing');
+  if (!billing) return null;
+  const { derived } = billing;
+
+  if (derived.kind === 'trial' && derived.trialDaysRemaining != null) {
+    const endsAt = derived.accessEndsAt ? ITALIAN_DATE.format(new Date(derived.accessEndsAt)) : '—';
+    return (
+      <aside className="border-oro/35 bg-oro/5 animate-fade-up relative mt-12 border-2 border-dashed p-6 [animation-delay:300ms] md:ml-[16.66%]">
+        <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between">
+          <div>
+            <p className="editorial-eyebrow">{t('trialBannerTitle')}</p>
+            <p className="font-display text-ink mt-2 text-lg leading-snug">
+              {t('trialBannerBody', { days: derived.trialDaysRemaining, endsAt })}
+            </p>
+          </div>
+          <Link
+            href="/billing"
+            className="text-oro hover:text-pomodoro shrink-0 font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px]"
+          >
+            {t('trialBannerCta')} →
+          </Link>
+        </div>
+      </aside>
+    );
+  }
+
+  if (derived.kind === 'trial_expired' || derived.kind === 'past_due') {
+    return (
+      <aside className="border-pomodoro/40 bg-pomodoro/5 animate-fade-up relative mt-12 border-2 border-dashed p-6 [animation-delay:300ms] md:ml-[16.66%]">
+        <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between">
+          <div>
+            <p className="editorial-eyebrow">{t('trialEndedBannerTitle')}</p>
+            <p className="font-display text-ink mt-2 text-lg leading-snug">
+              {t('trialEndedBannerBody')}
+            </p>
+          </div>
+          <Link
+            href="/billing"
+            className="text-pomodoro hover:text-ink shrink-0 font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px]"
+          >
+            {t('trialEndedBannerCta')} →
+          </Link>
+        </div>
+      </aside>
+    );
+  }
+
+  return null;
 }

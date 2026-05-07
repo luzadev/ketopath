@@ -6,6 +6,7 @@ import {
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { requirePro } from '../../plugins/require-pro.js';
 import { evaluateAndPersist, notifyUnlocked } from '../achievements/service.js';
 
 export const fastRoutes: FastifyPluginAsync = async (fastify) => {
@@ -29,91 +30,103 @@ export const fastRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  fastify.post('/me/fast-events', { preHandler: requireAuth() }, async (request, reply) => {
-    const parsed = fastEventStartSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
-    }
-    const data = parsed.data;
-    const event = await fastify.prisma.fastEvent.create({
-      data: {
-        userId: request.user!.id,
-        protocol: data.protocol,
-        startedAt: data.startedAt ?? new Date(),
-        targetDuration: data.targetDuration ?? PROTOCOL_DEFAULT_MINUTES[data.protocol],
-      },
-    });
-    return reply.code(201).send({ event: { id: event.id } });
-  });
-
-  fastify.patch('/me/fast-events/:id', { preHandler: requireAuth() }, async (request, reply) => {
-    const id = (request.params as { id: string }).id;
-    const parsed = fastEventUpdateSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
-    }
-    const data = parsed.data;
-    // Garantisce che l'utente possa aggiornare solo i propri eventi.
-    const owned = await fastify.prisma.fastEvent.findFirst({
-      where: { id, userId: request.user!.id },
-      select: { id: true },
-    });
-    if (!owned) return reply.code(404).send({ error: 'fast_event_not_found' });
-
-    // Costruiamo l'oggetto data omettendo le chiavi non fornite, perché con
-    // `exactOptionalPropertyTypes` Prisma rifiuta `undefined` esplicito.
-    const updateData: Parameters<typeof fastify.prisma.fastEvent.update>[0]['data'] = {};
-    if (data.endedAt) updateData.endedAt = data.endedAt;
-    if (data.status) updateData.status = data.status;
-    if (data.symptoms) updateData.symptoms = JSON.stringify(data.symptoms);
-    if (data.notes != null) updateData.notes = data.notes;
-
-    const event = await fastify.prisma.fastEvent.update({
-      where: { id },
-      data: updateData,
-    });
-    let newlyUnlocked: string[] = [];
-    if (event.status === 'COMPLETED') {
-      const ach = await evaluateAndPersist(fastify.prisma, request.user!.id);
-      newlyUnlocked = ach.newlyUnlocked;
-      if (newlyUnlocked.length > 0) {
-        void notifyUnlocked(fastify.prisma, request.user!.id, ach.newlyUnlocked).catch(() => {
-          /* notifica best-effort */
-        });
+  fastify.post(
+    '/me/fast-events',
+    { preHandler: [requireAuth(), requirePro()] },
+    async (request, reply) => {
+      const parsed = fastEventStartSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
       }
-    }
-    return { event: { id: event.id, status: event.status }, newlyUnlocked };
-  });
+      const data = parsed.data;
+      const event = await fastify.prisma.fastEvent.create({
+        data: {
+          userId: request.user!.id,
+          protocol: data.protocol,
+          startedAt: data.startedAt ?? new Date(),
+          targetDuration: data.targetDuration ?? PROTOCOL_DEFAULT_MINUTES[data.protocol],
+        },
+      });
+      return reply.code(201).send({ event: { id: event.id } });
+    },
+  );
+
+  fastify.patch(
+    '/me/fast-events/:id',
+    { preHandler: [requireAuth(), requirePro()] },
+    async (request, reply) => {
+      const id = (request.params as { id: string }).id;
+      const parsed = fastEventUpdateSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
+      }
+      const data = parsed.data;
+      // Garantisce che l'utente possa aggiornare solo i propri eventi.
+      const owned = await fastify.prisma.fastEvent.findFirst({
+        where: { id, userId: request.user!.id },
+        select: { id: true },
+      });
+      if (!owned) return reply.code(404).send({ error: 'fast_event_not_found' });
+
+      // Costruiamo l'oggetto data omettendo le chiavi non fornite, perché con
+      // `exactOptionalPropertyTypes` Prisma rifiuta `undefined` esplicito.
+      const updateData: Parameters<typeof fastify.prisma.fastEvent.update>[0]['data'] = {};
+      if (data.endedAt) updateData.endedAt = data.endedAt;
+      if (data.status) updateData.status = data.status;
+      if (data.symptoms) updateData.symptoms = JSON.stringify(data.symptoms);
+      if (data.notes != null) updateData.notes = data.notes;
+
+      const event = await fastify.prisma.fastEvent.update({
+        where: { id },
+        data: updateData,
+      });
+      let newlyUnlocked: string[] = [];
+      if (event.status === 'COMPLETED') {
+        const ach = await evaluateAndPersist(fastify.prisma, request.user!.id);
+        newlyUnlocked = ach.newlyUnlocked;
+        if (newlyUnlocked.length > 0) {
+          void notifyUnlocked(fastify.prisma, request.user!.id, ach.newlyUnlocked).catch(() => {
+            /* notifica best-effort */
+          });
+        }
+      }
+      return { event: { id: event.id, status: event.status }, newlyUnlocked };
+    },
+  );
 
   // PRD §5.3 — modalità "giorno libero". Mette in pausa i reminder fino a
   // `until` (default: domani alle 06:00 nel fuso del server). Idempotente:
   // body vuoto = pausa fino a domattina; { until: null } = riprende subito.
-  fastify.post('/me/fasting/pause', { preHandler: requireAuth() }, async (request, reply) => {
-    const userId = request.user!.id;
-    const body = (request.body ?? {}) as { until?: string | null };
-    let until: Date | null = null;
-    if (body.until === null) {
-      until = null;
-    } else if (typeof body.until === 'string') {
-      const d = new Date(body.until);
-      if (Number.isNaN(d.getTime())) {
-        return reply.code(400).send({ error: 'invalid_until' });
+  fastify.post(
+    '/me/fasting/pause',
+    { preHandler: [requireAuth(), requirePro()] },
+    async (request, reply) => {
+      const userId = request.user!.id;
+      const body = (request.body ?? {}) as { until?: string | null };
+      let until: Date | null = null;
+      if (body.until === null) {
+        until = null;
+      } else if (typeof body.until === 'string') {
+        const d = new Date(body.until);
+        if (Number.isNaN(d.getTime())) {
+          return reply.code(400).send({ error: 'invalid_until' });
+        }
+        until = d;
+      } else {
+        // default: domani alle 06:00 locali (server)
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(6, 0, 0, 0);
+        until = tomorrow;
       }
-      until = d;
-    } else {
-      // default: domani alle 06:00 locali (server)
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(6, 0, 0, 0);
-      until = tomorrow;
-    }
-    const user = await fastify.prisma.user.update({
-      where: { id: userId },
-      data: { fastingPausedUntil: until },
-      select: { fastingPausedUntil: true },
-    });
-    return { fastingPausedUntil: user.fastingPausedUntil?.toISOString() ?? null };
-  });
+      const user = await fastify.prisma.user.update({
+        where: { id: userId },
+        data: { fastingPausedUntil: until },
+        select: { fastingPausedUntil: true },
+      });
+      return { fastingPausedUntil: user.fastingPausedUntil?.toISOString() ?? null };
+    },
+  );
 
   // PRD §5.3 — pasto di rottura intelligente. Per digiuni > 24h propone 3
   // ricette facili da digerire: prep <= 20 min, kcal <= 350, nessun ingrediente

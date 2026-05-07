@@ -1,5 +1,6 @@
 export * from './achievements/definitions.js';
 export * from './achievements/evaluator.js';
+export * from './billing/pro-status.js';
 export * from './medical/conditions.js';
 export * from './planner/adherence.js';
 export * from './notifications/schema.js';

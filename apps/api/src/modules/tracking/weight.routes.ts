@@ -2,6 +2,7 @@ import { weightEntryInputSchema } from '@ketopath/shared';
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { requirePro } from '../../plugins/require-pro.js';
 import { evaluateAndPersist, notifyUnlocked } from '../achievements/service.js';
 
 export const weightRoutes: FastifyPluginAsync = async (fastify) => {
@@ -26,48 +27,52 @@ export const weightRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  fastify.post('/me/weight-entries', { preHandler: requireAuth() }, async (request, reply) => {
-    const parsed = weightEntryInputSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
-    }
-    const data = parsed.data;
-    const userId = request.user!.id;
+  fastify.post(
+    '/me/weight-entries',
+    { preHandler: [requireAuth(), requirePro()] },
+    async (request, reply) => {
+      const parsed = weightEntryInputSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
+      }
+      const data = parsed.data;
+      const userId = request.user!.id;
 
-    const entry = await fastify.prisma.weightEntry.upsert({
-      where: { userId_date: { userId, date: data.date } },
-      create: {
-        userId,
-        date: data.date,
-        weightKg: String(data.weightKg),
-        measurements: data.measurements ? JSON.stringify(data.measurements) : null,
-        notes: data.notes ?? null,
-        energy: data.energy ?? null,
-        sleep: data.sleep ?? null,
-        hunger: data.hunger ?? null,
-        photos: data.photos ?? [],
-      },
-      update: {
-        weightKg: String(data.weightKg),
-        measurements: data.measurements ? JSON.stringify(data.measurements) : null,
-        notes: data.notes ?? null,
-        energy: data.energy ?? null,
-        sleep: data.sleep ?? null,
-        hunger: data.hunger ?? null,
-        photos: data.photos ?? [],
-      },
-    });
-
-    const ach = await evaluateAndPersist(fastify.prisma, userId);
-    if (ach.newlyUnlocked.length > 0) {
-      void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
-        /* notifica best-effort */
+      const entry = await fastify.prisma.weightEntry.upsert({
+        where: { userId_date: { userId, date: data.date } },
+        create: {
+          userId,
+          date: data.date,
+          weightKg: String(data.weightKg),
+          measurements: data.measurements ? JSON.stringify(data.measurements) : null,
+          notes: data.notes ?? null,
+          energy: data.energy ?? null,
+          sleep: data.sleep ?? null,
+          hunger: data.hunger ?? null,
+          photos: data.photos ?? [],
+        },
+        update: {
+          weightKg: String(data.weightKg),
+          measurements: data.measurements ? JSON.stringify(data.measurements) : null,
+          notes: data.notes ?? null,
+          energy: data.energy ?? null,
+          sleep: data.sleep ?? null,
+          hunger: data.hunger ?? null,
+          photos: data.photos ?? [],
+        },
       });
-    }
 
-    return reply.code(201).send({
-      entry: { id: entry.id, date: entry.date.toISOString().slice(0, 10) },
-      newlyUnlocked: ach.newlyUnlocked,
-    });
-  });
+      const ach = await evaluateAndPersist(fastify.prisma, userId);
+      if (ach.newlyUnlocked.length > 0) {
+        void notifyUnlocked(fastify.prisma, userId, ach.newlyUnlocked).catch(() => {
+          /* notifica best-effort */
+        });
+      }
+
+      return reply.code(201).send({
+        entry: { id: entry.id, date: entry.date.toISOString().slice(0, 10) },
+        newlyUnlocked: ach.newlyUnlocked,
+      });
+    },
+  );
 };

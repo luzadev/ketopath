@@ -5,6 +5,7 @@ import { dailyCheckInInputSchema } from '@ketopath/shared';
 import type { FastifyPluginAsync } from 'fastify';
 
 import { requireAuth } from '../../plugins/auth.js';
+import { requirePro } from '../../plugins/require-pro.js';
 
 function todayDateOnly(): Date {
   const d = new Date();
@@ -54,36 +55,40 @@ export const checkInRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  fastify.post('/me/check-ins', { preHandler: requireAuth() }, async (request, reply) => {
-    const parsed = dailyCheckInInputSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
-    }
-    const data = parsed.data;
-    const userId = request.user!.id;
-    const date = new Date(data.date);
-    date.setHours(0, 0, 0, 0);
+  fastify.post(
+    '/me/check-ins',
+    { preHandler: [requireAuth(), requirePro()] },
+    async (request, reply) => {
+      const parsed = dailyCheckInInputSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues });
+      }
+      const data = parsed.data;
+      const userId = request.user!.id;
+      const date = new Date(data.date);
+      date.setHours(0, 0, 0, 0);
 
-    const item = await fastify.prisma.dailyCheckIn.upsert({
-      where: { userId_date: { userId, date } },
-      create: {
-        userId,
-        date,
-        energy: data.energy ?? null,
-        sleep: data.sleep ?? null,
-        hunger: data.hunger ?? null,
-        mood: data.mood ?? null,
-        notes: data.notes ?? null,
-      },
-      update: {
-        energy: data.energy ?? null,
-        sleep: data.sleep ?? null,
-        hunger: data.hunger ?? null,
-        mood: data.mood ?? null,
-        notes: data.notes ?? null,
-      },
-    });
+      const item = await fastify.prisma.dailyCheckIn.upsert({
+        where: { userId_date: { userId, date } },
+        create: {
+          userId,
+          date,
+          energy: data.energy ?? null,
+          sleep: data.sleep ?? null,
+          hunger: data.hunger ?? null,
+          mood: data.mood ?? null,
+          notes: data.notes ?? null,
+        },
+        update: {
+          energy: data.energy ?? null,
+          sleep: data.sleep ?? null,
+          hunger: data.hunger ?? null,
+          mood: data.mood ?? null,
+          notes: data.notes ?? null,
+        },
+      });
 
-    return reply.code(201).send({ item: { id: item.id } });
-  });
+      return reply.code(201).send({ item: { id: item.id } });
+    },
+  );
 };

@@ -185,7 +185,7 @@ Quando ti chiedo una nuova funzionalità, segui questo flusso:
 
 Queste decisioni non sono ancora finalizzate. Se le tocchi, aprire un ADR in `docs/decisions/`.
 
-- [ ] Stripe vs Lemon Squeezy per il payment provider
+- [x] ~~Stripe vs Lemon Squeezy per il payment provider~~ → Stripe + free 30gg → Pro (vedi `docs/decisions/0004-payment-provider.md`)
 - [ ] PostHog self-hosted vs Mixpanel per analytics di prodotto
 - [ ] Render vs Fly.io vs AWS ECS per l'hosting backend
 - [ ] Strategia di seeding del database ricette (manuale vs scraping autorizzato vs LLM-assisted)
