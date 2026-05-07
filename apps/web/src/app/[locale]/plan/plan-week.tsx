@@ -139,7 +139,7 @@ export function PlanWeek({
           // Nessuno slot → giorno di digiuno completo (ESE_24).
           const isFastingDay = slots.length === 0;
           // Solo CENA con dailyKcal ridotto → giorno "leggero" del 5:2.
-          const isLightDay = !isFastingDay && slots.length === 1 && slots[0].meal === 'CENA';
+          const isLightDay = !isFastingDay && slots.length === 1 && slots[0]?.meal === 'CENA';
 
           return (
             <section key={dayKey} aria-labelledby={`day-${dayKey}`} className="space-y-5">

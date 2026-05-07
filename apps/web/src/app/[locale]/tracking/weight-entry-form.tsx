@@ -1,6 +1,11 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import { zodResolver as zodResolverRaw } from '@hookform/resolvers/zod';
+// Cast: zod 3.x + RHF + exactOptionalPropertyTypes generano un mismatch noto;
+// il resolver runtime funziona, è solo un'incompatibilità sui tipi opzionali.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const zodResolver: any = zodResolverRaw;
 import { weightEntryInputSchema, type WeightEntryInput } from '@ketopath/shared';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';

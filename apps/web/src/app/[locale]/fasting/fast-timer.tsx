@@ -257,13 +257,15 @@ function SymptomsDiary({ event }: { event: FastEventRow }) {
   function save(): void {
     startTransition(async () => {
       setSaved(false);
-      const result = await updateFastSymptoms(event.id, {
+      const symptoms: Parameters<typeof updateFastSymptoms>[1] = {
         headache,
         energy,
         hunger,
         clarity,
-        other: other.trim() || undefined,
-      });
+      };
+      const trimmedOther = other.trim();
+      if (trimmedOther) symptoms.other = trimmedOther;
+      const result = await updateFastSymptoms(event.id, symptoms);
       if (result.ok) {
         setSaved(true);
         window.setTimeout(() => setSaved(false), 2500);
