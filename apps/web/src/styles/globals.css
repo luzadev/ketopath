@@ -14,6 +14,12 @@
 
 @layer base {
   :root {
+    /* Font aliases — il pacchetto `geist` espone --font-geist-sans / --font-geist-mono.
+     * Mappiamo le nostre tre keyword (display/sans/mono) tutte a Geist. */
+    --font-display: var(--font-geist-sans);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+
     --carta: 42 38% 94%;
     --carta-light: 44 45% 97%;
     --carta-dim: 40 30% 88%;
@@ -87,7 +93,7 @@
     @apply bg-background text-foreground font-sans;
     font-feature-settings:
       'ss01' on,
-      'cv11' on;
+      'ss03' on;
   }
 
   /* paper grain — applied once, fixed, non-interactive */
@@ -117,10 +123,11 @@
   h2,
   h3 {
     font-optical-sizing: auto;
+    letter-spacing: -0.02em;
     font-feature-settings:
       'ss01' on,
-      'liga' on,
-      'dlig' on;
+      'ss03' on,
+      'liga' on;
   }
 
   .font-mono {

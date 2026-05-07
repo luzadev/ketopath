@@ -12,9 +12,21 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        display: ['var(--font-display)', 'Georgia', 'serif'],
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+        display: [
+          'var(--font-display)',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'sans-serif',
+        ],
+        sans: [
+          'var(--font-sans)',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'sans-serif',
+        ],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       fontSize: {
         // tighter editorial display sizes

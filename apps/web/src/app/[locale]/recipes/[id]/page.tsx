@@ -110,7 +110,7 @@ function RecipeContent({ recipe }: { recipe: RecipeView }) {
   const phasesAll = recipe.phases.length === 3;
 
   return (
-    <div className="mx-auto min-h-screen max-w-5xl px-6 sm:px-10">
+    <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
       <Masthead issueLabel={`N. 08 — ${t(`categoryLabel.${recipe.category}`)}`} />
       <main className="py-10 sm:py-14">
         <Link

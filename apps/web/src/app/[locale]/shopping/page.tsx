@@ -53,7 +53,7 @@ function ShoppingPageContent({ list }: { list: ShoppingList | null }) {
 
   return (
     <div className="relative">
-      <div className="mx-auto min-h-screen max-w-7xl px-6 sm:px-10">
+      <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
         <Masthead issueLabel="N. 09 — La spesa" />
         <main className="relative overflow-hidden pb-24 pt-10 sm:pt-12">
           <CursorGlow color="hsl(var(--oliva))" size={520} />

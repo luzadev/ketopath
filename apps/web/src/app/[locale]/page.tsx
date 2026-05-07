@@ -18,7 +18,7 @@ export default async function HomePage({ params: { locale } }: { params: { local
 function HomeContent({ userName }: { userName: string | null }) {
   return (
     <div className="relative">
-      <div className="mx-auto min-h-screen max-w-7xl px-6 sm:px-10">
+      <div className="min-h-screen w-full px-6 sm:px-10 lg:px-16 xl:px-24">
         <Masthead />
         {userName ? <SignedInDashboard userName={userName} /> : <MarketingLanding />}
       </div>
