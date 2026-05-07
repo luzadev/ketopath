@@ -24,12 +24,16 @@ import { Input } from '@/components/ui/input';
 
 import { saveWeightEntry, type WeightEntryRow } from './actions';
 
-function todayISO(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
+export function WeightEntryForm({
+  latest,
+  todayISO,
+}: {
+  latest: WeightEntryRow | null;
+  /** Data odierna in formato YYYY-MM-DD calcolata server-side. Passata
+   * come prop per evitare hydration mismatch (server e client possono
+   * differire di fuso orario o di pochi ms attraverso la mezzanotte). */
+  todayISO: string;
+}) {
   const t = useTranslations('Tracking');
   const [serverError, setServerError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -41,7 +45,7 @@ export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
   const form = useForm<WeightEntryInput>({
     resolver: zodResolver(weightEntryInputSchema),
     defaultValues: {
-      date: todayISO(),
+      date: todayISO,
       weightKg: latest?.weightKg,
     } as unknown as WeightEntryInput,
   });
@@ -54,7 +58,7 @@ export function WeightEntryForm({ latest }: { latest: WeightEntryRow | null }) {
       return;
     }
     setSavedAt(new Date().toISOString());
-    form.reset({ date: todayISO(), weightKg: input.weightKg } as unknown as WeightEntryInput);
+    form.reset({ date: todayISO, weightKg: input.weightKg } as unknown as WeightEntryInput);
   });
 
   return (

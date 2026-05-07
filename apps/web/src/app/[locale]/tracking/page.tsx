@@ -38,11 +38,16 @@ export default async function TrackingPage({ params: { locale } }: { params: { l
     fetchTodayCheckIn(),
   ]);
 
+  // Calcolato server-side per evitare hydration mismatch su WeightEntryForm.
+  const now = new Date();
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
   return (
     <TrackingPageContent
       entries={entries}
       profile={profile as ProfileLike}
       todayCheckIn={todayCheckIn}
+      todayISO={todayISO}
     />
   );
 }
@@ -51,10 +56,12 @@ function TrackingPageContent({
   entries,
   profile,
   todayCheckIn,
+  todayISO,
 }: {
   entries: Awaited<ReturnType<typeof fetchWeightEntries>>;
   profile: ProfileLike;
   todayCheckIn: Awaited<ReturnType<typeof fetchTodayCheckIn>>;
+  todayISO: string;
 }) {
   const t = useTranslations('Tracking');
   const latest = entries[0] ?? null;
@@ -135,7 +142,7 @@ function TrackingPageContent({
           <div className="relative grid gap-12 md:grid-cols-12">
             <section className="animate-fade-up [animation-delay:300ms] md:col-span-7">
               <p className="editorial-eyebrow mb-6">{t('newEntry')}</p>
-              <WeightEntryForm latest={latest} />
+              <WeightEntryForm latest={latest} todayISO={todayISO} />
             </section>
             <aside className="md:border-ink/15 animate-fade-up [animation-delay:420ms] md:col-span-5 md:border-l md:pl-10">
               <p className="editorial-eyebrow mb-6">{t('history')}</p>

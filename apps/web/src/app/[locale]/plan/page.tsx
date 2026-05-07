@@ -26,7 +26,11 @@ export default async function PlanPage({ params: { locale } }: { params: { local
 
   const [plan, dailyTarget] = await Promise.all([fetchCurrentPlan(), fetchDailyTarget()]);
 
-  return <PlanPageContent plan={plan} dailyTarget={dailyTarget} />;
+  // Calcolato server-side per evitare hydration mismatch nel pannello macros.
+  const dow = new Date().getDay();
+  const todayDayOfWeek = dow === 0 ? 6 : dow - 1;
+
+  return <PlanPageContent plan={plan} dailyTarget={dailyTarget} todayDayOfWeek={todayDayOfWeek} />;
 }
 
 const ITALIAN_DATE = new Intl.DateTimeFormat('it-IT', {
@@ -49,9 +53,11 @@ function formatWeek(weekStart: string): string {
 function PlanPageContent({
   plan,
   dailyTarget,
+  todayDayOfWeek,
 }: {
   plan: Awaited<ReturnType<typeof fetchCurrentPlan>>;
   dailyTarget: Awaited<ReturnType<typeof fetchDailyTarget>>;
+  todayDayOfWeek: number;
 }) {
   const t = useTranslations('Plan');
 
@@ -154,7 +160,7 @@ function PlanPageContent({
 
           {plan ? (
             <div className="animate-fade-up relative [animation-delay:480ms]">
-              <PlanWeek plan={plan} dailyTarget={dailyTarget} />
+              <PlanWeek plan={plan} dailyTarget={dailyTarget} todayDayOfWeek={todayDayOfWeek} />
             </div>
           ) : null}
         </main>

@@ -62,18 +62,16 @@ function aggregateMacros(slots: PlanSlot[]): {
 
 const FREE_MEAL_DEFAULT_KCAL = 750;
 
-// PRD §6 — il pannello macros laterale ancora oggi (lun=0…dom=6).
-function todayDayOfWeek(): number {
-  const d = new Date().getDay(); // 0 = Sunday
-  return d === 0 ? 6 : d - 1;
-}
-
 export function PlanWeek({
   plan,
   dailyTarget,
+  todayDayOfWeek,
 }: {
   plan: CurrentPlan;
   dailyTarget: DailyTarget | null;
+  /** Indice giorno corrente (lun=0…dom=6) calcolato server-side per evitare
+   * hydration mismatch fra render SSR e client. */
+  todayDayOfWeek: number;
 }) {
   const t = useTranslations('Plan');
 
@@ -83,7 +81,7 @@ export function PlanWeek({
     byDay.get(slot.dayOfWeek)!.push(slot);
   }
 
-  const today = todayDayOfWeek();
+  const today = todayDayOfWeek;
   const todaySlots = byDay.get(today) ?? [];
   const todayConsumed = aggregateMacros(todaySlots.filter((s) => s.consumed));
   const todayPlanned = aggregateMacros(todaySlots);
