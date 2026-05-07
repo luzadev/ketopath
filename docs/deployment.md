@@ -321,7 +321,37 @@ BETTER_AUTH_SECRET=<BETTER_AUTH_SECRET>
 BETTER_AUTH_URL=https://lamiadieta.luzaonline.net
 API_URL=http://127.0.0.1:4000
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=<VAPID_PUBLIC>
+# IMPORTANTE: il client di Better Auth (lib/auth-client.ts) usa questa env per
+# costruire la baseURL delle fetch OAuth. Se manca → fallback a localhost:3000
+# → CORS error sul login Google. È inlined al build, quindi cambiarla richiede
+# un nuovo `pnpm --filter web build`.
+NEXT_PUBLIC_APP_URL=https://lamiadieta.luzaonline.net
 EOF
+```
+
+### 4.3.bis Google OAuth (opzionale, per il login con Google)
+
+Se vuoi abilitare "Continua con Google" su `/sign-in` e `/sign-up`:
+
+1. **Google Cloud Console** (https://console.cloud.google.com/) → crea progetto KetoPath.
+2. **APIs & Services → OAuth consent screen** → External, scopes `userinfo.email` + `userinfo.profile`, Authorized domain `<DOMAIN>`. Aggiungi te stesso come Test User finché l'app è in modalità Testing.
+3. **APIs & Services → Credentials → Create OAuth client ID** (Web application):
+   - Authorized JavaScript origins: `https://<DOMAIN>`
+   - Authorized redirect URI: `https://<DOMAIN>/api/auth/callback/google`
+4. Aggiungi le credenziali a **entrambi** i `.env` (api e web) — Better Auth le legge da `process.env` al boot:
+
+```bash
+# Da fare in apps/api/.env E apps/web/.env
+echo "GOOGLE_CLIENT_ID='<client_id>.apps.googleusercontent.com'" >> apps/api/.env
+echo "GOOGLE_CLIENT_SECRET='GOCSPX-...'" >> apps/api/.env
+# (idem per apps/web/.env)
+```
+
+5. **Rebuild + restart**: la pagina `/sign-in` è SSG (prerendered al build). Per renderizzare il bottone Google serve un nuovo build.
+
+```bash
+pnpm --filter web build
+pm2 restart ketopath-web --update-env
 ```
 
 ### 4.4 Crea `packages/db/.env`
