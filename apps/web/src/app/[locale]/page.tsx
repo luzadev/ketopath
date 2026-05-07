@@ -837,23 +837,6 @@ function SignedInDashboard({
         className="mesh-blob mesh-blob--oro animate-float-z bottom-12 right-1/4 h-72 w-72 opacity-30"
       />
 
-      {/* Chapter marker gigante "I" come art di sfondo */}
-      <span
-        aria-hidden
-        className="font-display text-stroke-thin text-chapter pointer-events-none absolute -right-4 -top-12 select-none italic"
-      >
-        I
-      </span>
-
-      {/* Eyebrow verticale a destra */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute right-0 top-32 hidden md:block"
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        <p className="text-ink-soft font-mono text-xs uppercase tracking-[0.4em]">{t('lettura')}</p>
-      </div>
-
       {/* Greeting bleed-left, sborda fuori dal container */}
       <h1 className="font-display text-mega bleed-left animate-fade-up relative mt-12 font-medium [animation-delay:120ms]">
         <span className="text-ink block">Buongiorno,</span>
@@ -869,15 +852,10 @@ function SignedInDashboard({
 
       <TrialBanner billing={billing} />
 
-      {/* Nav asimmetrica: card grande "/plan" a sinistra, le altre 4 in colonna a destra */}
+      {/* Nav asimmetrica bilanciata: card grande "/plan" 7 col a sx, lista 5 col a dx, gap chiuso */}
       <div className="animate-fade-up relative mt-20 grid grid-cols-12 gap-6 [animation-delay:360ms]">
-        <DashboardHero
-          href="/plan"
-          eyebrow="Capitolo I · Cucina"
-          title={t('viewPlan')}
-          accent="oliva"
-        />
-        <ul className="col-span-12 space-y-px md:col-span-5 md:col-start-8">
+        <DashboardHero href="/plan" eyebrow="Cucina" title={t('viewPlan')} accent="oliva" />
+        <ul className="col-span-12 space-y-px md:col-span-5 md:col-start-8 md:pl-2">
           <NavItem href="/shopping" label={t('viewShopping')} eyebrow="Spesa" chapter="II" />
           <NavItem href="/fasting" label={t('viewFasting')} eyebrow="Digiuno" chapter="III" />
           <NavItem href="/tracking" label={t('viewTracking')} eyebrow="Tracking" chapter="IV" />
@@ -916,7 +894,7 @@ function DashboardHero({
   return (
     <Link
       href={href}
-      className="hover-lift border-ink/15 group col-span-12 -rotate-1 overflow-hidden border md:col-span-6"
+      className="hover-lift border-ink/15 group col-span-12 -rotate-[0.5deg] overflow-hidden border md:col-span-7"
       style={{ background: tintGrad }}
     >
       <div
@@ -993,20 +971,32 @@ function TrialBanner({ billing }: { billing: BillingStatus | null }) {
   if (derived.kind === 'trial' && derived.trialDaysRemaining != null) {
     const endsAt = derived.accessEndsAt ? ITALIAN_DATE.format(new Date(derived.accessEndsAt)) : '—';
     return (
-      <aside className="border-oro/35 bg-oro/5 animate-fade-up relative mt-12 border-2 border-dashed p-6 [animation-delay:300ms] md:ml-[16.66%]">
-        <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between">
-          <div>
-            <p className="editorial-eyebrow">{t('trialBannerTitle')}</p>
-            <p className="font-display text-ink mt-2 text-lg leading-snug">
-              {t('trialBannerBody', { days: derived.trialDaysRemaining, endsAt })}
+      <aside className="bg-ink animate-fade-up relative mt-12 overflow-hidden [animation-delay:300ms]">
+        <div
+          aria-hidden
+          className="mesh-blob mesh-blob--oro animate-float-x -right-20 -top-20 h-72 w-72 opacity-60"
+        />
+        <div className="relative grid items-center gap-8 p-8 md:grid-cols-12 md:gap-12 md:p-12">
+          <div className="md:col-span-7">
+            <p className="editorial-eyebrow text-carta-light/60">{t('trialBannerTitle')}</p>
+            <p className="font-display text-carta mt-3 text-4xl font-medium leading-[1.05] tracking-tight md:text-5xl">
+              <span className="text-oro tabular-nums">{derived.trialDaysRemaining}</span>{' '}
+              {derived.trialDaysRemaining === 1 ? 'giorno' : 'giorni'}
+              <span className="text-pomodoro">.</span>
+            </p>
+            <p className="font-display text-carta/70 mt-3 max-w-md text-base italic leading-snug">
+              Tutto sbloccato fino al {endsAt}. Poi serve un abbonamento per generare nuovi piani.
             </p>
           </div>
-          <Link
-            href="/billing"
-            className="text-oro hover:text-pomodoro shrink-0 font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px]"
-          >
-            {t('trialBannerCta')} →
-          </Link>
+          <div className="md:col-span-5 md:text-right">
+            <Link
+              href="/billing"
+              className="bg-oro text-ink hover:bg-pomodoro hover:text-carta inline-flex items-center gap-3 px-7 py-4 font-mono text-[11px] font-medium uppercase tracking-[0.18em] transition-colors"
+            >
+              {t('trialBannerCta')}
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </aside>
     );
@@ -1014,20 +1004,31 @@ function TrialBanner({ billing }: { billing: BillingStatus | null }) {
 
   if (derived.kind === 'trial_expired' || derived.kind === 'past_due') {
     return (
-      <aside className="border-pomodoro/40 bg-pomodoro/5 animate-fade-up relative mt-12 border-2 border-dashed p-6 [animation-delay:300ms] md:ml-[16.66%]">
-        <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between">
-          <div>
-            <p className="editorial-eyebrow">{t('trialEndedBannerTitle')}</p>
-            <p className="font-display text-ink mt-2 text-lg leading-snug">
+      <aside className="bg-ink animate-fade-up relative mt-12 overflow-hidden [animation-delay:300ms]">
+        <div
+          aria-hidden
+          className="mesh-blob mesh-blob--pomodoro animate-float-x -right-20 -top-20 h-72 w-72 opacity-65"
+        />
+        <div className="relative grid items-center gap-8 p-8 md:grid-cols-12 md:gap-12 md:p-12">
+          <div className="md:col-span-7">
+            <p className="editorial-eyebrow text-carta-light/60">{t('trialEndedBannerTitle')}</p>
+            <p className="font-display text-carta mt-3 text-4xl font-medium leading-[1.05] tracking-tight md:text-5xl">
+              {t('trialEndedBannerTitle')}
+              <span className="text-pomodoro">.</span>
+            </p>
+            <p className="font-display text-carta/70 mt-3 max-w-md text-base italic leading-snug">
               {t('trialEndedBannerBody')}
             </p>
           </div>
-          <Link
-            href="/billing"
-            className="text-pomodoro hover:text-ink shrink-0 font-mono text-[11px] uppercase tracking-widest underline decoration-[1.5px] underline-offset-[5px]"
-          >
-            {t('trialEndedBannerCta')} →
-          </Link>
+          <div className="md:col-span-5 md:text-right">
+            <Link
+              href="/billing"
+              className="bg-pomodoro text-carta hover:bg-oro hover:text-ink inline-flex items-center gap-3 px-7 py-4 font-mono text-[11px] font-medium uppercase tracking-[0.18em] transition-colors"
+            >
+              {t('trialEndedBannerCta')}
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </aside>
     );
