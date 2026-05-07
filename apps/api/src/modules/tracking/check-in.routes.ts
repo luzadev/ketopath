@@ -68,6 +68,7 @@ export const checkInRoutes: FastifyPluginAsync = async (fastify) => {
       const date = new Date(data.date);
       date.setHours(0, 0, 0, 0);
 
+      request.log.info({ userId, date, body: data }, '[check-in] upsert START');
       const item = await fastify.prisma.dailyCheckIn.upsert({
         where: { userId_date: { userId, date } },
         create: {
@@ -87,6 +88,13 @@ export const checkInRoutes: FastifyPluginAsync = async (fastify) => {
           notes: data.notes ?? null,
         },
       });
+      request.log.info({ id: item.id }, '[check-in] upsert OK');
+      // Rilettura immediata per verificare che il record sia effettivamente
+      // persistito (catch silent rollback da middleware encryption).
+      const verify = await fastify.prisma.dailyCheckIn.findUnique({
+        where: { userId_date: { userId, date } },
+      });
+      request.log.info({ found: verify != null, verifyId: verify?.id }, '[check-in] verify');
 
       return reply.code(201).send({ item: { id: item.id } });
     },
